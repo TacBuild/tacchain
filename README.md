@@ -43,5 +43,5 @@ A guide for setting up a [BigDipper](https://bigdipper.live/) Block Explorer can
 
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [CosmWasm docs](https://docs.cosmwasm.com/)
-- [Ethermint docs](https://docs.ethermint.io/)
+- [Ethermint docs](https://docs.ethermint.zone/)
 

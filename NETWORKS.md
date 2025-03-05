@@ -2,13 +2,13 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_2390-1 | `testnet` | **Active** | `v0.0.1` | Turin Testnet |
+| tacchain_2390-1 | `testnet` | **Active** | `v0.0.4` | Turin Testnet |
 
 ## Turin Testnet (`tacchain_2390-1`)
 
 | Chain ID                    | `tacchain_2390-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v0.0.1`                                                                                      |
+| Tacchaind version           | `v0.0.4`                                                                                      |
 | RPC                         | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1>         |
 | Genesis                     | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1/genesis> |
 | gRPC                        | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_grpc_web_1>    |

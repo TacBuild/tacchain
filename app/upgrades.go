@@ -10,10 +10,13 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
 	"github.com/Asphere-xyz/tacchain/app/upgrades"
+	ethermintgethv11315 "github.com/Asphere-xyz/tacchain/app/upgrades/ethermint-geth-v1.13.15"
 )
 
 // Upgrades list of chain upgrades
-var Upgrades = []upgrades.Upgrade{}
+var Upgrades = []upgrades.Upgrade{
+	ethermintgethv11315.Upgrade,
+}
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers
 func (app *TacChainApp) RegisterUpgradeHandlers() {

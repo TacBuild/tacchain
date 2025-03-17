@@ -143,7 +143,7 @@ private_peer_ids = "<VALIDATOR_PEER_ID>@<VALIDATOR_IP:PORT>
 
 ### 3. Update `config.toml` for validator node
 
-Using the sentry node setup, our validator node will be represented by our sentry node, therefore it no longer has to be connected with other peers. We will replace `peristent_peers` so it points to our sentry node, this way it can no longer be accessed by the outter world. We will also disable `pex` field.
+Using the sentry node setup, our validator node will be represented by our sentry node, therefore it no longer has to be connected with other peers. We will replace `persistent_peers` so it points to our sentry node, this way it can no longer be accessed by the outter world. We will also disable `pex` field.
 
 ```toml
 ..

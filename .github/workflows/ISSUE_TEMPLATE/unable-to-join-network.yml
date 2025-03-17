@@ -1,0 +1,72 @@
+name: Network Connection Issue
+description: Report issues related to joining the network.
+title: "[Network Connection Issue]: "
+labels: ["network"]
+assignees:
+  - tgntr
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a network connection issue. 
+        Please provide the following details to help us diagnose and resolve the problem efficiently.
+
+        ⚠️ **Before submitting, make sure you have:**
+        - Read the [README.md](https://github.com/TacBuild/tacchain/blob/main/README.md)
+        - Checked the [NETWORKS.md](https://github.com/TacBuild/tacchain/blob/main/NETWORKS.md)
+        - Checked for similar issues
+
+  - type: input
+    id: binary_version
+    attributes:
+      label: "Binary Version"
+      description: "Please specify the version of the `tacchaind` binary you are using."
+      placeholder: "e.g., v0.0.1"
+    validations:
+      required: true
+
+  - type: textarea
+    id: app_toml
+    attributes:
+      label: "app.toml Configuration"
+      description: "Paste the content of your `app.toml` file."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: config_toml
+    attributes:
+      label: "config.toml Configuration"
+      description: "Paste the content of your `config.toml` file."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: "Logs"
+      description: "Provide full log entries from the point you've run `tacchaind start`."
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_info
+    attributes:
+      label: "Additional information"
+      description: "Provide any additional relevant information, that might help diagnose the issue."
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: documentation_review
+    attributes:
+      label: "Documentation Review"
+      description: "Confirm that you have reviewed the required documentation before submitting this issue."
+      options:
+        - label: "I have read the README.md"
+        - label: "I have read the NETWORKS.md"
+        - label: "I checked for similar issues"

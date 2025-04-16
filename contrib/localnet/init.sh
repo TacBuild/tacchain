@@ -39,12 +39,15 @@ sed -i.bak "s/allow-unprotected-txs = false/\allow-unprotected-txs = true/g" $HO
 sed -i.bak "s/\"active_static_precompiles\": \[\]/\"active_static_precompiles\": \[\"0x0000000000000000000000000000000000000100\",\"0x0000000000000000000000000000000000000400\",\"0x0000000000000000000000000000000000000800\",\"0x0000000000000000000000000000000000000801\",\"0x0000000000000000000000000000000000000802\",\"0x0000000000000000000000000000000000000803\",\"0x0000000000000000000000000000000000000804\",\"0x0000000000000000000000000000000000000805\"\]/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"native_precompiles\": \[\]/\"native_precompiles\": \[\"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\"\]/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\",\"denom\":\"wtac\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
-
 # set block time to 3s
 sed -i.bak "s/timeout_commit = "5s"/timeout_commit = "3s"/g" $HOMEDIR/config/config.toml
 # reduce proposal time
 sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"90s\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"60s\"/g" $HOMEDIR/config/genesis.json
+# enable apis
+sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
+# enable rpc cors
+sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml
 
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

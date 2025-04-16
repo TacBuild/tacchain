@@ -258,9 +258,8 @@ replace (
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
 
 	// replace wasmd with our fork that adds dummy Copy method to the store to satisfy replaced cosmossdk.io/store
-	// TODO: create fork and push then update <DIFF_LINK>
-	// See: <DIFF_LINK>
-	github.com/CosmWasm/wasmd => /Users/tugayemin/CODE_REPOS/cosmos-REPOS/cosmwasm-REPOS/wasmd
+	// See: https://github.com/CosmWasm/wasmd/compare/v0.54.0...Asphere-xyz:wasmd:v0.54.0-asphere
+	github.com/CosmWasm/wasmd => github.com/asphere-xyz/wasmd v0.0.0-20250403104749-bac39e6c2aaa
 
 	// use Cosmos-SDK fork to enable Ledger functionality
 	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.50.13-0.20250319183239-53dea340efc7

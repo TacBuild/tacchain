@@ -25,7 +25,6 @@ $TACCHAIND config set client output json
 # init genesis file
 $TACCHAIND init test --chain-id $CHAIN_ID --default-denom $DENOM --home $HOMEDIR
 
-
 # set EVM config
 # get ethereum chain id from CHAIN_ID
 EVM_CHAIN_ID=$(echo $CHAIN_ID | sed -E 's/.*_([0-9]+)-.*/\1/')

@@ -100,11 +100,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 							options.MaxTxGasWanted,
 						),
 					)
-				// TODO: test if EIP712 works (should as per https://github.com/cosmos/evm/blob/main/ante/evm/ante_test.go#L263)
-				// if not, uncomment newLegacyCosmosAnteHandlerEip712 and replace eip handler with https://github.com/cosmos/evm/blob/main/ante/cosmos/eip712.go#L47
-				// case "/cosmos.evm.vm.v1.ExtensionOptionsWeb3Tx":
-				// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
-				// anteHandler, err = newLegacyCosmosAnteHandlerEip712(options)
 				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
 					anteHandler, err = newCosmosAnteHandler(options)
@@ -155,7 +150,7 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		authante.NewValidateMemoDecorator(options.AccountKeeper),
 		evmcosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
 		authante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, nil),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewSetPubKeyDecorator(options.AccountKeeper),
 		authante.NewValidateSigCountDecorator(options.AccountKeeper),
@@ -166,37 +161,3 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	), nil
 }
-
-// TODO: test if EIP712 works (should as per https://github.com/cosmos/evm/blob/main/ante/evm/ante_test.go#L263)
-// if not, uncomment newLegacyCosmosAnteHandlerEip712 and replace eip handler with https://github.com/cosmos/evm/blob/main/ante/cosmos/eip712.go#L47
-// Deprecated: NewLegacyCosmosAnteHandlerEip712 creates an AnteHandler to process legacy EIP-712
-// transactions, as defined by the presence of an ExtensionOptionsWeb3Tx extension.
-// func newLegacyCosmosAnteHandlerEip712(options HandlerOptions) (sdk.AnteHandler, error) {
-// 	evmAccountKeeper, ok := options.AccountKeeper.(evmtypes.AccountKeeper)
-// 	if !ok {
-// 		return nil, errors.New("account keeper does not implement evmtypes.AccountKeeper")
-// 	}
-
-// 	ethermintOptions := ethermintante.HandlerOptions{
-// 		AccountKeeper:          evmAccountKeeper,
-// 		BankKeeper:             options.BankKeeper.(bankkeeper.BaseKeeper),
-// 		SignModeHandler:        options.SignModeHandler,
-// 		FeegrantKeeper:         options.HandlerOptions.FeegrantKeeper,
-// 		SigGasConsumer:         ethermintante.DefaultSigVerificationGasConsumer,
-// 		IBCKeeper:              options.IBCKeeper,
-// 		EvmKeeper:              options.EvmKeeper,
-// 		FeeMarketKeeper:        options.FeeMarketKeeper,
-// 		MaxTxGasWanted:         options.MaxTxGasWanted,
-// 		ExtensionOptionChecker: etherminttypes.HasDynamicFeeExtensionOption,
-// 		TxFeeChecker:           ethermintante.NewDynamicFeeChecker(options.EvmKeeper),
-// 		DisabledAuthzMsgs: []string{
-// 			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
-// 			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
-// 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePermanentLockedAccount{}),
-// 			sdk.MsgTypeURL(&vestingtypes.MsgCreatePeriodicVestingAccount{}),
-// 		},
-// 	}
-
-// 	// Deprecated: Handle as normal Cosmos SDK tx, except signature is checked for Legacy EIP712 representation
-// 	return ethermintante.NewLegacyCosmosAnteHandlerEip712(ethermintOptions), nil
-// }

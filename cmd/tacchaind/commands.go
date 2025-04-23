@@ -38,6 +38,7 @@ import (
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	evmclient "github.com/cosmos/evm/client"
 	evmserver "github.com/cosmos/evm/server"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
@@ -58,15 +59,12 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 			app.DefaultNodeHome,
 		),
 		cmtcli.NewCompletionCmd(rootCmd, true),
-		// TODO: NewTestnetCmd(basicManager, banktypes.GenesisBalancesIterator{}),
+		NewTestnetCmd(appInstance.BasicModuleManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newApp, app.DefaultNodeHome),
 		snapshot.Cmd(newApp),
 	)
-
-	// TODO: test adding after server.AddCommands as originally in wasmd
-	// wasmcli.ExtendUnsafeResetAllCmd(rootCmd)
 
 	// add Cosmos EVM' flavored TM commands to start server, etc.
 	evmserver.AddCommands(

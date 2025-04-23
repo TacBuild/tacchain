@@ -1183,7 +1183,6 @@ func (app *TacChainApp) DefaultGenesis() map[string]json.RawMessage {
 
 	// NOTE: for the example chain implementation we are also adding a default token pair,
 	// which is the base denomination of the chain (i.e. the WEVMOS contract)
-	// TODO: test erc20 and refactor if needed, e.g. move contract addr to config, etc
 	utacERC20 := "0xD4949664cD82660AaE99bEdc034a0deA8A0bd517"
 	erc20GenState := evmerc20types.DefaultGenesisState()
 	erc20GenState.TokenPairs = []evmerc20types.TokenPair{

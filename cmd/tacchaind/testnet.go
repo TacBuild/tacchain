@@ -85,7 +85,7 @@ type initArgs struct {
 	numValidators     int
 	outputDir         string
 	startingIPAddress string
-	singleMachine     bool
+	singleHost        bool
 	baseFee           int
 	minGasPrice       int
 	maxGas            int
@@ -164,7 +164,7 @@ Example:
 			args.maxGas, _ = cmd.Flags().GetInt(flagMaxGas)
 			args.initialBalances, _ = cmd.Flags().GetInt(flagInitialBalances)
 			args.initialStaking, _ = cmd.Flags().GetInt(flagInitialStaking)
-			args.singleMachine, _ = cmd.Flags().GetBool(flagSingleHost)
+			args.singleHost, _ = cmd.Flags().GetBool(flagSingleHost)
 			args.votingPeriod, err = cmd.Flags().GetDuration(flagVotingPeriod)
 			if err != nil {
 				return err
@@ -195,7 +195,7 @@ Example:
 	cmd.Flags().String(flagStartingIPAddress, "", "Starting IP address (192.168.0.1 results in persistent peers list ID0@192.168.0.1:46656, ID1@192.168.0.2:46656, ...)")
 	cmd.Flags().String(flags.FlagKeyringBackend, "test", "Select keyring's backend (os|file|test)")
 	cmd.Flags().Duration(flagCommitTimeout, 3*time.Second, "Time to wait after a block commit before starting on the new height")
-	cmd.Flags().Bool(flagSingleHost, true, "Cluster runs on a single host machine with different ports")
+	cmd.Flags().Bool(flagSingleHost, false, "Cluster runs on a single host machine with different ports")
 
 	return cmd
 }
@@ -222,6 +222,8 @@ func initTestnetFiles(
 	appConfig.MinGasPrices = args.minGasPrices
 	appConfig.API.Enable = true
 	appConfig.GRPC.Enable = true
+	appConfig.JSONRPC.Enable = true
+	appConfig.JSONRPC.AllowUnprotectedTxs = true
 	appConfig.Telemetry.Enabled = true
 	appConfig.Telemetry.PrometheusRetentionTime = 60
 	appConfig.Telemetry.EnableHostnameLabel = false
@@ -243,7 +245,7 @@ func initTestnetFiles(
 	// generate private keys, node IDs, and initial transactions
 	for i := 0; i < args.numValidators; i++ {
 		var portOffset int
-		if args.singleMachine {
+		if args.singleHost {
 			portOffset = i
 			p2pPortStart = 16656 // use different start point to not conflict with rpc port
 			nodeConfig.P2P.AddrBookStrict = false
@@ -257,10 +259,9 @@ func initTestnetFiles(
 
 		nodeConfig.SetRoot(nodeDir)
 		nodeConfig.Moniker = nodeDirName
-		nodeConfig.RPC.ListenAddress = "tcp://0.0.0.0:26657"
-
-		appConfig.API.Address = fmt.Sprintf("tcp://0.0.0.0:%d", apiPort+portOffset)
-		appConfig.GRPC.Address = fmt.Sprintf("0.0.0.0:%d", grpcPort+portOffset)
+		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://localhost:%d", rpcPort+portOffset)
+		appConfig.API.Address = fmt.Sprintf("tcp://localhost:%d", apiPort+portOffset)
+		appConfig.GRPC.Address = fmt.Sprintf("localhost:%d", grpcPort+portOffset)
 		appConfig.GRPCWeb.Enable = true
 
 		if err := os.MkdirAll(filepath.Join(nodeDir, "config"), nodeDirPerm); err != nil {
@@ -399,7 +400,7 @@ func initTestnetFiles(
 	err := collectGenFiles(
 		clientCtx, nodeConfig, args.chainID, nodeIDs, valPubKeys, args.numValidators,
 		args.outputDir, args.nodeDirPrefix, args.nodeDaemonHome, genBalIterator, valAddrCodec,
-		rpcPort, p2pPortStart, args.singleMachine, args.maxGas,
+		rpcPort, p2pPortStart, args.singleHost, args.maxGas,
 	)
 	if err != nil {
 		return err
@@ -456,6 +457,7 @@ func initGenFiles(
 	erc20GenState := evmerc20types.DefaultGenesisState()
 	utacERC20 := "0xD4949664cD82660AaE99bEdc034a0deA8A0bd517"
 	erc20GenState.Params.NativePrecompiles = append(erc20GenState.Params.NativePrecompiles, utacERC20)
+	erc20GenState.Params.DynamicPrecompiles = []string{}
 	// by default erc20 TokenPair.ContractOwner enum is marshalled as string, but is expected as int
 	// properly marshaling TokenPairs with ContractOwner as an integer instead of a string
 	erc20GenStateJSON, err := json.Marshal(struct {
@@ -519,7 +521,7 @@ func collectGenFiles(
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator, valAddrCodec runtime.ValidatorAddressCodec,
 	rpcPortStart, p2pPortStart int,
-	singleMachine bool,
+	singleHost bool,
 	maxGas int,
 ) error {
 	var appState json.RawMessage
@@ -527,7 +529,7 @@ func collectGenFiles(
 
 	for i := 0; i < numValidators; i++ {
 		var portOffset int
-		if singleMachine {
+		if singleHost {
 			portOffset = i
 		}
 
@@ -535,8 +537,8 @@ func collectGenFiles(
 		nodeDir := filepath.Join(outputDir, nodeDirName, nodeDaemonHome)
 		gentxsDir := filepath.Join(outputDir, "gentxs")
 		nodeConfig.Moniker = nodeDirName
-		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", rpcPortStart+portOffset)
-		nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://0.0.0.0:%d", p2pPortStart+portOffset)
+		nodeConfig.RPC.ListenAddress = fmt.Sprintf("tcp://localhost:%d", rpcPortStart+portOffset)
+		nodeConfig.P2P.ListenAddress = fmt.Sprintf("tcp://localhost:%d", p2pPortStart+portOffset)
 
 		nodeConfig.SetRoot(nodeDir)
 
@@ -571,7 +573,9 @@ func collectGenFiles(
 			return err
 		}
 
-		return appGenesis.SaveAs(nodeConfig.GenesisFile())
+		if err := appGenesis.SaveAs(nodeConfig.GenesisFile()); err != nil {
+			return err
+		}
 	}
 
 	return nil

@@ -14,8 +14,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
 	"github.com/cosmos/evm/evmd/eips"
-	evmvmcore "github.com/cosmos/evm/x/vm/core/vm"
 	evmvmtypes "github.com/cosmos/evm/x/vm/types"
+	evmvmcore "github.com/ethereum/go-ethereum/core/vm"
 )
 
 const (
@@ -62,10 +62,10 @@ func SetupEvmConfig(chainID string) error {
 
 	ethCfg := evmvmtypes.DefaultChainConfig(chainID)
 
-	eips := map[string]func(*evmvmcore.JumpTable){
-		"evmos_0": eips.Enable0000,
-		"evmos_1": eips.Enable0001,
-		"evmos_2": eips.Enable0002,
+	eips := map[int]func(*evmvmcore.JumpTable){
+		0o000: eips.Enable0000,
+		0o001: eips.Enable0001,
+		0o002: eips.Enable0002,
 	}
 	err = evmvmtypes.NewEVMConfigurator().
 		WithExtendedEips(eips).

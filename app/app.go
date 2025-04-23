@@ -14,10 +14,8 @@ import (
 	"sort"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
-	"github.com/cosmos/evm/evmd"
-	"github.com/cosmos/evm/x/erc20"
-	_ "github.com/cosmos/evm/x/vm/core/tracers/js"
-	_ "github.com/cosmos/evm/x/vm/core/tracers/native"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
+	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
@@ -148,15 +146,17 @@ import (
 	evmante "github.com/cosmos/evm/ante"
 	evmcosmosante "github.com/cosmos/evm/ante/evm"
 	evmencoding "github.com/cosmos/evm/encoding"
+	"github.com/cosmos/evm/evmd"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
 	evmcosmosutils "github.com/cosmos/evm/utils"
+	evmerc20 "github.com/cosmos/evm/x/erc20"
 	evmerc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	evmerc20types "github.com/cosmos/evm/x/erc20/types"
 	"github.com/cosmos/evm/x/feemarket"
 	evmfeemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	evmfeemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/cosmos/evm/x/vm"
-	evmcorevm "github.com/cosmos/evm/x/vm/core/vm"
+	evmcorevm "github.com/ethereum/go-ethereum/core/vm"
 
 	// NOTE: override ICS20 keeper to support IBC transfers of ERC20 tokens
 	evmcosmostypes "github.com/cosmos/evm/types"
@@ -708,7 +708,7 @@ func NewTacChainApp(
 	// Create Transfer Stack
 	var transferStack porttypes.IBCModule
 	transferStack = evmibctransfer.NewIBCModule(app.TransferKeeper)
-	transferStack = erc20.NewIBCMiddleware(app.Erc20Keeper, transferStack)
+	transferStack = evmerc20.NewIBCMiddleware(app.Erc20Keeper, transferStack)
 
 	// Create static IBC router, add app routes, then set and seal it
 	ibcRouter := porttypes.NewRouter().
@@ -781,7 +781,7 @@ func NewTacChainApp(
 		// Cosmos EVM modules
 		vm.NewAppModule(app.EVMKeeper, app.AccountKeeper, app.GetSubspace(evmvmtypes.ModuleName)),
 		feemarket.NewAppModule(app.FeeMarketKeeper, app.GetSubspace(evmfeemarkettypes.ModuleName)),
-		erc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper, app.GetSubspace(evmerc20types.ModuleName)),
+		evmerc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper, app.GetSubspace(evmerc20types.ModuleName)),
 	)
 
 	// BasicModuleManager defines the module BasicManager is in charge of setting up basic,

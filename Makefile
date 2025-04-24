@@ -122,6 +122,8 @@ testnet: install testnet-init
 localnet-init:
 	./contrib/localnet/init.sh
 
+localnet-init-multi-node:
+	./contrib/localnet/init-multi-node.sh
 localnet-start:
 	./contrib/localnet/start.sh
 

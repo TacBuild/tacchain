@@ -20,5 +20,3 @@ grpcurl -plaintext -d "{\"address\": \"$CONTRACT\"}" localhost:9090 cosmwasm.was
 
 echo "### Show contract state"
 grpcurl -plaintext -d "{\"address\": \"$CONTRACT\"}" localhost:9090 cosmwasm.wasm.v1.Query/AllContractState | jq
-
-echo "Empty state due to 'burner' contract cleanup"

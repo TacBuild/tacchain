@@ -69,8 +69,8 @@ sed -i.bak "s/allow-unprotected-txs = false/allow-unprotected-txs = true/g" $HOM
 
 # set evm/erc20 precompiles
 sed -i.bak "s/\"active_static_precompiles\": \[\]/\"active_static_precompiles\": \[\"0x0000000000000000000000000000000000000100\",\"0x0000000000000000000000000000000000000400\",\"0x0000000000000000000000000000000000000800\",\"0x0000000000000000000000000000000000000801\",\"0x0000000000000000000000000000000000000802\",\"0x0000000000000000000000000000000000000803\",\"0x0000000000000000000000000000000000000804\",\"0x0000000000000000000000000000000000000805\",\"0x0000000000000000000000000000000000000806\",\"0x0000000000000000000000000000000000000807\"\]/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"native_precompiles\": \[\]/\"native_precompiles\": \[\"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\"\]/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE\",\"denom\":\"$DENOM\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"native_precompiles\": \[\]/\"native_precompiles\": \[\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\"\]/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\",\"denom\":\"$DENOM\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
 
 # set block time to 3s
 sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"3s\"/g" $HOMEDIR/config/config.toml

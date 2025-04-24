@@ -54,7 +54,13 @@ func init() {
 	setAddressPrefixes()
 }
 
+var evmConfigSealed = false
+
 func SetupEvmConfig(chainID string) error {
+	if evmConfigSealed {
+		return nil
+	}
+
 	baseDenom, err := sdk.GetBaseDenom()
 	if err != nil {
 		return fmt.Errorf("failed to get base denom: %s", err)
@@ -76,6 +82,7 @@ func SetupEvmConfig(chainID string) error {
 		return fmt.Errorf("failed to setup EVMConfigurator: %s", err)
 	}
 
+	evmConfigSealed = true
 	return nil
 }
 

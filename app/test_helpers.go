@@ -25,7 +25,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	evmdcmd "github.com/cosmos/evm/cmd/evmd/cmd"
 )
 
 var emptyWasmOpts []wasmkeeper.Option
@@ -65,7 +64,7 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 		invCheckPeriod,
 		options.AppOpts,
 		options.WasmOpts,
-		evmdcmd.NoOpEvmAppOptions,
+		SetupEvmConfig,
 		bam.SetChainID(DefaultChainID),
 	)
 	genesisState := app.DefaultGenesis()

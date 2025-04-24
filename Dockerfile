@@ -3,16 +3,12 @@
 
 # Using Alpine 3.19+ as the build system is currently broken,
 # see https://github.com/CosmWasm/wasmvm/issues/523
-FROM golang:1.23.6-alpine3.20 AS go-builder
+FROM golang:1.23.8-alpine3.20 AS go-builder
 
 # this comes from standard alpine nightly file
 #  https://github.com/rust-lang/docker-rust-nightly/blob/master/alpine3.12/Dockerfile
 # with some changes to support our toolchain, etc
-RUN set -eux; apk add --no-cache ca-certificates build-base;
-
-RUN apk add git
-# NOTE: add these to run with LEDGER_ENABLED=true
-# RUN apk add libusb-dev linux-headers
+RUN set -eux; apk add --no-cache ca-certificates build-base libusb-dev linux-headers;
 
 WORKDIR /code
 COPY . /code/
@@ -23,7 +19,7 @@ RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep ba6cb5db6b14a265c8556326c045
 RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep b3bd755efac0ff39c01b59b8110f961c48aa3eb93588071d7a628270cc1f2326
 
 # force it to use static lib (from above) not standard libgo_cosmwasm.so file
-RUN LEDGER_ENABLED=false BUILD_TAGS=muslc LINK_STATICALLY=true make build
+RUN LEDGER_ENABLED=true BUILD_TAGS=muslc LINK_STATICALLY=true make build
 RUN echo "Ensuring binary is statically linked ..." \
   && (file /code/build/tacchaind | grep "statically linked")
 

@@ -49,15 +49,8 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(
-			appInstance.BasicModuleManager,
-			app.DefaultNodeHome,
-		),
-		genutilcli.Commands(
-			appInstance.TxConfig(),
-			appInstance.BasicModuleManager,
-			app.DefaultNodeHome,
-		),
+		evmclient.ValidateChainID(genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome)),
+		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
 		NewTestnetCmd(appInstance.BasicModuleManager, banktypes.GenesisBalancesIterator{}),
 		debug.Cmd(),

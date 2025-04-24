@@ -46,8 +46,8 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   export PROMETHEUS_PORT=$((26660 + i * 1000))
   export PPROF_PORT=$((6060 + i * 1000))
 
+  # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
-  # echo y | HOMEDIR=$NODEDIR INITIAL_BALANCE=$INITIAL_BALANCE INITIAL_STAKE=$INITIAL_STAKE RPC_PORT=$RPC_PORT P2P_PORT=$P2P_PORT $(dirname "$0")/./init.sh
 
   # explicitly add balances to first node(node0) which will be used to collect gentxs later
   ADDRESS=$(tacchaind keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)

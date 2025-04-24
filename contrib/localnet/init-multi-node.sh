@@ -8,6 +8,7 @@ export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
 export DENOM=${DENOM:-utac}
 export INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000$DENOM}
 export INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000$DENOM}
+export FAUCET_BALANCE=${FAUCET_BALANCE:-1000000000000000000000000000$DENOM}
 
 # validate validators count is at least 2
 if [[ "$VALIDATORS_COUNT" -le 1 ]]; then
@@ -56,6 +57,10 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   cp $NODEDIR/config/gentx/* "$HOMEDIR/gentxs/"
 done
 
+# add faucet account
+tacchaind keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+tacchaind genesis add-genesis-account faucet $FAUCET_BALANCE --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"
 
@@ -87,6 +92,6 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
       fi
     fi
   done
-  
+
   sed -i.bak "s/persistent_peers = \"\"/persistent_peers = \"$PERSISTENT_PEERS\"/g" $HOMEDIR/node$i/config/config.toml
 done

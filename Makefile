@@ -124,6 +124,7 @@ localnet-init:
 
 localnet-init-multi-node:
 	./contrib/localnet/init-multi-node.sh
+
 localnet-start:
 	./contrib/localnet/start.sh
 

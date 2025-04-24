@@ -2,13 +2,13 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_2390-1 | `testnet` | **Active** | `v0.0.5` | Turin Testnet |
+| tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet |
 
 ## Turin Testnet (`tacchain_2390-1`)
 
 | Chain ID                    | `tacchain_2390-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v0.0.5`                                                                                      |
+| Tacchaind version           | `v0.0.7-testnet`                                                                              |
 | RPC                         | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1>         |
 | Genesis                     | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1/genesis> |
 | gRPC                        | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_grpc_web_1>    |
@@ -21,10 +21,108 @@
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |
 | Peer 3                      | ea5719fe6587b18ed0fee81f960e23c65c0e0ccc@206.217.210.164:45130                                |
-| Snapshots                   | TBD                                                                                           |
+| Snapshots                   |                                                                                               |
+| - full                      | <http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4>                            |
+| - archive                   | <http://snapshot.tac-turin.ankr.com/tac-turin-archive-latest.tar.lz4>                         |
 | Frontend                    | TBD                                                                                           |
 
-## Join Tac Turin Testnet
+#### Hardware Requirements
+
+  - CPU: 8 cores
+  - RAM: 16GB (rpc) / 32GB (validator)
+  - SSD: 500GB NVMe
+
+### Join Tac Turin Testnet Using Official Snapshots
+
+This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
+
+### Prerequisites
+
+  - [Go >= v1.21](https://go.dev/doc/install)
+  - jq
+  - curl
+  - tar
+  - lz4
+  - wget
+
+### 1. Install latest `tacchaind` [v0.0.7-testnet](https://github.com/TacBuild/tacchain/tree/v0.0.7-testnet)
+
+``` shell
+git checkout v0.0.7-testnet
+make install
+```
+
+### 2. Initialize network folder
+
+In this example our node moniker will be `testnode`, don't forget to name your own node differently.
+
+``` sh
+tacchaind init testnode --chain-id tacchain_2390-1 --home .testnet
+```
+
+### 3. Modify your [config.toml](.testnet/config/config.toml)
+
+``` toml
+..
+timeout_commit = "3s"
+..
+persistent_peers = "f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130,4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130,ea5719fe6587b18ed0fee81f960e23c65c0e0ccc@206.217.210.164:45130"
+..
+```
+
+### 4. Fetch genesis
+
+``` sh
+curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/networks/tacchain_2390-1/genesis.json > .testnet/config/genesis.json
+```
+
+### 5. Fetch snapshot
+
+``` sh
+cd .testnet
+rm -rf data
+wget http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4
+lz4 -dc < tac-turin-full-latest.tar.lz4 | tar -xvf -
+```
+
+### 6. Start node
+
+``` shell
+tacchaind start --chain-id tacchain_2390-1 --home .testnet
+```
+
+### Join Tac Turin Testnet Using Docker
+
+#### Prerequisites
+
+  - [Go >= v1.21](https://go.dev/doc/install)
+  - jq
+  - curl
+  - lz4
+  - docker
+  - docker compose
+
+``` shell
+export TAC_HOME="~/.tacchain"
+export VERSION="v0.0.7-testnet"
+
+git clone https://github.com/TacBuild/tacchain.git && cd tacchain
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
+mkdir -p $TAC_HOME
+cp networks/tacchain_2390-1/{docker-compose.yaml,.env.turin} $TAC_HOME/
+cd $TAC_HOME
+wget http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4
+lz4 -dc < tac-turin-full-latest.tar.lz4 | tar -xvf -
+docker compose --env-file=.env.turin up -d
+## Test
+curl -L localhost:45138 -H "Content-Type: application/json" -d '{"jsonrpc": "2.0","method": "eth_blockNumber","params": [],"id": 1}'
+```
+
+Assuming all is working you can now proceed from "Join as a validator”
+
+
+## Join Tac Turin Testnet Manually
 
 This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
 

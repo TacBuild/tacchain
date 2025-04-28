@@ -85,7 +85,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
       CURRENT_PEER=$((CURRENT_PEER + 1))
       NODE_ID=$(tacchaind tendermint show-node-id --home $HOMEDIR/node$j)
       P2P_PORT=451$((j+1))0
-      PERSISTENT_PEERS+=$NODE_ID@0.0.0.0:$P2P_PORT
+      PERSISTENT_PEERS+=$NODE_ID@127.0.0.1:$P2P_PORT
       # add comma if not last node
       if [ "$CURRENT_PEER" != "$((VALIDATORS_COUNT-1))" ]; then
         PERSISTENT_PEERS+=","

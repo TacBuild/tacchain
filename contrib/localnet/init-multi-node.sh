@@ -97,6 +97,6 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   sed -i.bak "s/seeds = \"\"/seeds = \"$PERSISTENT_PEERS\"/g" $HOMEDIR/node$i/config/config.toml
 
   # set multi node configs
-  sed -i.bak "s/addr_book_strict = true/addr_book_strict = false/g" $HOMEDIR/config/config.toml
-  sed -i.bak "s/allow_duplicate_ip = false/allow_duplicate_ip = true/g" $HOMEDIR/config/config.toml
+  sed -i.bak "s/addr_book_strict = true/addr_book_strict = false/g" $HOMEDIR/node$i/config/config.toml
+  sed -i.bak "s/allow_duplicate_ip = false/allow_duplicate_ip = true/g" $HOMEDIR/node$i/config/config.toml
 done

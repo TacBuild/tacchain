@@ -35,16 +35,16 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   NODEDIR="$HOMEDIR/$NODE_KEY"
 
   # set ports
-  export RPC_PORT=$((26657 + i * 1000))
-  export P2P_PORT=$((26656 + i * 1000))
-  export GRPC_PORT=$((9090 + i * 1000))
-  export GRPC_WEB_PORT=$((9091 + i * 1000))
-  export API_PORT=$((1317 + i * 1000))
-  export JSON_RPC_PORT=$((8545 + i * 1000))
-  export JSON_WS_PORT=$((8546 + i * 1000))
-  export METRICS_PORT=$((6065 + i * 1000))
-  export PROMETHEUS_PORT=$((26660 + i * 1000))
-  export PPROF_PORT=$((6060 + i * 1000))
+  export P2P_PORT=451$((i+1))0        # 45110
+  export RPC_PORT=451$((i+1))0        # 45111
+  export API_PORT=451$((i+1))0        # 45112
+  export METRICS_PORT=451$((i+1))0    # 45113
+  export PPROF_PORT=451$((i+1))0      # 45114
+  export PROMETHEUS_PORT=451$((i+1))0 # 45115
+  export GRPC_WEB_PORT=451$((i+1))0   # 45116
+  export GRPC_PORT=451$((i+1))0       # 45117
+  export JSON_RPC_PORT=451$((i+1))0   # 45118
+  export JSON_WS_PORT=451$((i+1))0    # 45119
 
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh

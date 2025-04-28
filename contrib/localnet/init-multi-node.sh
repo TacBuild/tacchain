@@ -35,16 +35,17 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   NODEDIR="$HOMEDIR/$NODE_KEY"
 
   # set ports
-  export RPC_PORT=$((26657 + i * 1000))
-  export P2P_PORT=$((26656 + i * 1000))
-  export GRPC_PORT=$((9090 + i * 1000))
-  export GRPC_WEB_PORT=$((9091 + i * 1000))
-  export API_PORT=$((1317 + i * 1000))
-  export JSON_RPC_PORT=$((8545 + i * 1000))
-  export JSON_WS_PORT=$((8546 + i * 1000))
-  export METRICS_PORT=$((6065 + i * 1000))
-  export PROMETHEUS_PORT=$((26660 + i * 1000))
-  export PPROF_PORT=$((6060 + i * 1000))
+  export P2P_PORT=451$((i+1))0        # 45110
+  export RPC_PORT=451$((i+1))1        # 45111
+  export API_PORT=451$((i+1))2        # 45112
+  export METRICS_PORT=451$((i+1))3    # 45113
+  export PPROF_PORT=451$((i+1))4      # 45114
+  export PROMETHEUS_PORT=451$((i+1))5 # 45115
+  export GRPC_WEB_PORT=451$((i+1))6   # 45116
+  export GRPC_PORT=451$((i+1))7       # 45117
+  export JSON_RPC_PORT=451$((i+1))8   # 45118
+  export JSON_WS_PORT=451$((i+1))9    # 45119
+  export PROXY_PORT=451$((i+1))10     # 451110
 
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
@@ -64,7 +65,7 @@ tacchaind genesis add-genesis-account faucet $FAUCET_BALANCE --keyring-backend $
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"
 
-# clear gentx in genesis
+# clear gentx in genesis because we already collect in init.sh, so recollect here instead changing the original script
 jq '.app_state.genutil.gen_txs = []' "$HOMEDIR/node0/config/genesis.json" > "$HOMEDIR/node0/config/genesis_tmp.json" && mv "$HOMEDIR/node0/config/genesis_tmp.json" "$HOMEDIR/node0/config/genesis.json"
 
 $TACCHAIND genesis collect-gentxs --home $HOMEDIR/node0
@@ -84,14 +85,18 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
     if [ "$i" != "$j" ]; then
       CURRENT_PEER=$((CURRENT_PEER + 1))
       NODE_ID=$(tacchaind tendermint show-node-id --home $HOMEDIR/node$j)
-      P2P_PORT=$((26656 + j * 1000))
-      PERSISTENT_PEERS+=$NODE_ID@0.0.0.0:$P2P_PORT
+      P2P_PORT=451$((j+1))0
+      PERSISTENT_PEERS+=$NODE_ID@127.0.0.1:$P2P_PORT
       # add comma if not last node
       if [ "$CURRENT_PEER" != "$((VALIDATORS_COUNT-1))" ]; then
         PERSISTENT_PEERS+=","
       fi
     fi
   done
-
   sed -i.bak "s/persistent_peers = \"\"/persistent_peers = \"$PERSISTENT_PEERS\"/g" $HOMEDIR/node$i/config/config.toml
+  sed -i.bak "s/seeds = \"\"/seeds = \"$PERSISTENT_PEERS\"/g" $HOMEDIR/node$i/config/config.toml
+
+  # set multi node configs
+  sed -i.bak "s/addr_book_strict = true/addr_book_strict = false/g" $HOMEDIR/config/config.toml
+  sed -i.bak "s/allow_duplicate_ip = false/allow_duplicate_ip = true/g" $HOMEDIR/config/config.toml
 done

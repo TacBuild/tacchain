@@ -66,10 +66,12 @@ jobs:
           check-latest: true
       - run: make install
       - run: |
-          echo y | VALIDATORS_COUNT=2 make localnet-init-multi-node
+          echo y | VALIDATORS_COUNT=4 make localnet-init-multi-node
           HOMEDIR=./.testnet/node0 make localnet-start &
           HOMEDIR=./.testnet/node1 make localnet-start &
-          while ! tacchaind query block --type=height 5 --home ./.testnet/node0; do sleep 5; done
+          HOMEDIR=./.testnet/node2 make localnet-start &
+          HOMEDIR=./.testnet/node3 make localnet-start &
+          while ! tacchaind query block --type=height 5 --node http://localhost:45111; do sleep 5; done
         timeout-minutes: 2
 
   test-wasmd:
@@ -92,18 +94,20 @@ jobs:
 
   test-evm-multicall:
     runs-on: ubuntu-latest
+    needs: test-build
     steps:
       - uses: actions/checkout@v4
       - uses: foundry-rs/foundry-toolchain@v1
       - uses: actions/setup-go@v5
         with:
-          go-version: "1.21"
+          go-version: "1.23.6"
           check-latest: true
       - run: make install
       - name: Init and run localnet
         run: |
           echo y | make localnet &
           while ! tacchaind query block --type=height 3; do sleep 5; done
+        timeout-minutes: 2
       - name: Send tokens and publish contract
         run: |
           tacchaind tx bank send validator tac1qhejk0xr3zz98lm3kqgntv60lrjpycljdj3tjz 200000000000000000utac --gas 200000 --keyring-backend test --chain-id tacchain_2390-1 -y

@@ -18,6 +18,7 @@ JSON_WS_PORT=${JSON_WS_PORT:-8546}
 METRICS_PORT=${METRICS_PORT:-6065}
 PROMETHEUS_PORT=${PROMETHEUS_PORT:-26660}
 PPROF_PORT=${PPROF_PORT:-6060}
+PROXY_PORT=${PROXY_PORT:-26658}
 
 # prompt user for confirmation before cleanup
 read -p "This will remove all existing data in $HOMEDIR. Do you want to proceed? (y/n): " confirm
@@ -99,3 +100,4 @@ sed -i.bak "s/8546/$JSON_WS_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/6065/$METRICS_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/26660/$PROMETHEUS_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/6060/$PPROF_PORT/g" $HOMEDIR/config/config.toml
+sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml

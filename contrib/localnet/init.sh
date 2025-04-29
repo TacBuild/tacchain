@@ -21,6 +21,7 @@ METRICS_PORT=${METRICS_PORT:-6065}
 PROMETHEUS_PORT=${PROMETHEUS_PORT:-26660}
 PPROF_PORT=${PPROF_PORT:-6060}
 PROXY_PORT=${PROXY_PORT:-26658}
+NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
 
 # prompt user for confirmation before cleanup
 read -p "This will remove all existing data in $HOMEDIR. Do you want to proceed? (y/n): " confirm
@@ -38,7 +39,7 @@ $TACCHAIND config set client keyring-backend $KEYRING_BACKEND
 $TACCHAIND config set client output json
 
 # init genesis file
-$TACCHAIND init test --chain-id $CHAIN_ID --default-denom $DENOM --home $HOMEDIR
+$TACCHAIND init $NODE_MONIKER --chain-id $CHAIN_ID --default-denom $DENOM --home $HOMEDIR
 
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

@@ -49,6 +49,8 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   export JSON_WS_PORT=451$((i+1))9    # 45119
   export PROXY_PORT=451$((i+1))10     # 451110
 
+  export NODE_MONIKER=$NODE_KEY
+  
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
 

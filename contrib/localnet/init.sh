@@ -78,7 +78,7 @@ sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"e
 # set block time to 3s
 sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"${BLOCK_TIME_SECONDS}s\"/g" $HOMEDIR/config/config.toml
 
-# update blocks per year to match 3s block time
+# update blocks per year to match our block time
 BLOCKS_PER_YEAR=$((365*24*60*60 / $BLOCK_TIME_SECONDS))
 sed -i.bak "s/\"blocks_per_year\": \"6311520\"/\"blocks_per_year\": \"$BLOCKS_PER_YEAR\"/g" $HOMEDIR/config/genesis.json
 

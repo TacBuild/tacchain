@@ -8,6 +8,8 @@ KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000$DENOM}
 INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000$DENOM}
+BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-4}
+MAX_GAS=${MAX_GAS:-90000000}
 RPC_PORT=${RPC_PORT:-26657}
 P2P_PORT=${P2P_PORT:-26656}
 GRPC_PORT=${GRPC_PORT:-9090}
@@ -59,7 +61,7 @@ sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"$DENOM\"/g" $HOMEDIR/config/gene
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
 
 # set max gas which is required for evm txs
-sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"20000000\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855
 sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/config/genesis.json
@@ -74,7 +76,16 @@ sed -i.bak "s/\"native_precompiles\": \[\]/\"native_precompiles\": \[\"0xD494966
 sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\",\"denom\":\"$DENOM\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
 
 # set block time to 3s
-sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"3s\"/g" $HOMEDIR/config/config.toml
+sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"${BLOCK_TIME_SECONDS}s\"/g" $HOMEDIR/config/config.toml
+
+# update blocks per year to match 3s block time
+BLOCKS_PER_YEAR=$((365*24*60*60 / $BLOCK_TIME_SECONDS))
+sed -i.bak "s/\"blocks_per_year\": \"6311520\"/\"blocks_per_year\": \"$BLOCKS_PER_YEAR\"/g" $HOMEDIR/config/genesis.json
+
+# set inflation
+sed -i.bak "s/\"inflation_max\": \"0.200000000000000000\"/\"inflation_max\": \"0.07\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"inflation_min\": \"0.070000000000000000\"/\"inflation_min\": \"0.02\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"goal_bonded\": \"0.670000000000000000\"/\"goal_bonded\": \"0.7\"/g" $HOMEDIR/config/genesis.json
 
 # reduce proposal time
 sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"900s\"/g" $HOMEDIR/config/genesis.json
@@ -85,9 +96,6 @@ sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
 
 # enable rpc cors
 sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml
-
-# update blocks per year to match 3s block time
-sed -i.bak "s/\"blocks_per_year\": \"6311520\"/\"blocks_per_year\": \"10512000\"/g" $HOMEDIR/config/genesis.json
 
 # set ports
 sed -i.bak "s/26657/$RPC_PORT/g" $HOMEDIR/config/config.toml

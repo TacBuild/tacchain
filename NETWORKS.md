@@ -272,8 +272,8 @@ pex = false
 | REST API                    | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rest_1>        |
 | EVM JSON RPC                | <https://newyork-inap-72-251-230-233.ankr.com:443/tac_tacd_testnet_full_rpc_1>                |
 | Faucet                      | <https://faucet.tac-turin.ankr.com>                                                           |
-| EVM Explorer                | <https://explorer.tac-turin.ankr.com>                                                         |
-| Cosmos Explorer             | <https://explorer.tacchain-turin.ankr.com/tac>                                                |
+| EVM Explorer                | <https://turin.explorer.tac.build>                                                         |
+| Cosmos Explorer             | <https://turin.bd-explorer.tac.build>                                                |
 | Timeout commit (block time) | 3s                                                                                            |
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |

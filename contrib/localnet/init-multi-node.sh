@@ -6,11 +6,12 @@ export HOMEDIR=${HOMEDIR:-./.testnet}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
 export DENOM=${DENOM:-utac}
-export INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000$DENOM}
-export INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000$DENOM}
-export FAUCET_BALANCE=${FAUCET_BALANCE:-1000000000000000000000000000$DENOM}
+export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-4}
 export MAX_GAS=${MAX_GAS:-90000000}
+
+# validators will need 2tac: 1 for min self delegation and 1 for gas in case needed (e.g. unjailing)
+VALIDATOR_BALANCE=2000000000000000000
 
 # validate validators count is at least 2
 if [[ "$VALIDATORS_COUNT" -le 1 ]]; then
@@ -50,21 +51,24 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   export PROXY_PORT=451$((i+1))10     # 451110
 
   export NODE_MONIKER=$NODE_KEY
-  
+
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
 
   # explicitly add balances to first node(node0) which will be used to collect gentxs later
   ADDRESS=$(tacchaind keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)
-  tacchaind genesis add-genesis-account $ADDRESS $INITIAL_BALANCE --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
+  tacchaind genesis add-genesis-account $ADDRESS ${VALIDATOR_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
 
   # copy gentx into main gentxs
   cp $NODEDIR/config/gentx/* "$HOMEDIR/gentxs/"
 done
 
 # add faucet account
+# deduct validator balances from initial supply and mint to faucet account
+# use bc for large integers support
+FAUCET_BALANCE=$(echo "$INITIAL_SUPPLY - ($VALIDATOR_BALANCE * $VALIDATORS_COUNT)" | bc)
 tacchaind keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
-tacchaind genesis add-genesis-account faucet $FAUCET_BALANCE --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+tacchaind genesis add-genesis-account faucet ${FAUCET_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
 
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"

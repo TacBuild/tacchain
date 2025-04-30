@@ -29,7 +29,7 @@
         "init",
         "test",
         "--chain-id",
-        "tacchain_2390-1",
+        "tacchain_2391-1",
         "--default-denom",
         "atom"
       ],
@@ -43,7 +43,7 @@
       "args": [
         "start",
         "--chain-id",
-        "tacchain_2390-1",
+        "tacchain_2391-1",
       ],
     },
   ],

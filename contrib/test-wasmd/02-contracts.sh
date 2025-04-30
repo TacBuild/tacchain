@@ -35,7 +35,7 @@ CONTRACT=$(tacchaind query wasm list-contract-by-code "$CODE_ID" -o json | jq -r
 echo "* Contract address: $CONTRACT"
 
 echo "## Create new contract instance with predictable address"
-RESP=$(tacchaind tx wasm instantiate2 "$CODE_ID" "$INIT" $(echo -n "tacchain_2390-1" | xxd -ps) \
+RESP=$(tacchaind tx wasm instantiate2 "$CODE_ID" "$INIT" $(echo -n "tacchain_2391-1" | xxd -ps) \
   --admin="$(tacchaind keys show validator -a --keyring-backend=test)" \
   --from validator --amount="100utac" --label "local0.1.0" \
   --fix-msg \
@@ -44,7 +44,7 @@ sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json | jq
 
 
-predictedAddress=$(tacchaind q wasm build-address "$CODE_HASH" $(tacchaind keys show validator -a --keyring-backend=test) $(echo -n "tacchain_2390-1" | xxd -ps) "$INIT" | jq -r .address)
+predictedAddress=$(tacchaind q wasm build-address "$CODE_HASH" $(tacchaind keys show validator -a --keyring-backend=test) $(echo -n "tacchain_2391-1" | xxd -ps) "$INIT" | jq -r .address)
 tacchaind q wasm contract $predictedAddress -o json | jq
 
 echo "### Query all"

@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	DefaultChainID        = "tacchain_2390-1"
+	DefaultChainID        = "tacchain_2391-1"
 	DefaultDenom          = "utac"
 	DefaultKeyringBackend = "test"
 )

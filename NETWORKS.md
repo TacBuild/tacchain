@@ -111,7 +111,7 @@ git clone https://github.com/TacBuild/tacchain.git && cd tacchain
 git checkout ${VERSION}
 docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
-cp networks/tacchain_2391-1/{docker-compose.yaml,.env.turin} $TAC_HOME/
+cp networks/tacchain_2391-1/{docker-compose.yaml,.env.spb} $TAC_HOME/
 cd $TAC_HOME
 wget TBD
 lz4 -dc < tac-spb-full-latest.tar.lz4 | tar -xvf -
@@ -228,7 +228,7 @@ To setup your sentry node architecture you can follow the instructions below:
 
 - NOTE: This will initialize config folder in $HOME/.tacchaind
 
-- NOTE: Make sure you have replaced your genesis file with the one for Tac Turin Testnet. Example script to download it:
+- NOTE: Make sure you have replaced your genesis file with the one for Tac Saint Petersburg Testnet. Example script to download it:
 `curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/networks/tacchain_2391-1/genesis.json > .testnet/config/genesis.json` 
 
 #### 2. Update `config.toml` for sentry node

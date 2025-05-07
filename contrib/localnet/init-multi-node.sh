@@ -6,12 +6,11 @@ export HOMEDIR=${HOMEDIR:-./.testnet}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
 export DENOM=${DENOM:-utac}
-export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
+export INITIAL_SUPPLY=${INITIAL_SUPPLY:-5000000000000000000000000000} # 5B tokens to our evm address, other 5B should go to safe addresses
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 export MAX_GAS=${MAX_GAS:-90000000}
-
-# validators will need 2tac: 1 for min self delegation and 1 for gas in case needed (e.g. unjailing)
-VALIDATOR_BALANCE=2000000000000000000
+# validators will need 200tac: 100 for min self delegation and 100 for gas in case needed (e.g. unjailing)
+VALIDATOR_BALANCE=200000000000000000000
 
 # validate validators count is at least 2
 if [[ "$VALIDATORS_COUNT" -le 1 ]]; then

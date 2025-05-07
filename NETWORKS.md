@@ -10,18 +10,19 @@
 | Chain ID                    | `tacchain_2391-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
 | Tacchaind version           | `v0.0.8`                                                                                      |
-| RPC                         | TBD                                                                                           |
-| Genesis                     | TBD                                                                                           |
-| gRPC                        | TBD                                                                                           |
-| REST API                    | TBD                                                                                           |
-| EVM JSON RPC                | TBD                                                                                           |
-| Faucet                      | TBD                                                                                           |
-| EVM Explorer                | TBD                                                                                           |
-| Cosmos Explorer             | TBD                                                                                           |
+| RPC                         | <https://spb.tendermint.rpc.tac.build>                                                                                           |
+| Genesis                     | <https://spb.tendermint-rest.rpc.tac.build/genesis>                                                                                           |
+| gRPC                        | <https://spb-grpc.rpc.tac.build>                                                                                           |
+| REST API                    | <https://spb.cosmos-api.rpc.tac.build>                                                                                           |
+| EVM JSON RPC                | <https://spb.rpc.tac.build>                                                                                           |
+| Faucet                      | <https://spb.faucet.tac.build/>                                                                                           |
+| EVM Explorer                | <https://spb.explorer.tac.build/>                                                                                           |
+| Cosmos Explorer             | <https://bd-explorer.tac-spb.ankr.com/>                                                                                           |
 | Timeout commit (block time) | 4s                                                                                            |
-| Peer 1                      | TBD                                                                                           |
-| Peer 2                      | TBD                                                                                           |
-| Peer 3                      | TBD                                                                                           |
+| Peer 1                      | 9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130                                                                                           |
+| Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
+| Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
+| Peer 4                      | ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120                                                                                           |
 | Snapshots                   |                                                                                               |
 | - full                      | TBD                                                                                           |
 | - archive                   | TBD                                                                                           |
@@ -67,7 +68,7 @@ tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 ..
 timeout_commit = "4s"
 ..
-persistent_peers = "TBD"
+persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..
 ```
 

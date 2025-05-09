@@ -5,7 +5,7 @@
 | tacchain_2391-1 | `testnet` | **Active** | `v0.0.8`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
-# Saint Petersburg  Testnet (`tacchain_2391-1`)
+# Saint Petersburg Testnet (`tacchain_2391-1`)
 
 | Chain ID                    | `tacchain_2391-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
@@ -18,7 +18,7 @@
 | Faucet                      | <https://spb.faucet.tac.build/>                                                                                           |
 | EVM Explorer                | <https://spb.explorer.tac.build/>                                                                                           |
 | Cosmos Explorer             | <https://bd-explorer.tac-spb.ankr.com/>                                                                                           |
-| Timeout commit (block time) | 4s                                                                                            |
+| Timeout commit (block time) | 2s                                                                                            |
 | Peer 1                      | 9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130                                                                                           |
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
 | Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
@@ -34,7 +34,54 @@
   - RAM: 16GB (rpc) / 32GB (validator)
   - SSD: 500GB NVMe
 
-### Join Tac Saint Petersburg Testnet Using Official Snapshots
+### Join Tac Saint Petersburg Testnet Manually
+
+This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
+
+#### Prerequisites
+
+  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - jq
+  - curl
+
+#### 1. Install `tacchaind` [v0.0.8](https://github.com/TacBuild/tacchain/tree/v0.0.8)
+
+``` shell
+git checkout v0.0.8
+make install
+```
+
+#### 2. Initialize network folder
+
+In this example our node moniker will be `testnode`, don't forget to name your own node differently.
+
+``` sh
+tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
+```
+
+#### 3. Modify your [config.toml](.testnet/config/config.toml)
+
+``` toml
+..
+timeout_commit = "2s"
+..
+persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
+..
+```
+
+#### 4. Fetch genesis
+
+``` sh
+curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/networks/tacchain_2391-1/genesis.json > .testnet/config/genesis.json
+```
+
+#### 5. Start node
+
+``` shell
+tacchaind start --chain-id tacchain_2391-1 --home .testnet
+```
+
+### Join Tac Saint Petersburg Testnet Using Official Snapshots (TBD)
 
 This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
 
@@ -66,7 +113,7 @@ tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 
 ``` toml
 ..
-timeout_commit = "4s"
+timeout_commit = "2s"
 ..
 persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..
@@ -123,61 +170,13 @@ curl -L localhost:45138 -H "Content-Type: application/json" -d '{"jsonrpc": "2.0
 
 Assuming all is working you can now proceed from "Join as a validator”
 
-
-### Join Tac Saint Petersburg Testnet Manually
-
-This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
-
-#### Prerequisites
-
-  - [Go >= 1.23.6](https://go.dev/doc/install)
-  - jq
-  - curl
-
-#### 1. Install `tacchaind` [v0.0.8](https://github.com/TacBuild/tacchain/tree/v0.0.8)
-
-``` shell
-git checkout v0.0.8
-make install
-```
-
-#### 2. Initialize network folder
-
-In this example our node moniker will be `testnode`, don't forget to name your own node differently.
-
-``` sh
-tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
-```
-
-#### 3. Modify your [config.toml](.testnet/config/config.toml)
-
-``` toml
-..
-timeout_commit = "4s"
-..
-persistent_peers = "TBD"
-..
-```
-
-#### 4. Fetch genesis
-
-``` sh
-curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/networks/tacchain_2391-1/genesis.json > .testnet/config/genesis.json
-```
-
-#### 5. Start node
-
-``` shell
-tacchaind start --chain-id tacchain_2391-1 --home .testnet
-```
-
 ### Join Tac Saint Petersburg Testnet as a validator
 
 #### 1. Make sure you followed one of our join guides above and have a fully synced running node before you proceed
 
 #### 2. Fund account and import key
 
-1. Use the [faucet](TBD) to get funds.
+1. You can use the [faucet](https://spb.faucet.tac.build/) to get funds.
 
 2. Export your metamask private key
 
@@ -238,9 +237,9 @@ To setup your sentry node architecture you can follow the instructions below:
 
 ``` toml
 ..
-timeout_commit = "4s"
+timeout_commit = "2s"
 ..
-persistent_peers = "TBD"
+persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..
 private_peer_ids = "<VALIDATOR_PEER_ID>@<VALIDATOR_IP:PORT>
 ..
@@ -262,7 +261,7 @@ pex = false
 
 #### 4. Restart validator node and start sentry node.
 
-## Turin Testnet (`tacchain_2390-1`)
+# Turin Testnet (`tacchain_2390-1`)
 
 | Chain ID                    | `tacchain_2390-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|

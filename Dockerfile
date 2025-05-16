@@ -11,7 +11,7 @@ RUN set -eux; apk add --no-cache ca-certificates build-base libusb-dev linux-hea
 WORKDIR /code
 COPY . /code/
 
-RUN LEDGER_ENABLED=true BUILD_TAGS=muslc LINK_STATICALLY=true make build
+RUN LEDGER_ENABLED=true BUILD_TAGS=muslc make build
 RUN echo "Ensuring binary is statically linked ..." \
   && (file /code/build/tacchaind | grep "statically linked")
 

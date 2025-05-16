@@ -95,7 +95,7 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e test-wasmd
+test: test-unit test-race test-e2e
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests/e2e")
@@ -111,12 +111,6 @@ test-cover:
 
 test-benchmark:
 	@go test -mod=readonly -bench=. ./...
-
-test-wasmd:
-	./contrib/test-wasmd/01-accounts.sh
-	./contrib/test-wasmd/02-contracts.sh
-	./contrib/test-wasmd/03-grpc-queries.sh
-	./contrib/test-wasmd/04-gov.sh
 
 ###############################################################################
 ###                                Networks                                 ###

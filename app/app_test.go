@@ -65,7 +65,6 @@ func TestExportAndBlockedAddrs(t *testing.T) {
 		true,
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-		emptyWasmOpts,
 		evmdcmd.NoOpEvmAppOptions,
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})

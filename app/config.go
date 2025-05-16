@@ -10,7 +10,6 @@ import (
 	"os"
 
 	sdkmath "cosmossdk.io/math"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
 	"github.com/cosmos/evm/evmd/eips"
@@ -109,5 +108,4 @@ func setAddressPrefixes() {
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
-	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 }

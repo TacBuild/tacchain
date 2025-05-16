@@ -10,7 +10,6 @@ import (
 	"io"
 	"maps"
 	"os"
-	"path/filepath"
 	"sort"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
@@ -18,10 +17,8 @@ import (
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	ibccallbacks "github.com/cosmos/ibc-go/modules/apps/callbacks"
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
@@ -138,11 +135,6 @@ import (
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmmigrationv2 "github.com/CosmWasm/wasmd/x/wasm/migrations/v2"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	evmante "github.com/cosmos/evm/ante"
 	evmcosmosante "github.com/cosmos/evm/ante/evm"
 	evmencoding "github.com/cosmos/evm/encoding"
@@ -179,7 +171,6 @@ var maccPerms = map[string][]string{
 	ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
 	ibcfeetypes.ModuleName:      nil,
 	icatypes.ModuleName:         nil,
-	wasmtypes.ModuleName:        {authtypes.Burner},
 	// Cosmos EVM modules
 	evmvmtypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 	evmfeemarkettypes.ModuleName: nil,
@@ -229,14 +220,12 @@ type TacChainApp struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      evmibctransferkeeper.Keeper
-	WasmKeeper          wasmkeeper.Keeper
 
 	ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
 	ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
 	ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
 	ScopedIBCFeeKeeper        capabilitykeeper.ScopedKeeper
-	ScopedWasmKeeper          capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -262,7 +251,6 @@ func NewTacChainApp(
 	loadLatest bool,
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
-	wasmOpts []wasmkeeper.Option,
 	evmAppOptions evmd.EVMOptionsFn,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TacChainApp {
@@ -315,8 +303,7 @@ func NewTacChainApp(
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
 		// non sdk store keys
 		capabilitytypes.StoreKey, ibcexported.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey,
-		wasmtypes.StoreKey, icahosttypes.StoreKey,
-		icacontrollertypes.StoreKey,
+		icahosttypes.StoreKey, icacontrollertypes.StoreKey,
 		// Cosmos EVM store keys
 		evmvmtypes.StoreKey, evmfeemarkettypes.StoreKey, evmerc20types.StoreKey,
 	)
@@ -370,7 +357,6 @@ func NewTacChainApp(
 	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 	app.ScopedICAControllerKeeper = app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-	app.ScopedWasmKeeper = app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
 	// their scoped modules in `NewApp` with `ScopeToModule`
@@ -648,41 +634,6 @@ func NewTacChainApp(
 		authAddr,
 	)
 
-	wasmDir := filepath.Join(homePath, "wasm")
-	wasmConfig, err := wasm.ReadNodeConfig(appOpts)
-	if err != nil {
-		panic(fmt.Sprintf("error while reading wasm config: %s", err))
-	}
-
-	// The last arguments can contain custom message handlers, and custom query handlers,
-	// if we want to allow any custom callbacks
-	app.WasmKeeper = wasmkeeper.NewKeeper(
-		encodingConfig.Codec,
-		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
-		app.AccountKeeper,
-		app.BankKeeper,
-		app.StakingKeeper,
-		distrkeeper.NewQuerier(app.DistrKeeper),
-		app.IBCFeeKeeper, // ISC4 Wrapper: fee IBC middleware
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.PortKeeper,
-		app.ScopedWasmKeeper,
-		app.TransferKeeper,
-		app.MsgServiceRouter(),
-		app.GRPCQueryRouter(),
-		wasmDir,
-		wasmConfig,
-		wasmtypes.VMConfig{},
-		wasmkeeper.BuiltInCapabilities(),
-		authAddr,
-		wasmOpts...,
-	)
-
-	// Create fee enabled wasm ibc Stack
-	var wasmStack porttypes.IBCModule
-	wasmStackIBCHandler := wasm.NewIBCHandler(app.WasmKeeper, app.IBCKeeper.ChannelKeeper, app.IBCFeeKeeper)
-	wasmStack = ibcfee.NewIBCMiddleware(wasmStackIBCHandler, app.IBCFeeKeeper)
-
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
 	// icaAuthModuleKeeper.SendTx -> icaController.SendPacket -> fee.SendPacket -> channel.SendPacket
@@ -691,9 +642,7 @@ func NewTacChainApp(
 	// see https://medium.com/the-interchain-foundation/ibc-go-v6-changes-to-interchain-accounts-and-how-it-impacts-your-chain-806c185300d7
 	var noAuthzModule porttypes.IBCModule
 	icaControllerStack = icacontroller.NewIBCMiddleware(noAuthzModule, app.ICAControllerKeeper)
-	// app.ICAAuthModule = icaControllerStack.(ibcmock.IBCModule)
 	icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.ICAControllerKeeper)
-	icaControllerStack = ibccallbacks.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper, wasmStackIBCHandler, wasm.DefaultMaxIBCCallbackGas)
 	icaICS4Wrapper := icaControllerStack.(porttypes.ICS4Wrapper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper)
 	// Since the callbacks middleware itself is an ics4wrapper, it needs to be passed to the ica controller keeper
@@ -713,7 +662,6 @@ func NewTacChainApp(
 	// Create static IBC router, add app routes, then set and seal it
 	ibcRouter := porttypes.NewRouter().
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
-		AddRoute(wasmtypes.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
 		AddRoute(icahosttypes.SubModuleName, icaHostStack)
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -770,7 +718,6 @@ func NewTacChainApp(
 		circuit.NewAppModule(encodingConfig.Codec, app.CircuitKeeper),
 		// non sdk modules
 		capability.NewAppModule(encodingConfig.Codec, *app.CapabilityKeeper, false),
-		wasm.NewAppModule(encodingConfig.Codec, &app.WasmKeeper, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		ibc.NewAppModule(app.IBCKeeper),
 		evmibctransfer.NewAppModule(app.TransferKeeper),
 		ibcfee.NewAppModule(app.IBCFeeKeeper),
@@ -842,9 +789,6 @@ func NewTacChainApp(
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		crisistypes.ModuleName,
-
-		// CosmWasm modules
-		wasmtypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(
@@ -877,9 +821,6 @@ func NewTacChainApp(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		consensusparamtypes.ModuleName,
-
-		// CosmWasm modules
-		wasmtypes.ModuleName,
 	)
 
 	// NOTE: The genutils module must occur after staking so that pools are
@@ -888,8 +829,6 @@ func NewTacChainApp(
 	// NOTE: Capability module must occur first so that it can initialize any capabilities
 	// so that other modules that want to create or claim capabilities afterwards in InitChain
 	// can do so safely.
-	// NOTE: wasm module should be at the end as it can call other module functionality direct or via message dispatching during
-	// genesis phase. For example bank transfer, auth account check, staking, ...
 	genesisModuleOrder := []string{
 		capabilitytypes.ModuleName,
 		// simd modules
@@ -928,8 +867,6 @@ func NewTacChainApp(
 		consensusparamtypes.ModuleName,
 		// NOTE: crisis module must go at the end to check for invariants on each module
 		crisistypes.ModuleName,
-		// wasm after ibc transfer
-		wasmtypes.ModuleName,
 	}
 	app.ModuleManager.SetOrderInitGenesis(genesisModuleOrder...)
 	app.ModuleManager.SetOrderExportGenesis(genesisModuleOrder...)
@@ -983,21 +920,7 @@ func NewTacChainApp(
 	app.setAnteHandler(
 		txConfig,
 		cast.ToUint64(appOpts.Get(evmsrvflags.EVMMaxTxGasWanted)),
-		wasmConfig,
-		keys[wasmtypes.StoreKey],
 	)
-
-	// must be before Loading version
-	// requires the snapshot store to be created and registered as a BaseAppOption
-	// see cmd/wasmd/root.go: 206 - 214 approx
-	if manager := app.SnapshotManager(); manager != nil {
-		err := manager.RegisterExtensions(
-			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.WasmKeeper),
-		)
-		if err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
-		}
-	}
 
 	// In v0.46, the SDK introduces _postHandlers_. PostHandlers are like
 	// antehandlers, but are run _after_ the `runMsgs` execution. They are also
@@ -1031,18 +954,12 @@ func NewTacChainApp(
 		if err := app.LoadLatestVersion(); err != nil {
 			panic(fmt.Errorf("error loading last version: %w", err))
 		}
-		ctx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
-
-		// Initialize pinned codes in wasmvm as they are not persisted there
-		if err := app.WasmKeeper.InitializePinnedCodes(ctx); err != nil {
-			panic(fmt.Sprintf("failed initialize pinned codes %s", err))
-		}
 	}
 
 	return app
 }
 
-func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64, wasmConfig wasmtypes.NodeConfig, txCounterStoreKey *storetypes.KVStoreKey) {
+func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64) {
 	anteHandler, err := NewAnteHandler(HandlerOptions{
 		HandlerOptions: authante.HandlerOptions{
 			BankKeeper:             app.BankKeeper,
@@ -1052,15 +969,12 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 			ExtensionOptionChecker: evmcosmostypes.HasDynamicFeeExtensionOption,
 			TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
 		},
-		AccountKeeper:         app.AccountKeeper,
-		IBCKeeper:             app.IBCKeeper,
-		WasmConfig:            &wasmConfig,
-		WasmKeeper:            &app.WasmKeeper,
-		TXCounterStoreService: runtime.NewKVStoreService(txCounterStoreKey),
-		CircuitKeeper:         &app.CircuitKeeper,
-		EvmKeeper:             app.EVMKeeper,
-		FeeMarketKeeper:       app.FeeMarketKeeper,
-		MaxTxGasWanted:        maxGasWanted,
+		AccountKeeper:   app.AccountKeeper,
+		IBCKeeper:       app.IBCKeeper,
+		CircuitKeeper:   &app.CircuitKeeper,
+		EvmKeeper:       app.EVMKeeper,
+		FeeMarketKeeper: app.FeeMarketKeeper,
+		MaxTxGasWanted:  maxGasWanted,
 	},
 	)
 	if err != nil {
@@ -1341,7 +1255,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
-	paramsKeeper.Subspace(wasmtypes.ModuleName).WithKeyTable(wasmmigrationv2.ParamKeyTable())
 
 	// Cosmos EVM modules
 	paramsKeeper.Subspace(evmvmtypes.ModuleName).WithKeyTable(evmvmtypes.ParamKeyTable())

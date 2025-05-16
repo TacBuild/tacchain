@@ -11,7 +11,6 @@ import (
 
 	cmtcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -35,9 +34,6 @@ import (
 
 	"github.com/Asphere-xyz/tacchain/app"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmcli "github.com/CosmWasm/wasmd/x/wasm/client/cli"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	evmclient "github.com/cosmos/evm/client"
 	evmserver "github.com/cosmos/evm/server"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
@@ -65,8 +61,6 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 		addModuleInitFlags,
 	)
 
-	wasmcli.ExtendUnsafeResetAllCmd(rootCmd)
-
 	// add Cosmos EVM key commands
 	rootCmd.AddCommand(
 		evmclient.KeyCommands(app.DefaultNodeHome, true),
@@ -89,7 +83,6 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 
 func addModuleInitFlags(cmd *cobra.Command) {
 	crisis.AddModuleInitFlags(cmd)
-	wasm.AddModuleInitFlags(cmd)
 }
 
 func queryCommand() *cobra.Command {
@@ -149,11 +142,6 @@ func newApp(
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
-	var wasmOpts []wasmkeeper.Option
-	if cast.ToBool(appOpts.Get("telemetry.enabled")) {
-		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
-	}
-
 	return app.NewTacChainApp(
 		logger,
 		db,
@@ -161,7 +149,6 @@ func newApp(
 		true,
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		appOpts,
-		wasmOpts,
 		app.SetupEvmConfig,
 		baseappOptions...,
 	)
@@ -195,7 +182,6 @@ func appExport(
 	viperAppOpts.Set(server.FlagInvCheckPeriod, 1)
 	appOpts = viperAppOpts
 
-	var emptyWasmOpts []wasmkeeper.Option
 	tacChainApp = app.NewTacChainApp(
 		logger,
 		db,
@@ -203,7 +189,6 @@ func appExport(
 		height == -1,
 		uint(1),
 		appOpts,
-		emptyWasmOpts,
 		app.SetupEvmConfig,
 		baseapp.SetChainID(cast.ToString(appOpts.Get(flags.FlagChainID))),
 	)

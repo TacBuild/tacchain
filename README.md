@@ -1,6 +1,6 @@
 # Tac Chain
 
-`tacchaind` is a TAC EVM Node based on CosmosSDK with EVM and Wasm support.
+`tacchaind` is a TAC EVM Node based on CosmosSDK with EVM support.
 
 ### Quickstart
 
@@ -35,6 +35,5 @@ docker run --rm -it tacchaind:latest tacchaind --help # example binary usage
 ### Learn more
 
 - [Cosmos SDK docs](https://docs.cosmos.network)
-- [CosmWasm docs](https://docs.cosmwasm.com/)
 - [CosmosEVM docs](https://evm.cosmos.network/)
 

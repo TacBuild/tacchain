@@ -19,9 +19,6 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmTypes "github.com/CosmWasm/wasmd/x/wasm/types"
-
 	evmcosmosante "github.com/cosmos/evm/ante/cosmos"
 	evmante "github.com/cosmos/evm/ante/evm"
 	evmanteinterfaces "github.com/cosmos/evm/ante/interfaces"
@@ -29,7 +26,7 @@ import (
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
-// channel keeper, CosmWasm keeper and Ethermint keeper.
+// channel keeper and Ethermint keeper.
 type HandlerOptions struct {
 	authante.HandlerOptions
 
@@ -37,14 +34,10 @@ type HandlerOptions struct {
 
 	IBCKeeper *keeper.Keeper
 
-	// CosmWasm
-	WasmConfig            *wasmTypes.NodeConfig
-	WasmKeeper            *wasmkeeper.Keeper
 	TXCounterStoreService corestoretypes.KVStoreService
 	CircuitKeeper         *circuitkeeper.Keeper
 
-	// Ethermint
-
+	// Cosmos EVM
 	FeeMarketKeeper evmanteinterfaces.FeeMarketKeeper
 	EvmKeeper       evmanteinterfaces.EVMKeeper
 	MaxTxGasWanted  uint64
@@ -63,12 +56,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 	if options.SignModeHandler == nil {
 		return nil, errors.New("sign mode handler is required for ante builder")
-	}
-	if options.WasmConfig == nil {
-		return nil, errors.New("wasm config is required for ante builder")
-	}
-	if options.TXCounterStoreService == nil {
-		return nil, errors.New("wasm store service is required for ante builder")
 	}
 	if options.CircuitKeeper == nil {
 		return nil, errors.New("circuit keeper is required for ante builder")
@@ -139,10 +126,6 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			sdk.MsgTypeURL(&sdkvesting.MsgCreateVestingAccount{}),
 		),
 		authante.NewSetUpContextDecorator(),
-		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit), // after setup context to enforce limits early
-		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreService),
-		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
-		wasmkeeper.NewTxContractsDecorator(),
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
 		authante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		authante.NewValidateBasicDecorator(),

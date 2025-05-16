@@ -26,8 +26,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/Asphere-xyz/tacchain/app"
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
 	evmserverconfig "github.com/cosmos/evm/server/config"
@@ -39,8 +37,7 @@ import (
 // main function.
 func NewRootCmd() *cobra.Command {
 	temp := tempDir()
-	// cleanup temp dir after we are done with the tempApp, so we don't leave behind a
-	// new temporary directory for every invocation. See https://github.com/CosmWasm/wasmd/issues/2017
+	// cleanup temp dir after we are done with the tempApp, so we don't leave behind a new temporary directory for every invocation
 	defer os.RemoveAll(temp)
 
 	tempApp := app.NewTacChainApp(
@@ -50,7 +47,6 @@ func NewRootCmd() *cobra.Command {
 		true,
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(temp),
-		[]wasmkeeper.Option{},
 		evmdcmd.NoOpEvmAppOptions,
 	)
 
@@ -160,8 +156,6 @@ func initAppConfig() (string, interface{}) {
 	type CustomAppConfig struct {
 		serverconfig.Config
 
-		Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
-
 		// Cosmos EVM configs
 		EVM     evmserverconfig.EVMConfig
 		JSONRPC evmserverconfig.JSONRPCConfig
@@ -189,14 +183,12 @@ func initAppConfig() (string, interface{}) {
 
 	customAppConfig := CustomAppConfig{
 		Config:  *srvCfg,
-		Wasm:    wasmtypes.DefaultNodeConfig(),
 		EVM:     *evmserverconfig.DefaultEVMConfig(),
 		JSONRPC: *evmserverconfig.DefaultJSONRPCConfig(),
 		TLS:     *evmserverconfig.DefaultTLSConfig(),
 	}
 
 	customAppTemplate := serverconfig.DefaultConfigTemplate +
-		wasmtypes.DefaultConfigTemplate() +
 		evmserverconfig.DefaultEVMConfigTemplate
 
 	return customAppTemplate, customAppConfig

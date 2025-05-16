@@ -7,7 +7,6 @@ package app
 import (
 	"testing"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	cmtjson "github.com/cometbft/cometbft/libs/json"
 	cmttypes "github.com/cometbft/cometbft/types"
@@ -27,14 +26,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
-var emptyWasmOpts []wasmkeeper.Option
-
 // SetupOptions defines arguments that are passed into `TacChainApp` constructor.
 type SetupOptions struct {
-	Logger   log.Logger
-	DB       *dbm.MemDB
-	AppOpts  servertypes.AppOptions
-	WasmOpts []wasmkeeper.Option
+	Logger  log.Logger
+	DB      *dbm.MemDB
+	AppOpts servertypes.AppOptions
 }
 
 // NewTacChainAppWithCustomOptions initializes a new TacChainApp with custom options.
@@ -63,7 +59,6 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 		true,
 		invCheckPeriod,
 		options.AppOpts,
-		options.WasmOpts,
 		SetupEvmConfig,
 		bam.SetChainID(DefaultChainID),
 	)

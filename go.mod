@@ -16,17 +16,14 @@ require (
 	cosmossdk.io/x/feegrant v0.1.1
 	cosmossdk.io/x/nft v0.1.1
 	cosmossdk.io/x/upgrade v0.1.4
-	github.com/CosmWasm/wasmd v0.54.0
 	github.com/cometbft/cometbft v0.38.17
 	github.com/cosmos/cosmos-db v1.1.1
 	github.com/cosmos/cosmos-sdk v0.50.13
 	github.com/cosmos/evm v0.1.1-0.20250328143818-59c573a37f8b
 	github.com/cosmos/gogoproto v1.7.0
-	github.com/cosmos/ibc-go/modules/apps/callbacks v0.2.1-0.20231113120333-342c00b0f8bd
 	github.com/cosmos/ibc-go/modules/capability v1.0.1
 	github.com/cosmos/ibc-go/v8 v8.7.0
 	github.com/ethereum/go-ethereum v1.13.15
-	github.com/prometheus/client_golang v1.20.5
 	github.com/spf13/cast v1.7.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
@@ -47,7 +44,6 @@ require (
 	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/99designs/go-keychain v0.0.0-20191008050251-8e49817e8af4 // indirect
 	github.com/99designs/keyring v1.2.1 // indirect
-	github.com/CosmWasm/wasmvm/v2 v2.2.1 // indirect
 	github.com/DataDog/datadog-go v3.2.0+incompatible // indirect
 	github.com/DataDog/zstd v1.5.5 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -97,7 +93,6 @@ require (
 	github.com/desertbit/timer v0.0.0-20180107155436-c41aec40b27f // indirect
 	github.com/dgraph-io/badger/v4 v4.2.0 // indirect
 	github.com/dgraph-io/ristretto v0.1.1 // indirect
-	github.com/distribution/reference v0.5.0 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -129,7 +124,6 @@ require (
 	github.com/google/btree v1.1.3 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
-	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/orderedcode v0.0.1 // indirect
 	github.com/google/pprof v0.0.0-20241210010833-40e02aabc2ad // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
@@ -186,11 +180,11 @@ require (
 	github.com/oasisprotocol/curve25519-voi v0.0.0-20230904125328-1f23a7beb09a // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
-	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
+	github.com/prometheus/client_golang v1.20.5 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
@@ -202,7 +196,6 @@ require (
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sasha-s/go-deadlock v0.3.5 // indirect
-	github.com/shamaton/msgpack/v2 v2.2.0 // indirect
 	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
@@ -269,10 +262,6 @@ replace (
 
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-
-	// replace wasmd with our fork that adds dummy Copy method to the store to satisfy replaced cosmossdk.io/store
-	// See: https://github.com/CosmWasm/wasmd/compare/v0.54.0...Asphere-xyz:wasmd:v0.54.0-asphere
-	github.com/CosmWasm/wasmd => github.com/asphere-xyz/wasmd v0.0.0-20250403104749-bac39e6c2aaa
 
 	// Pin this pebble version to avoid breaking compilation of geth
 	github.com/cockroachdb/pebble => github.com/cockroachdb/pebble v0.0.0-20230928194634-aa077af62593

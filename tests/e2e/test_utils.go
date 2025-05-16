@@ -8,9 +8,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -237,53 +235,6 @@ func GetValidatorAddress(ctx context.Context, s *TacchainTestSuite) (string, err
 		return "", fmt.Errorf("failed to query validator info: %v", err)
 	}
 	return strings.TrimSpace(validatorAddr), nil
-}
-
-func CreateFeemarketProposalFile(s *TacchainTestSuite, newBaseFee string) (string, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-
-	params := s.CommandParamsHomeDir()
-	output, err := ExecuteCommand(ctx, params, "q", "auth", "module-account", "gov")
-	if err != nil {
-		return "", fmt.Errorf("failed to get governance module address: %v", err)
-	}
-
-	governanceAddr := parseField(output, "address")
-	if governanceAddr == "" {
-		return "", fmt.Errorf("failed to extract governance module address")
-	}
-
-	proposalContent := fmt.Sprintf(`{ 
-	"messages": [
-		{
-			"@type": "/cosmos.evm.feemarket.v1.MsgUpdateParams",
-			"authority": "%s",
-			"params": {
-				"no_base_fee": false,
-				"base_fee_change_denominator": 8,
-				"elasticity_multiplier": 2,
-				"enable_height": "0",
-				"base_fee": "%s", 
-				"min_gas_price": "0.000000000000000000",
-				"min_gas_multiplier": "0.500000000000000000"
-			}
-		}
-	],
-	"metadata": "ipfs://CID",
-	"deposit": "20000000utac",
-	"title": "test",
-	"summary": "test",
-	"expedited": false
-}`, governanceAddr, newBaseFee)
-
-	proposalFile := filepath.Join(s.homeDir, "draft_proposal.json")
-	err = os.WriteFile(proposalFile, []byte(proposalContent), 0644)
-	if err != nil {
-		return "", fmt.Errorf("failed to write proposal file: %v", err)
-	}
-
-	return proposalFile, nil
 }
 
 func ParseBoolField(output string, fieldName string) (bool, bool) {

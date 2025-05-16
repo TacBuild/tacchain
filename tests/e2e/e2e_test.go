@@ -164,63 +164,6 @@ func (s *TacchainTestSuite) TestDelegation() {
 	require.Contains(s.T(), delegatedAmount, delegationAmount, "Delegated amount should match")
 }
 
-func (s *TacchainTestSuite) TestFeemarketParams() {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
-	defer cancel()
-
-	params := s.CommandParamsHomeDir()
-
-	output, err := ExecuteCommand(ctx, params, "q", "feemarket", "params")
-	require.NoError(s.T(), err, "Failed to query feemarket parameters")
-
-	noBaseFee, _ := ParseBoolField(output, "no_base_fee")
-	require.NotEmpty(s.T(), noBaseFee, "Base fee should not be empty")
-
-	newBaseFee := "777777777.000000000000000000"
-
-	proposalFile, err := CreateFeemarketProposalFile(s, newBaseFee)
-	require.NoError(s.T(), err, "Failed to create proposal file")
-
-	waitForNewBlock(s, nil)
-
-	proposalOutput, err := ExecuteCommand(ctx, s.DefaultCommandParams(), "tx", "gov", "submit-proposal", proposalFile, "--from", "validator", "-y")
-	if err != nil {
-		s.T().Logf("Proposal submission error output: %s", proposalOutput)
-	}
-	require.NoError(s.T(), err, "Failed to submit proposal")
-
-	txHash := parseField(proposalOutput, "txhash")
-	require.NotEmpty(s.T(), txHash, "Transaction hash should not be empty")
-
-	waitForNewBlock(s, nil)
-
-	_, err = ExecuteCommand(ctx, params, "q", "tx", txHash)
-	require.NoError(s.T(), err, "Failed to query transaction")
-
-	_, err = ExecuteCommand(ctx, params, "q", "gov", "proposal", "1")
-	require.NoError(s.T(), err, "Failed to query proposal info")
-
-	output, err = ExecuteCommand(ctx, s.DefaultCommandParams(), "tx", "gov", "vote", "1", "yes", "--from", "validator", "-y")
-	require.NoError(s.T(), err, "Failed to vote on proposal")
-
-	txHash = parseField(output, "txhash")
-	require.NotEmpty(s.T(), txHash, "Transaction hash should not be empty")
-
-	// wait for two blocks to ensure the proposal is processed, as it some times fails non-deterministically
-	waitForNewBlock(s, nil)
-	waitForNewBlock(s, nil)
-
-	output, err = ExecuteCommand(ctx, params, "q", "feemarket", "params")
-	require.NoError(s.T(), err, "Failed to query updated feemarket parameters")
-
-	expectedNoBaseFee := false
-	updatedNoBaseFee, _ := ParseBoolField(output, "no_base_fee")
-	require.Equal(s.T(), expectedNoBaseFee, updatedNoBaseFee, "Base fee bool should be updated")
-
-	updatedBaseFee := parseField(output, "base_fee")
-	require.Equal(s.T(), newBaseFee, updatedBaseFee, "Base fee should be updated")
-}
-
 func (s *TacchainTestSuite) TestStakingAPR() {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()

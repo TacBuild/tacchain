@@ -22,10 +22,10 @@ PROMETHEUS_PORT=${PROMETHEUS_PORT:-26660}
 PPROF_PORT=${PPROF_PORT:-6060}
 PROXY_PORT=${PROXY_PORT:-26658}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
-MIN_GAS_PRICE=${MIN_GAS_PRICE:-336000000000000$DENOM}
+MIN_GAS_PRICE=${MIN_GAS_PRICE:-20000000000000$DENOM}
 GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
-MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-100000000000000000$DENOM}
-MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-500000000000000000$DENOM}
+MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-100000000000000000}
+MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-500000000000000000}
 
 # prompt user for confirmation before cleanup
 read -p "This will remove all existing data in $HOMEDIR. Do you want to proceed? (y/n): " confirm
@@ -81,6 +81,12 @@ fi
 sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
+
+# disable x/feemarket EIP1559
+sed -i.bak "s/\"no_base_fee\": false/\"no_base_fee\": true/g" $HOMEDIR/config/genesis.json
+
+# set min gas price
+sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/app.toml
 
 # set max gas which is required for evm txs
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json

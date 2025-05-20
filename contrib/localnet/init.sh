@@ -15,6 +15,9 @@ MIN_GAS_PRICE=${MIN_GAS_PRICE:-20000000000000}
 GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
 MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-100000000000000000}
 MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-500000000000000000}
+INFLATION_MAX=${INFLATION_MAX:-0.05}
+INFLATION_MIN=${INFLATION_MIN:-0}
+GOAL_BONDED=${GOAL_BONDED:-0.6}
 
 # ports
 RPC_PORT=${RPC_PORT:-26657}
@@ -113,9 +116,9 @@ BLOCKS_PER_YEAR=$(echo "(365 * 24 * 60 * 60) / $BLOCK_TIME_SECONDS" | bc)
 sed -i.bak "s/\"blocks_per_year\": \"6311520\"/\"blocks_per_year\": \"$BLOCKS_PER_YEAR\"/g" $HOMEDIR/config/genesis.json
 
 # set inflation
-sed -i.bak "s/\"inflation_max\": \"0.200000000000000000\"/\"inflation_max\": \"0.07\"/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"inflation_min\": \"0.070000000000000000\"/\"inflation_min\": \"0.02\"/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"goal_bonded\": \"0.670000000000000000\"/\"goal_bonded\": \"0.7\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"inflation_max\": \"0.200000000000000000\"/\"inflation_max\": \"$INFLATION_MAX\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"inflation_min\": \"0.070000000000000000\"/\"inflation_min\": \"$INFLATION_MIN\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"goal_bonded\": \"0.670000000000000000\"/\"goal_bonded\": \"$GOAL_BONDED\"/g" $HOMEDIR/config/genesis.json
 
 # set gov vote time
 sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"${GOV_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json

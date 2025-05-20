@@ -41,6 +41,23 @@ $TACCHAIND config set client output json
 # init genesis file
 $TACCHAIND init $NODE_MONIKER --chain-id $CHAIN_ID --default-denom $DENOM --home $HOMEDIR
 
+# predeployed contracts (all precompiled contracts need to be defined before genesis accounts to avoid issues with auth account_numbers)
+# safe singleton proxy
+jq '
+  .app_state.auth.accounts += [{
+    "@type": "/cosmos.auth.v1beta1.BaseAccount",
+    "address": "tac1j9xhlmr24jxd2sh890983vcx2r29vs7hc7xaks",
+    "pub_key": null,
+    "account_number": "0",
+    "sequence": "0"
+  }]
+  | .app_state.evm.accounts += [{
+    "address": "0x914d7fec6aac8cd542e72bca78b30650d45643d7",
+    "code": "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe03601600081602082378035828234f58015156039578182fd5b8082525050506014600cf3",
+    "storage": []
+  }]
+' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
+
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator $INITIAL_BALANCE --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
@@ -110,3 +127,4 @@ sed -i.bak "s/6065/$METRICS_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/26660/$PROMETHEUS_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/6060/$PPROF_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
+

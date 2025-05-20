@@ -1,7 +1,3 @@
-// SPDX-License-Identifier: BUSL-1.1-or-later
-// SPDX-FileCopyrightText: 2025 Web3 Technologies Inc. <https://asphere.xyz/>
-// Copyright (c) 2025 Web3 Technologies Inc. All rights reserved.
-// Use of this software is governed by the Business Source License included in the LICENSE file <https://github.com/Asphere-xyz/tacchain/blob/main/LICENSE>.
 package e2e
 
 import (

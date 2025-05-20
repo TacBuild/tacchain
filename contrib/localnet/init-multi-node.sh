@@ -3,14 +3,14 @@
 # environment variables
 export TACCHAIND=${TACCHAIND:-$(which tacchaind)}
 export HOMEDIR=${HOMEDIR:-./.testnet}
+export CHAIN_ID=${CHAIN_ID:-tacchain_239-1}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
 export DENOM=${DENOM:-utac}
-export INITIAL_SUPPLY=${INITIAL_SUPPLY:-5000000000000000000000000000} # 5B tokens to our evm address, other 5B should go to safe addresses
+export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 export MAX_GAS=${MAX_GAS:-90000000}
-# validators will need 200tac: 100 for min self delegation and 100 for gas in case needed (e.g. unjailing)
-VALIDATOR_BALANCE=200000000000000000000
+export GENESIS_ACC_ADDRESS=${GENESIS_ACC_ADDRESS:-}
 
 # validate validators count is at least 2
 if [[ "$VALIDATORS_COUNT" -le 1 ]]; then
@@ -31,6 +31,19 @@ rm -rf $HOMEDIR
 # create folder to collect validator gentxs
 mkdir -p $HOMEDIR/gentxs
 
+# token distribution
+# allocating 0.2% of initial supply split between all validators
+# use bc for large integers support
+VALIDATOR_BALANCE=$(echo "$INITIAL_SUPPLY * 0.002 / $VALIDATORS_COUNT" | bc)
+# keeping 100TAC for emergency, e.g. unjailing tx fees
+VALIDATOR_EMERGENCY_BALANCE=100000000000000000000
+# self delegeting the rest
+VALIDATOR_SELF_DELEGATION=$(echo "$VALIDATOR_BALANCE - $VALIDATOR_EMERGENCY_BALANCE" | bc)
+
+# deduct validator balances from initial supply and mint to genesis account
+# use bc for large integers support
+GENESIS_ACC_BALANCE=$(echo "$INITIAL_SUPPLY - ($VALIDATOR_BALANCE * $VALIDATORS_COUNT)" | bc)
+
 # initialize config folder for each validator
 for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   NODE_KEY="node$i"
@@ -50,24 +63,27 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   export PROXY_PORT=451$((i+1))10     # 451110
 
   export NODE_MONIKER=$NODE_KEY
+  
+  export INITIAL_BALANCE=$VALIDATOR_BALANCE$DENOM
+  export INITIAL_STAKE=$VALIDATOR_SELF_DELEGATION$DENOM
 
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
 
   # explicitly add balances to first node(node0) which will be used to collect gentxs later
-  ADDRESS=$(tacchaind keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)
-  tacchaind genesis add-genesis-account $ADDRESS ${VALIDATOR_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
+  ADDRESS=$($TACCHAIND keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)
+  $TACCHAIND genesis add-genesis-account $ADDRESS ${VALIDATOR_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
 
   # copy gentx into main gentxs
   cp $NODEDIR/config/gentx/* "$HOMEDIR/gentxs/"
 done
 
-# add faucet account
-# deduct validator balances from initial supply and mint to faucet account
-# use bc for large integers support
-FAUCET_BALANCE=$(echo "$INITIAL_SUPPLY - ($VALIDATOR_BALANCE * $VALIDATORS_COUNT)" | bc)
-tacchaind keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
-tacchaind genesis add-genesis-account faucet ${FAUCET_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+# add genesis account
+if [ -z "$GENESIS_ACC_ADDRESS" ]; then
+  $TACCHAIND keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+  GENESIS_ACC_ADDRESS=$($TACCHAIND keys show faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0 -a)
+fi
+$TACCHAIND genesis add-genesis-account $GENESIS_ACC_ADDRESS ${GENESIS_ACC_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
 
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"
@@ -91,7 +107,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
     # add all nodes except the current one
     if [ "$i" != "$j" ]; then
       CURRENT_PEER=$((CURRENT_PEER + 1))
-      NODE_ID=$(tacchaind tendermint show-node-id --home $HOMEDIR/node$j)
+      NODE_ID=$($TACCHAIND tendermint show-node-id --home $HOMEDIR/node$j)
       P2P_PORT=451$((j+1))0
       PERSISTENT_PEERS+=$NODE_ID@127.0.0.1:$P2P_PORT
       # add comma if not last node

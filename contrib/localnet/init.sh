@@ -18,6 +18,7 @@ MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-500000000000000000}
 INFLATION_MAX=${INFLATION_MAX:-0.05}
 INFLATION_MIN=${INFLATION_MIN:-0}
 GOAL_BONDED=${GOAL_BONDED:-0.6}
+SLASH_DOWNTIME_PENALTY=${SLASH_DOWNTIME_PENALTY:-0.001}
 
 # ports
 RPC_PORT=${RPC_PORT:-26657}
@@ -134,6 +135,9 @@ sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
 
 # enable rpc cors
 sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml
+
+# set slashing
+sed -i.bak "s/\"slash_fraction_downtime\": \"0.010000000000000000\"/\"slash_fraction_downtime\": \"$SLASH_DOWNTIME_PENALTY\"/g" $HOMEDIR/config/genesis.json
 
 # set ports
 sed -i.bak "s/26657/$RPC_PORT/g" $HOMEDIR/config/config.toml

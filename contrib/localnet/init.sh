@@ -22,6 +22,10 @@ PROMETHEUS_PORT=${PROMETHEUS_PORT:-26660}
 PPROF_PORT=${PPROF_PORT:-6060}
 PROXY_PORT=${PROXY_PORT:-26658}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
+MIN_GAS_PRICE=${MIN_GAS_PRICE:-336000000000000$DENOM}
+GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
+MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-100000000000000000$DENOM}
+MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-500000000000000000$DENOM}
 
 # prompt user for confirmation before cleanup
 read -p "This will remove all existing data in $HOMEDIR. Do you want to proceed? (y/n): " confirm
@@ -105,9 +109,14 @@ sed -i.bak "s/\"inflation_max\": \"0.200000000000000000\"/\"inflation_max\": \"0
 sed -i.bak "s/\"inflation_min\": \"0.070000000000000000\"/\"inflation_min\": \"0.02\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"goal_bonded\": \"0.670000000000000000\"/\"goal_bonded\": \"0.7\"/g" $HOMEDIR/config/genesis.json
 
-# reduce proposal time
-sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"900s\"/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"600s\"/g" $HOMEDIR/config/genesis.json
+# set gov vote time
+sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"${GOV_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
+EXPEDITED_TIME_SECONDS=$((GOV_TIME_SECONDS / 2))
+sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"${EXPEDITED_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
+# set min gov deposit
+sed -i.bak "s/\"amount\": \"10000000\"/\"amount\": \"$MIN_GOV_DEPOSIT\"/g" $HOMEDIR/config/genesis.json
+# set min expedited gov deposit
+sed -i.bak "s/\"amount\": \"50000000\"/\"amount\": \"$MIN_EXPEDITED_GOV_DEPOSIT\"/g" $HOMEDIR/config/genesis.json
 
 # enable apis
 sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml

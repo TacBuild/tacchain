@@ -129,7 +129,7 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		authante.NewValidateMemoDecorator(options.AccountKeeper),
 		evmcosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
 		authante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, nil),
+		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewSetPubKeyDecorator(options.AccountKeeper),
 		authante.NewValidateSigCountDecorator(options.AccountKeeper),

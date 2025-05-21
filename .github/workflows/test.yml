@@ -67,10 +67,10 @@ jobs:
       - run: make install
       - run: |
           echo y | VALIDATORS_COUNT=4 make localnet-init-multi-node
-          HOMEDIR=./.testnet/node0 make localnet-start &
-          HOMEDIR=./.testnet/node1 make localnet-start &
-          HOMEDIR=./.testnet/node2 make localnet-start &
-          HOMEDIR=./.testnet/node3 make localnet-start &
+          CHAIN_ID=tacchain_239-1 HOMEDIR=./.testnet/node0 make localnet-start &
+          CHAIN_ID=tacchain_239-1 HOMEDIR=./.testnet/node1 make localnet-start &
+          CHAIN_ID=tacchain_239-1 HOMEDIR=./.testnet/node2 make localnet-start &
+          CHAIN_ID=tacchain_239-1 HOMEDIR=./.testnet/node3 make localnet-start &
           while ! tacchaind query block --type=height 5 --node http://localhost:45111; do sleep 5; done
         timeout-minutes: 2
 

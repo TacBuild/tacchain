@@ -109,6 +109,9 @@ test-cover:
 test-benchmark:
 	@go test -mod=readonly -bench=. ./...
 
+test-localnet:
+	./contrib/localnet/test.sh
+
 ###############################################################################
 ###                                Networks                                 ###
 ###############################################################################
@@ -126,7 +129,4 @@ localnet-init-multi-node:
 
 localnet-start:
 	./contrib/localnet/start.sh
-
-testnet-init:
-	@$(TACCHAIND) testnet init-files --keyring-backend=test
 

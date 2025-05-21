@@ -132,7 +132,6 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 
 	evmante "github.com/cosmos/evm/ante"
-	evmcosmosante "github.com/cosmos/evm/ante/evm"
 	evmencoding "github.com/cosmos/evm/encoding"
 	"github.com/cosmos/evm/evmd"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
@@ -963,7 +962,8 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 			FeegrantKeeper:         app.FeeGrantKeeper,
 			SigGasConsumer:         evmante.SigVerificationGasConsumer,
 			ExtensionOptionChecker: evmcosmostypes.HasDynamicFeeExtensionOption,
-			TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
+			// evm tx fee checker must be passed if x/feemarket is enabled
+			// TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
 		},
 		AccountKeeper:   app.AccountKeeper,
 		IBCKeeper:       app.IBCKeeper,

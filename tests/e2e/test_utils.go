@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os/exec"
@@ -70,6 +71,21 @@ func ExecuteCommand(ctx context.Context, params CommandParams, args ...string) (
 	sonicWarning := "WARNING:(ast) sonic only supports go1.17~1.23, but your environment is not suitable\n"
 	strOutput = strings.Replace(strOutput, sonicWarning, "", 1)
 
+	// Check for errors in the output in case of tx commands
+	// TODO: parseField(output, "code") doesn't return the code correctly
+	// TODO: additionally tx can fail after a txHash is returned. ideally we want to q tx <txHash> and also check it
+	var txCode, rawLog string
+	var m map[string]interface{}
+	if err := json.Unmarshal([]byte(strOutput), &m); err == nil {
+		if codeVal, ok := m["code"]; ok {
+			txCode = fmt.Sprintf("%v", codeVal)
+			rawLog = fmt.Sprintf("%v", m["raw_log"])
+		}
+	}
+	if txCode != "" && txCode != "0" {
+		return strOutput, fmt.Errorf("command failed with code %s, err: %s", txCode, rawLog)
+	}
+
 	return strOutput, err
 }
 
@@ -93,7 +109,7 @@ func QueryBankBalances(ctx context.Context, s *TacchainTestSuite, address string
 
 func TxBankSend(ctx context.Context, s *TacchainTestSuite, from, to string, utacAmount string) (string, error) {
 	params := s.DefaultCommandParams()
-	output, err := ExecuteCommand(ctx, params, "tx", "bank", "send", from, to, utacAmount, "--gas", "200000", "-y")
+	output, err := ExecuteCommand(ctx, params, "tx", "bank", "send", from, to, utacAmount, "--gas", "200000", "--gas-prices", "20000000000000utac", "-y")
 	return output, err
 }
 
@@ -151,15 +167,10 @@ func parseField(output string, fieldName string) string {
 func parseBalanceAmount(balanceOutput string) string {
 	amount := parseField(balanceOutput, "amount")
 	if amount == "" {
-		return UTacAmount(0)
+		return UTacAmount("0")
 	}
 
-	amountInt, err := strconv.ParseInt(amount, 10, 64)
-	if err != nil {
-		return UTacAmount(0)
-	}
-
-	return UTacAmount(amountInt)
+	return UTacAmount(amount)
 }
 
 func killProcessOnPort(port int) error {
@@ -220,8 +231,8 @@ func waitForNewBlock(s *TacchainTestSuite, stderr io.ReadCloser) {
 	}
 }
 
-func UTacAmount(amount int64) string {
-	return fmt.Sprintf("%d%s", amount, DefaultDenom)
+func UTacAmount(amount string) string {
+	return fmt.Sprintf("%s%s", amount, DefaultDenom)
 }
 
 func GetValidatorAddress(ctx context.Context, s *TacchainTestSuite) (string, error) {

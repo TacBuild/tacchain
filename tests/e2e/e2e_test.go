@@ -71,7 +71,7 @@ func (s *TacchainTestSuite) TestBankSend() {
 	initialRecipientBalance, err := QueryBankBalances(ctx, s, recipientAddr)
 	require.NoError(s.T(), err, "Failed to query recipient balance")
 
-	amount := UTacAmount(1000000)
+	amount := UTacAmount("1000000")
 	_, err = TxBankSend(ctx, s, "validator", recipientAddr, amount)
 	require.NoError(s.T(), err, "Failed to send tokens")
 
@@ -138,17 +138,17 @@ func (s *TacchainTestSuite) TestDelegation() {
 	validatorAddr, err := GetValidatorAddress(ctx, s)
 	require.NoError(s.T(), err, "Failed to get validator address")
 
-	amount := UTacAmount(1000000)
+	amount := UTacAmount("10000000000000000000")
 	_, err = TxBankSend(ctx, s, "validator", delegatorAddr, amount)
 	require.NoError(s.T(), err, "Failed to send tokens to delegator")
 
 	waitForNewBlock(s, nil)
 
-	delegationAmount := UTacAmount(500000)
+	delegationAmount := UTacAmount("500000")
 	require.NoError(s.T(), err, "Failed to parse delegation amount")
 
 	_, err = ExecuteCommand(ctx, params, "tx", "staking", "delegate", validatorAddr,
-		delegationAmount, "--from", "delegator", "-y")
+		delegationAmount, "--from", "delegator", "--gas-prices", "20000000000000utac", "-y")
 	require.NoError(s.T(), err, "Failed to delegate tokens")
 
 	waitForNewBlock(s, nil)
@@ -175,7 +175,7 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 	validatorAddr, err := GetValidatorAddress(ctx, s)
 	require.NoError(s.T(), err, "Failed to get validator address")
 
-	initialAmount := UTacAmount(1000000)
+	initialAmount := UTacAmount("10000000000000000000")
 	_, err = TxBankSend(ctx, s, "validator", delegatorAddr, initialAmount)
 	require.NoError(s.T(), err, "Failed to send tokens to delegator")
 
@@ -185,9 +185,9 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 	require.NoError(s.T(), err, "Failed to query delegator balance")
 	require.Contains(s.T(), balance, initialAmount, "Delegator should have received the tokens")
 
-	delegationAmount := initialAmount
+	delegationAmount := UTacAmount("10000000000000000")
 	output, err := ExecuteCommand(ctx, params, "tx", "staking", "delegate", validatorAddr,
-		delegationAmount, "--from", "apr_delegator", "--gas", "200000", "-y")
+		delegationAmount, "--from", "apr_delegator", "--gas", "200000", "--gas-prices", "20000000000000utac", "-y")
 	require.NoError(s.T(), err, "Failed to delegate tokens: %s", output)
 
 	waitForNewBlock(s, nil)

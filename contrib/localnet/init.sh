@@ -6,15 +6,14 @@ HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
 CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
-DENOM=${DENOM:-utac}
-INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000000}
-INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000000}
+INITIAL_BALANCE=${INITIAL_BALANCE:-200}
+INITIAL_STAKE=${INITIAL_STAKE:-100}
 BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 MAX_GAS=${MAX_GAS:-90000000}
-MIN_GAS_PRICE=${MIN_GAS_PRICE:-4000000000000}
-GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
-MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-10000000000000000}
-MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-50000000000000000}
+MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.000004}
+GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-21600}
+MIN_GOV_DEPOSIT_UTAC=${MIN_GOV_DEPOSIT_UTAC:-10000000000000000}
+MIN_EXPEDITED_GOV_DEPOSIT_UTAC=${MIN_EXPEDITED_GOV_DEPOSIT_UTAC:-50000000000000000}
 INFLATION_MAX=${INFLATION_MAX:-0.05}
 INFLATION_MIN=${INFLATION_MIN:-0}
 GOAL_BONDED=${GOAL_BONDED:-0.6}
@@ -49,7 +48,7 @@ $TACCHAIND config set client keyring-backend $KEYRING_BACKEND
 $TACCHAIND config set client output json
 
 # init genesis file
-$TACCHAIND init $NODE_MONIKER --chain-id $CHAIN_ID --default-denom $DENOM --home $HOMEDIR
+$TACCHAIND init $NODE_MONIKER --chain-id $CHAIN_ID --default-denom utac --home $HOMEDIR
 
 # predeployed contracts (all precompiled contracts need to be defined before genesis accounts to avoid issues with auth account_numbers)
 # safe singleton factory (https://github.com/safe-global/safe-singleton-factory)
@@ -101,12 +100,6 @@ jq '
   }]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
 
-# setup and add validator to genesis
-$TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}${DENOM} --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-
 # edit configs
 
 # set EVM config
@@ -118,14 +111,14 @@ if [[ -z $EVM_CHAIN_ID ]]; then
 fi
 
 sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 
 # disable x/feemarket EIP1559
 sed -i.bak "s/\"no_base_fee\": false/\"no_base_fee\": true/g" $HOMEDIR/config/genesis.json
 
 # set min gas price
-sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}${DENOM}\"/g" $HOMEDIR/config/app.toml
+sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}tac\"/g" $HOMEDIR/config/app.toml
 
 # set max gas which is required for evm txs
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
@@ -140,7 +133,7 @@ sed -i.bak "s/allow-unprotected-txs = false/allow-unprotected-txs = true/g" $HOM
 # set evm/erc20 precompiles
 sed -i.bak "s/\"active_static_precompiles\": \[\]/\"active_static_precompiles\": \[\"0x0000000000000000000000000000000000000100\",\"0x0000000000000000000000000000000000000400\",\"0x0000000000000000000000000000000000000800\",\"0x0000000000000000000000000000000000000801\",\"0x0000000000000000000000000000000000000802\",\"0x0000000000000000000000000000000000000803\",\"0x0000000000000000000000000000000000000804\",\"0x0000000000000000000000000000000000000805\",\"0x0000000000000000000000000000000000000806\",\"0x0000000000000000000000000000000000000807\"\]/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"native_precompiles\": \[\]/\"native_precompiles\": \[\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\"\]/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\",\"denom\":\"$DENOM\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"token_pairs\": \[\]/\"token_pairs\": \[{\"contract_owner\":1,\"erc20_address\":\"0xD4949664cD82660AaE99bEdc034a0deA8A0bd517\",\"denom\":\"utac\",\"enabled\":true}\]/g" $HOMEDIR/config/genesis.json
 
 # set block time to 3s
 sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"${BLOCK_TIME_SECONDS}s\"/g" $HOMEDIR/config/config.toml
@@ -158,10 +151,26 @@ sed -i.bak "s/\"goal_bonded\": \"0.670000000000000000\"/\"goal_bonded\": \"$GOAL
 sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"${GOV_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
 EXPEDITED_TIME_SECONDS=$((GOV_TIME_SECONDS / 2))
 sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"${EXPEDITED_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
+
 # set min gov deposit
-sed -i.bak "s/\"amount\": \"10000000\"/\"amount\": \"$MIN_GOV_DEPOSIT\"/g" $HOMEDIR/config/genesis.json
+jq --arg MIN_GOV_DEPOSIT_UTAC "$MIN_GOV_DEPOSIT_UTAC" '
+  .app_state.gov.params.min_deposit = [
+    {
+      "denom": "utac",
+      "amount": $MIN_GOV_DEPOSIT_UTAC
+    }
+  ]
+' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
+
 # set min expedited gov deposit
-sed -i.bak "s/\"amount\": \"50000000\"/\"amount\": \"$MIN_EXPEDITED_GOV_DEPOSIT\"/g" $HOMEDIR/config/genesis.json
+jq --arg MIN_EXPEDITED_GOV_DEPOSIT_UTAC "$MIN_EXPEDITED_GOV_DEPOSIT_UTAC" '
+  .app_state.gov.params.expedited_min_deposit = [
+    {
+      "denom": "utac",
+      "amount": $MIN_EXPEDITED_GOV_DEPOSIT_UTAC
+    }
+  ]
+' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
 
 # enable apis
 sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
@@ -212,3 +221,8 @@ sed -i.bak "s/26660/$PROMETHEUS_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/6060/$PPROF_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 
+# setup and add validator to genesis
+$TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}tac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}tac --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

@@ -6,14 +6,14 @@ HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
 CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
-INITIAL_BALANCE=${INITIAL_BALANCE:-200}
-INITIAL_STAKE=${INITIAL_STAKE:-100}
+INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000000}
+INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000000}
 BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 MAX_GAS=${MAX_GAS:-90000000}
-MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.000004}
-GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-21600}
-MIN_GOV_DEPOSIT_UTAC=${MIN_GOV_DEPOSIT_UTAC:-10000000000000000}
-MIN_EXPEDITED_GOV_DEPOSIT_UTAC=${MIN_EXPEDITED_GOV_DEPOSIT_UTAC:-50000000000000000}
+MIN_GAS_PRICE=${MIN_GAS_PRICE:-4000000000000}
+GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
+MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-10000000000000000}
+MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-50000000000000000}
 INFLATION_MAX=${INFLATION_MAX:-0.05}
 INFLATION_MIN=${INFLATION_MIN:-0}
 GOAL_BONDED=${GOAL_BONDED:-0.6}
@@ -118,7 +118,7 @@ sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/confi
 sed -i.bak "s/\"no_base_fee\": false/\"no_base_fee\": true/g" $HOMEDIR/config/genesis.json
 
 # set min gas price
-sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}tac\"/g" $HOMEDIR/config/app.toml
+sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}utac\"/g" $HOMEDIR/config/app.toml
 
 # set max gas which is required for evm txs
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
@@ -153,21 +153,21 @@ EXPEDITED_TIME_SECONDS=$((GOV_TIME_SECONDS / 2))
 sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"${EXPEDITED_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
 
 # set min gov deposit
-jq --arg MIN_GOV_DEPOSIT_UTAC "$MIN_GOV_DEPOSIT_UTAC" '
+jq --arg MIN_GOV_DEPOSIT "$MIN_GOV_DEPOSIT" '
   .app_state.gov.params.min_deposit = [
     {
       "denom": "utac",
-      "amount": $MIN_GOV_DEPOSIT_UTAC
+      "amount": $MIN_GOV_DEPOSIT
     }
   ]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
 
 # set min expedited gov deposit
-jq --arg MIN_EXPEDITED_GOV_DEPOSIT_UTAC "$MIN_EXPEDITED_GOV_DEPOSIT_UTAC" '
+jq --arg MIN_EXPEDITED_GOV_DEPOSIT "$MIN_EXPEDITED_GOV_DEPOSIT" '
   .app_state.gov.params.expedited_min_deposit = [
     {
       "denom": "utac",
-      "amount": $MIN_EXPEDITED_GOV_DEPOSIT_UTAC
+      "amount": $MIN_EXPEDITED_GOV_DEPOSIT
     }
   ]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
@@ -223,6 +223,6 @@ sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}tac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}tac --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

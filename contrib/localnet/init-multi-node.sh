@@ -7,13 +7,13 @@ export CHAIN_ID=${CHAIN_ID:-tacchain_239-1}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
 export GENESIS_ACC_ADDRESS=${GENESIS_ACC_ADDRESS:-}
-export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000}
+export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 export MAX_GAS=${MAX_GAS:-90000000}
 export MIN_GAS_PRICE=${MIN_GAS_PRICE:-0.000004}
 export GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-21600}
-export MIN_GOV_DEPOSIT_UTAC=${MIN_GOV_DEPOSIT_UTAC:-10000000000000000}
-export MIN_EXPEDITED_GOV_DEPOSIT_UTAC=${MIN_EXPEDITED_GOV_DEPOSIT_UTAC:-50000000000000000}
+export MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-10000000000000000}
+export MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-50000000000000000}
 export INFLATION_MAX=${INFLATION_MAX:-0.05}
 export INFLATION_MIN=${INFLATION_MIN:-0.00}
 export GOAL_BONDED=${GOAL_BONDED:-0.6}
@@ -42,7 +42,7 @@ mkdir -p $HOMEDIR/gentxs
 # allocating 0.2% of initial supply split between all validators
 VALIDATOR_BALANCE=$(echo "$INITIAL_SUPPLY * 0.002 / $VALIDATORS_COUNT" | bc)
 # keeping 100TAC for emergency, e.g. unjailing tx fees
-VALIDATOR_EMERGENCY_BALANCE=100
+VALIDATOR_EMERGENCY_BALANCE=100000000000000000000
 # self delegeting the rest
 VALIDATOR_SELF_DELEGATION=$(echo "$VALIDATOR_BALANCE - $VALIDATOR_EMERGENCY_BALANCE" | bc)
 # deduct validator balances from initial supply and mint to genesis account
@@ -76,7 +76,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
 
   # explicitly add balances to first node(node0) which will be used to collect gentxs later
   ADDRESS=$($TACCHAIND keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)
-  $TACCHAIND genesis add-genesis-account $ADDRESS ${VALIDATOR_BALANCE}tac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
+  $TACCHAIND genesis add-genesis-account $ADDRESS ${VALIDATOR_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0  &> /dev/null || true
 
   # copy gentx into main gentxs
   cp $NODEDIR/config/gentx/* "$HOMEDIR/gentxs/"
@@ -87,7 +87,7 @@ if [ -z "$GENESIS_ACC_ADDRESS" ]; then
   $TACCHAIND keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
   GENESIS_ACC_ADDRESS=$($TACCHAIND keys show faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0 -a)
 fi
-$TACCHAIND genesis add-genesis-account $GENESIS_ACC_ADDRESS ${GENESIS_ACC_BALANCE}tac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+$TACCHAIND genesis add-genesis-account $GENESIS_ACC_ADDRESS ${GENESIS_ACC_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
 
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"

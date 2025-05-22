@@ -32,6 +32,10 @@ docker build . -t tacchaind:latest # build image
 docker run --rm -it tacchaind:latest tacchaind --help # example binary usage
 ```
 
+### TAC Address Converter
+
+Check our [tool](./contrib/tac-address-converter/) for converting between EVM <> TAC addresses deterministically
+
 ### Learn more
 
 - [Cosmos SDK docs](https://docs.cosmos.network)

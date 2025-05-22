@@ -6,7 +6,7 @@ CHAIN_ID=tacchain_239-1 HOMEDIR=./.test-localnet-params/node0 make localnet-star
 CHAIN_ID=tacchain_239-1 HOMEDIR=./.test-localnet-params/node1 make localnet-start > /dev/null 2>&1 &
 CHAIN_ID=tacchain_239-1 HOMEDIR=./.test-localnet-params/node2 make localnet-start > /dev/null 2>&1 &
 CHAIN_ID=tacchain_239-1 HOMEDIR=./.test-localnet-params/node3 make localnet-start > /dev/null 2>&1 &
-echo dasdsa
+
 # wait for network to start
 echo "Waiting for network to start"
 timeout=120

@@ -172,6 +172,33 @@ sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $H
 # set slashing
 sed -i.bak "s/\"slash_fraction_downtime\": \"0.010000000000000000\"/\"slash_fraction_downtime\": \"$SLASH_DOWNTIME_PENALTY\"/g" $HOMEDIR/config/genesis.json
 
+# add token metadata
+jq '
+  .app_state.bank.denom_metadata = [
+    {
+      "description": "The native staking token for tacchaind.",
+      "denom_units": [
+        {
+          "denom": "utac",
+          "exponent": 0,
+          "aliases": []
+        },
+        {
+          "denom": "tac",
+          "exponent": 18,
+          "aliases": []
+        }
+      ],
+      "base": "utac",
+      "display": "tac",
+      "name": "TAC Token",
+      "symbol": "TAC",
+      "uri": "",
+      "uri_hash": ""
+    }
+  ]
+' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
+
 # set ports
 sed -i.bak "s/26657/$RPC_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/26656/$P2P_PORT/g" $HOMEDIR/config/config.toml

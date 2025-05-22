@@ -104,7 +104,7 @@ jq '
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}${DENOM} --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}${DENOM} --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}${DENOM} --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR --gas-prices ${MIN_GAS_PRICE}${DENOM} --gas 200000
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 
 # edit configs
@@ -121,13 +121,10 @@ sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMED
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"$DENOM\"/g" $HOMEDIR/config/genesis.json
 
-# disable x/feemarket EIP1559
-sed -i.bak "s/\"no_base_fee\": false/\"no_base_fee\": true/g" $HOMEDIR/config/genesis.json
+# set x/feemarket min gas price
+sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
 
-# set min gas price
-sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}${DENOM}\"/g" $HOMEDIR/config/app.toml
-
-# set max gas which is required for evm txs
+# set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855

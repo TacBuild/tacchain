@@ -1,0 +1,9 @@
+# dependencies
+node_modules/
+cache/
+artifacts/
+.test-solidity/
+
+# ignore package-lock files (only use yarn.lock)
+package-lock.json
+!yarn.lock

@@ -105,3 +105,25 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
       - run: cd ./contrib/tac-address-converter && npm install && npm run test
+
+  test-ledger:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.6"
+          check-latest: true
+      - run: make install
+      - run: make test-ledger
+
+  test-solidity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.6"
+          check-latest: true
+      - run: make install
+      - run: make test-solidity

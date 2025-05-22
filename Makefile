@@ -92,10 +92,10 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e
+test: test-unit test-race test-e2e test-localnet-params test-solidity
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests/e2e")
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests")
 
 test-race:
 	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
@@ -111,6 +111,12 @@ test-benchmark:
 
 test-localnet-params:
 	./contrib/localnet/test-params.sh
+
+test-ledger:
+	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v ./tests/ledger/...
+
+test-solidity:
+	./tests/solidity/run-solidity-tests.sh
 
 ###############################################################################
 ###                                Networks                                 ###

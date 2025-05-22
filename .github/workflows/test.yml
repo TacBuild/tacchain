@@ -40,7 +40,7 @@ jobs:
           push: false
       - run: docker run --rm tacchaind:latest tacchaind --help
 
-  test-localnet:
+  test-localnet-params:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
@@ -53,6 +53,7 @@ jobs:
       - run: make test-localnet
         timeout-minutes: 2
 
+  # TODO move into test-evm.sh and include getBlockReceipts test
   test-evm-multicall:
     runs-on: ubuntu-latest
     needs: test-build

@@ -109,8 +109,8 @@ test-cover:
 test-benchmark:
 	@go test -mod=readonly -bench=. ./...
 
-test-localnet:
-	./contrib/localnet/test.sh
+test-localnet-params:
+	./contrib/localnet/test-params.sh
 
 ###############################################################################
 ###                                Networks                                 ###

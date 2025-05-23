@@ -49,7 +49,7 @@ $TACCHAIND config set client keyring-backend $KEYRING_BACKEND
 $TACCHAIND config set client output json
 
 # init genesis file
-$TACCHAIND init $NODE_MONIKER --chain-id $CHAIN_ID --default-denom utac --home $HOMEDIR
+$TACCHAIND init "$NODE_MONIKER" --chain-id $CHAIN_ID --default-denom utac --home $HOMEDIR
 
 # predeployed contracts (all precompiled contracts need to be defined before genesis accounts to avoid issues with auth account_numbers)
 # safe singleton factory (https://github.com/safe-global/safe-singleton-factory)

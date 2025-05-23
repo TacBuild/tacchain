@@ -17,7 +17,7 @@
 | EVM JSON RPC                | <https://spb.rpc.tac.build>                                                                                           |
 | Faucet                      | <https://spb.faucet.tac.build/>                                                                                           |
 | EVM Explorer                | <https://spb.explorer.tac.build/>                                                                                           |
-| Cosmos Explorer             | <https://bd-explorer.tac-spb.ankr.com/>                                                                                           |
+| Cosmos Explorer             | <https://pp-explorer.tac-spb.tac.build/>                                                                                           |
 | Timeout commit (block time) | 2s                                                                                            |
 | Peer 1                      | 9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130                                                                                           |
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |

@@ -2,7 +2,7 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_2391-1 | `testnet` | **Active** | `v0.0.9`         | Saint Petersburg Testnet |
+| tacchain_2391-1 | `testnet` | **Active** | `v0.0.10`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
 # Saint Petersburg Testnet (`tacchain_2391-1`)
@@ -91,10 +91,19 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 #### 6. Upgrade binary to v0.0.9 and restart
 
-At block height 872601 your node should halt and throw error `"UPGRADE \"v0.0.9\" NEEDED at height: 872601: add eth_getBlockReceipts, disable x/feemarket, remove wasmd`. Now you need to stop your node, upgrade binary and restart.
+At block height 872601 your node should halt and throw error `"UPGRADE \"v0.0.9\" NEEDED at height: 872601: add eth_getBlockReceipts, disable x/feemarket, remove wasmd"`. Now you need to stop your node, upgrade binary and restart.
 
 ``` shell
 git checkout v0.0.9
+tacchaind start --chain-id tacchain_2391-1 --home .testnet
+```
+
+#### 7. Upgrade binary to v0.0.10 and restart
+
+At block height 939310 your node should halt and throw error `"UPGRADE \"v0.0.10\" NEEDED at height: 939310: enable x/feemarket tx fee checker"`. Now you need to stop your node, upgrade binary and restart.
+
+``` shell
+git checkout v0.0.10
 tacchaind start --chain-id tacchain_2391-1 --home .testnet
 ```
 

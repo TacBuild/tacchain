@@ -6,6 +6,8 @@ HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
 CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
+VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-TAC}
+VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
 INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000000}
 INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000000}
 BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
@@ -223,5 +225,5 @@ sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

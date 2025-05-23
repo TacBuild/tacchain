@@ -120,7 +120,7 @@ sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/confi
 # set x/feemarket min gas price
 sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
 
-# set max gas which is required for evm txs
+# set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855
@@ -225,5 +225,5 @@ sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 # setup and add validator to genesis
 $TACCHAIND keys add validator --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --gas-prices ${MIN_GAS_PRICE}utac --gas 200000 --home $HOMEDIR
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

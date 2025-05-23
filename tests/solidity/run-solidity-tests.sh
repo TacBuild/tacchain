@@ -1,17 +1,11 @@
-#!/bin/bash
-export GOPATH="$HOME"/go
-export PATH="$PATH":"$GOPATH"/bin
+#!/bin/bash -e
+
+# set current directory to the script directory
+cd "$(dirname "$0")" || exit
+
 
 # remove existing data
-rm -rf "$HOME"/.tmp-evmd-solidity-tests
-
-# used to exit on first error (any non-zero exit code)
-set -e
-
-# build evmd binary
-make install
-
-cd tests/solidity || exit
+rm -rf .test-solidity
 
 if command -v yarn &>/dev/null; then
 	yarn install

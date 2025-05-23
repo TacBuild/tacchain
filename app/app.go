@@ -146,6 +146,7 @@ import (
 	evmcorevm "github.com/ethereum/go-ethereum/core/vm"
 
 	// NOTE: override ICS20 keeper to support IBC transfers of ERC20 tokens
+	evmcosmosante "github.com/cosmos/evm/ante/evm"
 	evmcosmostypes "github.com/cosmos/evm/types"
 	evmibctransfer "github.com/cosmos/evm/x/ibc/transfer"
 	evmibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
@@ -962,8 +963,7 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 			FeegrantKeeper:         app.FeeGrantKeeper,
 			SigGasConsumer:         evmante.SigVerificationGasConsumer,
 			ExtensionOptionChecker: evmcosmostypes.HasDynamicFeeExtensionOption,
-			// evm tx fee checker must be passed if x/feemarket is enabled
-			// TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
+			TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
 		},
 		AccountKeeper:   app.AccountKeeper,
 		IBCKeeper:       app.IBCKeeper,

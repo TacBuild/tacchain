@@ -115,11 +115,8 @@ sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMED
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 
-# disable x/feemarket EIP1559
-sed -i.bak "s/\"no_base_fee\": false/\"no_base_fee\": true/g" $HOMEDIR/config/genesis.json
-
-# set min gas price
-sed -i.bak "s/minimum-gas-prices = \"0utac\"/minimum-gas-prices = \"${MIN_GAS_PRICE}utac\"/g" $HOMEDIR/config/app.toml
+# set x/feemarket min gas price
+sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
 
 # set max gas which is required for evm txs
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json

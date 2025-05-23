@@ -2,7 +2,7 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_2391-1 | `testnet` | **Active** | `v0.0.9`         | Saint Petersburg Testnet |
+| tacchain_2391-1 | `testnet` | **Active** | `v0.0.10`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
 # Saint Petersburg Testnet (`tacchain_2391-1`)
@@ -18,7 +18,9 @@
 | Faucet                      | <https://spb.faucet.tac.build/>                                                                                           |
 | EVM Explorer                | <https://spb.explorer.tac.build/>                                                                                           |
 | Cosmos Explorer             | <https://pp-explorer.tac-spb.tac.build/>                                                                                           |
+| Staking UI                  | <https://staking.spb.tac.build/>                                                           |
 | Timeout commit (block time) | 2s                                                                                            |
+| Minimum gas price           | 25000000000utac                                                                                            |
 | Peer 1                      | 9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130                                                                                           |
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
 | Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
@@ -26,7 +28,6 @@
 | Snapshots                   |                                                                                               |
 | - full                      | TBD                                                                                           |
 | - archive                   | TBD                                                                                           |
-| Staking UI                  | https://public1.rollup.asphere.xyz/                                                           |
 
 ### Hardware Requirements
 
@@ -91,10 +92,19 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 #### 6. Upgrade binary to v0.0.9 and restart
 
-At block height 872601 your node should halt and throw error `"UPGRADE \"v0.0.9\" NEEDED at height: 872601: add eth_getBlockReceipts, disable x/feemarket, remove wasmd`. Now you need to stop your node, upgrade binary and restart.
+At block height 872601 your node should halt and throw error `"UPGRADE \"v0.0.9\" NEEDED at height: 872601: add eth_getBlockReceipts, disable x/feemarket, remove wasmd"`. Now you need to stop your node, upgrade binary and restart.
 
 ``` shell
 git checkout v0.0.9
+tacchaind start --chain-id tacchain_2391-1 --home .testnet
+```
+
+#### 7. Upgrade binary to v0.0.10 and restart
+
+At block height 939826 your node should halt and throw error `"UPGRADE \"v0.0.10\" NEEDED at height: 939826: enable x/feemarket tx fee checker"`. Now you need to stop your node, upgrade binary and restart.
+
+``` shell
+git checkout v0.0.10
 tacchaind start --chain-id tacchain_2391-1 --home .testnet
 ```
 
@@ -126,7 +136,7 @@ In this example our node moniker will be `testnode`, don't forget to name your o
 tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 ```
 
-#### 3. Modify your [config.toml](.testnet/config/config.toml) and [app.toml](.testnet/config/app.toml)
+#### 3. Modify your [config.toml](.testnet/config/config.toml)
 
 - config.toml:
 ``` toml
@@ -134,13 +144,6 @@ tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 timeout_commit = "2s"
 ..
 persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
-..
-```
-
-- app.toml:
-``` toml
-..
-minimum-gas-prices = "4000000000000utac"
 ..
 ```
 
@@ -224,7 +227,7 @@ echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amoun
 2. Broadcast tx
 
 ``` sh
-tacchaind --home .testnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 200000 --gas-prices 4000000000000utac -y
+tacchaind --home .testnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 400000 --gas-prices 100000000000utac -y
 ```
 
 #### 4. Delegate more tokens (optional)
@@ -232,7 +235,7 @@ tacchaind --home .testnet tx staking create-validator validatortx.json --from va
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-tacchaind --home .testnet tx staking delegate $(tacchaind --home .testnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 200000 --gas-prices 4000000000000utac -y
+tacchaind --home .testnet tx staking delegate $(tacchaind --home .testnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 400000 --gas-prices 100000000000utac -y
 ```
 
 ### Tac Saint Petersburg Testnet Validator Sentry Node Setup

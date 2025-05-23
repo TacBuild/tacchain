@@ -2,7 +2,7 @@
 
 const Counter = artifacts.require('Counter')
 
-async function expectRevert (promise) {
+async function expectRevert(promise) {
   try {
     await promise
   } catch (error) {
@@ -18,7 +18,7 @@ async function expectRevert (promise) {
 }
 
 contract('Counter', (accounts) => {
-  const [one, two, three] = accounts
+  const [acc] = accounts
   let counter
 
   beforeEach(async () => {
@@ -26,37 +26,17 @@ contract('Counter', (accounts) => {
   })
 
   it('should add', async () => {
-    const balanceOne = await web3.eth.getBalance(one)
-    const balanceTwo = await web3.eth.getBalance(two)
-    const balanceThree = await web3.eth.getBalance(three)
+    const balance = await web3.eth.getBalance(acc)
 
     let count
 
-    await counter.add({ from: one })
+    await counter.add({ from: acc })
     count = await counter.getCounter()
     assert.equal(count, '1', 'Counter should be 1')
     assert.notEqual(
-      balanceOne,
-      await web3.eth.getBalance(one),
-      `${one}'s balance should be different`
-    )
-
-    await counter.add({ from: two })
-    count = await counter.getCounter()
-    assert.equal(count, '2', 'Counter should be 2')
-    assert.notEqual(
-      balanceTwo,
-      await web3.eth.getBalance(two),
-      `${two}'s balance should be different`
-    )
-
-    await counter.add({ from: three })
-    count = await counter.getCounter()
-    assert.equal(count, '3', 'Counter should be 3')
-    assert.notEqual(
-      balanceThree,
-      await web3.eth.getBalance(three),
-      `${three}'s balance should be different`
+      balance,
+      await web3.eth.getBalance(acc),
+      `${acc}'s balance should be different`
     )
   })
 

@@ -110,7 +110,7 @@ test-benchmark:
 	@go test -mod=readonly -bench=. ./...
 
 test-localnet-params:
-	./contrib/localnet/test-params.sh
+	./tests/localnet/test-params.sh
 
 test-ledger:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v ./tests/ledger/...

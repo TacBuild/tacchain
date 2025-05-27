@@ -200,6 +200,8 @@ Assuming all is working you can now proceed from "Join as a validator”
 
 ### Join Tac Saint Petersburg Testnet as a validator
 
+NOTE: The provided examples use `--keyring-backend test`. This is not recommended for production validator nodes. Please use `os` or `file` for encryption features and more advanced security.
+
 #### 1. Make sure you followed one of our join guides above and have a fully synced running node before you proceed
 
 #### 2. Fund account and import key
@@ -523,6 +525,8 @@ tacchaind start --chain-id tacchain_2390-1 --home .testnet
 ```
 
 ## Join as a validator
+
+NOTE: The provided examples use `--keyring-backend test`. This is not recommended for production validator nodes. Please use `os` or `file` for encryption features and more advanced security.
 
 ### 1. Make sure you followed [Join Tac Turin Testnet](#join-tac-turin-testnet) guide and you have a fully synced node to the latest block.
 

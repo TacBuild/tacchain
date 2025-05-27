@@ -133,7 +133,7 @@ sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$
 # set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
 
-# set block time to 3s
+# set block time
 sed -i.bak "s/timeout_commit = \"5s\"/timeout_commit = \"${BLOCK_TIME_SECONDS}s\"/g" $HOMEDIR/config/config.toml
 
 # update blocks per year to match our block time

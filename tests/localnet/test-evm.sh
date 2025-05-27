@@ -1,5 +1,10 @@
 #!/bin/bash -e
 
+if ! command -v cast >/dev/null 2>&1; then
+  echo "Error: Foundry (cast) is not installed. Please install it from https://book.getfoundry.sh/getting-started/installation"
+  exit 1
+fi
+
 export HOMEDIR=.test-localnet-evm
 
 # start new network

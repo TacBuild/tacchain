@@ -1091,18 +1091,7 @@ func (app *TacChainApp) DefaultGenesis() map[string]json.RawMessage {
 	evmGenState := evmd.NewEVMGenesisState()
 	genesis[evmvmtypes.ModuleName] = app.appCodec.MustMarshalJSON(evmGenState)
 
-	// NOTE: for the example chain implementation we are also adding a default token pair,
-	// which is the base denomination of the chain (i.e. the WEVMOS contract)
-	utacERC20 := "0xD4949664cD82660AaE99bEdc034a0deA8A0bd517"
 	erc20GenState := evmerc20types.DefaultGenesisState()
-	erc20GenState.TokenPairs = []evmerc20types.TokenPair{
-		{
-			Erc20Address:  utacERC20,
-			Denom:         BaseDenom,
-			Enabled:       true,
-			ContractOwner: evmerc20types.OWNER_MODULE,
-		}}
-	erc20GenState.Params.NativePrecompiles = append(erc20GenState.Params.NativePrecompiles, utacERC20)
 	genesis[evmerc20types.ModuleName] = app.appCodec.MustMarshalJSON(erc20GenState)
 
 	return genesis

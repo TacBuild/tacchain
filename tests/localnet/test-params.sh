@@ -61,7 +61,7 @@ else
   echo "Verified genesis account balance successfully"
 fi
 
-# verify validators emergency balances and self delegations
+# verify validators emergency balances, self delegations and description
 echo "Verifying validators emergency balances and self delegations"
 expected_validator_emergency_balance="99995000000000000000"
 expected_validator_self_delegation="4999900000000000000000000"
@@ -90,6 +90,23 @@ for i in $(seq 0 3); do
     exit 1
   else
     echo "Verified validator $i self delegation successfully"
+  fi
+
+  echo "Verifying validator $i description"
+  expected_description="{
+  \"moniker\": \"TAC Validator $((i + 1))\",
+  \"identity\": \"TAC\",
+  \"website\": \"https://tac.build/\"
+}"
+  description=$(tacchaind q staking validator $valoper_addr --node http://localhost:45111 --output json | jq -r '.validator .description')
+  if [[ "$description" != "$expected_description" ]]; then
+    echo "Failed to verify validator $i description"
+    echo "Expected: $expected_description"
+    echo "Got:      $description"
+    killall tacchaind
+    exit 1
+  else
+    echo "Verified validator $i description successfully"
   fi
 done
 

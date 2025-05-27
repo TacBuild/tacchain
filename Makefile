@@ -92,7 +92,7 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e test-localnet-params test-solidity
+test: test-unit test-race test-e2e test-localnet-params test-ledger test-solidity
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests")

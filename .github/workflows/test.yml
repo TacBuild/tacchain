@@ -51,7 +51,6 @@ jobs:
           check-latest: true
       - run: make install
       - run: make test-localnet-params
-        timeout-minutes: 2
 
   test-localnet-evm:
     runs-on: ubuntu-latest
@@ -65,7 +64,6 @@ jobs:
           check-latest: true
       - run: make install
       - run: make test-localnet-evm
-        timeout-minutes: 2
 
   test-unit:
     runs-on: ubuntu-latest

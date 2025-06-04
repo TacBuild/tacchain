@@ -7,6 +7,7 @@ import (
 
 	"github.com/Asphere-xyz/tacchain/app/upgrades"
 	v0010 "github.com/Asphere-xyz/tacchain/app/upgrades/v0.0.10"
+	v0011 "github.com/Asphere-xyz/tacchain/app/upgrades/v0.0.11"
 	v009 "github.com/Asphere-xyz/tacchain/app/upgrades/v0.0.9"
 )
 
@@ -14,6 +15,7 @@ import (
 var Upgrades = []upgrades.Upgrade{
 	v009.Upgrade,
 	v0010.Upgrade,
+	v0011.Upgrade,
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

@@ -2,7 +2,9 @@ package main
 
 import (
 	"os"
+	"time"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -112,7 +114,16 @@ func NewRootCmd() *cobra.Command {
 			}
 
 			customAppTemplate, customAppConfig := initAppConfig()
-			customCMTConfig := initCometBFTConfig()
+
+			// Enforce faster block times
+			// 2 seconds + 1 second tendermint = 3 second blocks
+			timeoutCommit := 2 * time.Second
+			customCMTConfig := initCometBFTConfig(timeoutCommit)
+
+			err = os.Setenv("TACCHAIND_CONSENSUS_TIMEOUT_COMMIT", cast.ToString(timeoutCommit))
+			if err != nil {
+				return err
+			}
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},
@@ -134,8 +145,10 @@ func NewRootCmd() *cobra.Command {
 
 // initCometBFTConfig helps to override default CometBFT Config values.
 // return cmtcfg.DefaultConfig if no custom configuration is required for the application.
-func initCometBFTConfig() *cmtcfg.Config {
+func initCometBFTConfig(timeoutCommit time.Duration) *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
+
+	cfg.Consensus.TimeoutCommit = timeoutCommit
 
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100

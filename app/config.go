@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"time"
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -24,6 +25,9 @@ const (
 	NodeDir        = ".tacchaind"
 	AppName        = "TacChainApp"
 	DefaultChainID = "tacchain_2391-1"
+
+	// Enfore timeout commit: 1 second + 1 second cometbft = 2 second blocks
+	TimeoutCommit = 1 * time.Second
 )
 
 var (

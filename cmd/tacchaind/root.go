@@ -4,7 +4,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	"cosmossdk.io/log"
@@ -116,14 +115,7 @@ func NewRootCmd() *cobra.Command {
 			customAppTemplate, customAppConfig := initAppConfig()
 
 			// Enforce faster block times
-			// 2 seconds + 1 second tendermint = 3 second blocks
-			timeoutCommit := 2 * time.Second
-			customCMTConfig := initCometBFTConfig(timeoutCommit)
-
-			err = os.Setenv("TACCHAIND_CONSENSUS_TIMEOUT_COMMIT", cast.ToString(timeoutCommit))
-			if err != nil {
-				return err
-			}
+			customCMTConfig := initCometBFTConfig(app.TimeoutCommit)
 
 			return server.InterceptConfigsPreRunHandler(cmd, customAppTemplate, customAppConfig, customCMTConfig)
 		},

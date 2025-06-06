@@ -26,7 +26,7 @@ const (
 	AppName        = "TacChainApp"
 	DefaultChainID = "tacchain_2391-1"
 
-	// Enfore timeout commit: 1 second + 1 second cometbft = 2 second blocks
+	// Custom timeout commit to ensure faster block times
 	TimeoutCommit = 1 * time.Second
 )
 

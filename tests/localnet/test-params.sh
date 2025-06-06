@@ -283,7 +283,7 @@ fi
 
 # verify timeout commit
 echo "Verifying timeout_commit"
-expected_timeout_commit="2s"
+expected_timeout_commit="1s"
 timeout_commit=$(grep '^timeout_commit' $HOMEDIR/node0/config/config.toml | cut -d '=' -f2 | tr -d ' "')
 if [[ "$timeout_commit" != "$expected_timeout_commit" ]]; then
   echo "Failed to verify timeout_commit"

@@ -2,14 +2,14 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_2391-1 | `testnet` | **Active** | `v0.0.11`         | Saint Petersburg Testnet |
+| tacchain_2391-1 | `testnet` | **Active** | `v0.0.12`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
 # Saint Petersburg Testnet (`tacchain_2391-1`)
 
 | Chain ID                    | `tacchain_2391-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v0.0.11`                                                                                      |
+| Tacchaind version           | `v0.0.12`                                                                                      |
 | RPC                         | <https://spb.tendermint.rpc.tac.build>                                                                                           |
 | Genesis                     | <https://spb.tendermint-rest.rpc.tac.build/genesis>                                                                                           |
 | gRPC                        | <https://spb-grpc.rpc.tac.build>                                                                                           |
@@ -19,7 +19,8 @@
 | EVM Explorer                | <https://spb.explorer.tac.build/>                                                                                           |
 | Cosmos Explorer             | <https://pp-explorer.tac-spb.tac.build/>                                                                                           |
 | Staking UI                  | <https://staking.spb.tac.build/>                                                           |
-| Timeout commit (block time) | 2s                                                                                            |
+| Timeout commit | 1s                                                                                            |
+| Block time | 2s                                                                                            |
 | Minimum gas price           | 25000000000utac                                                                                            |
 | Peer 1                      | 9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130                                                                                           |
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
@@ -37,7 +38,7 @@
 
 ### Join Tac Saint Petersburg Testnet Manually
 
-This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
+This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
 
 #### Prerequisites
 
@@ -64,8 +65,6 @@ tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 
 - config.toml:
 ``` toml
-..
-timeout_commit = "2s"
 ..
 persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..
@@ -122,7 +121,7 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 ### Join Tac Saint Petersburg Testnet Using Official Snapshots (TBD)
 
-This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `timeout_commit`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
+This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
 
 #### Prerequisites
 
@@ -152,8 +151,6 @@ tacchaind init testnode --chain-id tacchain_2391-1 --home .testnet
 
 - config.toml:
 ``` toml
-..
-timeout_commit = "2s"
 ..
 persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..
@@ -278,8 +275,6 @@ To setup your sentry node architecture you can follow the instructions below:
 `private_peer_ids` field is used to specify peers that will not be gossiped to the outside world, in our case the validator node we want it to represent. Example: `private_peer_ids = "3e16af0cead27979e1fc3dac57d03df3c7a77acc@3.87.179.235:26656"`
 
 ``` toml
-..
-timeout_commit = "2s"
 ..
 persistent_peers = "9c32b3b959a2427bd2aa064f8c9a8efebdad4c23@206.217.210.164:45130,04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140,5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110,ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120"
 ..

@@ -332,7 +332,7 @@ expected_gov_params='{
   "quorum": "0.334000000000000000",
   "threshold": "0.500000000000000000",
   "veto_threshold": "0.334000000000000000",
-  "min_initial_deposit_ratio": "0.000000000000000000",
+  "min_initial_deposit_ratio": "1",
   "proposal_cancel_ratio": "0.500000000000000000",
   "expedited_voting_period": "6h0m0s",
   "expedited_threshold": "0.667000000000000000",

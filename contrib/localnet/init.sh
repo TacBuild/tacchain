@@ -14,8 +14,9 @@ BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 MAX_GAS=${MAX_GAS:-90000000}
 MIN_GAS_PRICE=${MIN_GAS_PRICE:-25000000000}
 GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-900}
-MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-10000000000000000}
-MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-50000000000000000}
+GOV_MIN_DEPOSIT=${GOV_MIN_DEPOSIT:-10000000000000000}
+GOV_MIN_EXPEDITED_DEPOSIT=${GOV_MIN_EXPEDITED_DEPOSIT:-50000000000000000}
+GOV_MIN_INITIAL_DEPOSIT_RATIO=${GOV_MIN_INITIAL_DEPOSIT_RATIO:-1}
 INFLATION_MAX=${INFLATION_MAX:-0.05}
 INFLATION_MIN=${INFLATION_MIN:-0.01}
 GOAL_BONDED=${GOAL_BONDED:-0.6}
@@ -164,22 +165,25 @@ sed -i.bak "s/\"voting_period\": \"172800s\"/\"voting_period\": \"${GOV_TIME_SEC
 EXPEDITED_TIME_SECONDS=$((GOV_TIME_SECONDS / 2))
 sed -i.bak "s/\"expedited_voting_period\": \"86400s\"/\"expedited_voting_period\": \"${EXPEDITED_TIME_SECONDS}s\"/g" $HOMEDIR/config/genesis.json
 
+# set gov min initial deposit ratio
+sed -i.bak "s/\"min_initial_deposit_ratio\": \"0.000000000000000000\"/\"min_initial_deposit_ratio\": \"$GOV_MIN_INITIAL_DEPOSIT_RATIO\"/g" $HOMEDIR/config/genesis.json
+
 # set min gov deposit
-jq --arg MIN_GOV_DEPOSIT "$MIN_GOV_DEPOSIT" '
+jq --arg GOV_MIN_DEPOSIT "$GOV_MIN_DEPOSIT" '
   .app_state.gov.params.min_deposit = [
     {
       "denom": "utac",
-      "amount": $MIN_GOV_DEPOSIT
+      "amount": $GOV_MIN_DEPOSIT
     }
   ]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
 
 # set min expedited gov deposit
-jq --arg MIN_EXPEDITED_GOV_DEPOSIT "$MIN_EXPEDITED_GOV_DEPOSIT" '
+jq --arg GOV_MIN_EXPEDITED_DEPOSIT "$GOV_MIN_EXPEDITED_DEPOSIT" '
   .app_state.gov.params.expedited_min_deposit = [
     {
       "denom": "utac",
-      "amount": $MIN_EXPEDITED_GOV_DEPOSIT
+      "amount": $GOV_MIN_EXPEDITED_DEPOSIT
     }
   ]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json

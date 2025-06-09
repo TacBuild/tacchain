@@ -21,6 +21,7 @@ INFLATION_MIN=${INFLATION_MIN:-0.01}
 GOAL_BONDED=${GOAL_BONDED:-0.6}
 SLASH_DOWNTIME_PENALTY=${SLASH_DOWNTIME_PENALTY:-0.001}
 SLASH_SIGNED_BLOCKS_WINDOW=${SLASH_SIGNED_BLOCKS_WINDOW:-21600}
+MAX_VALIDATORS=${MAX_VALIDATORS:-14}
 
 # ports
 RPC_PORT=${RPC_PORT:-26657}
@@ -219,6 +220,9 @@ jq '
     }
   ]
 ' $HOMEDIR/config/genesis.json > $HOMEDIR/config/genesis_patched.json && mv $HOMEDIR/config/genesis_patched.json $HOMEDIR/config/genesis.json
+
+# set max validators
+sed -i.bak "s/\"max_validators\": 100/\"max_validators\": $MAX_VALIDATORS/g" $HOMEDIR/config/genesis.json
 
 # set ports
 sed -i.bak "s/26657/$RPC_PORT/g" $HOMEDIR/config/config.toml

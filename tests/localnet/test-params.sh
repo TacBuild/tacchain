@@ -423,5 +423,21 @@ else
   echo "Verified x/bank denom metadata successfully"
 fi
 
+# verify x/staking max validators
+echo "Verifying x/staking max validators"
+expected_max_validators="14"
+max_validators=$(tacchaind q staking params --node http://localhost:45111 --output json | jq -r '.params .max_validators')
+if [[ "$max_validators" != "$expected_max_validators" ]]; then
+  echo "Failed to verify x/staking max validators"
+  echo "Expected: $expected_max_validators"
+  echo "Got:      $max_validators"
+  
+  killall tacchaind
+  exit 1
+else
+  echo "Verified x/staking max validators successfully"
+fi
+
+
 killall tacchaind
 echo "All tests passed successfully"

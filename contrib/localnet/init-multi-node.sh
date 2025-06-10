@@ -5,29 +5,29 @@ export TACCHAIND=${TACCHAIND:-$(which tacchaind)}
 export HOMEDIR=${HOMEDIR:-./.testnet}
 export CHAIN_ID=${CHAIN_ID:-tacchain_239-1}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
-export VALIDATORS_COUNT=${VALIDATORS_COUNT:-4}
+export VALIDATORS_COUNT=4
 export VALIDATOR_NAME=${VALIDATOR_NAME:-TAC Validator}
 export VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-TAC}
 export VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
+export VALIDATOR_1_MNEMONIC=${VALIDATOR_1_MNEMONIC:-"island mail dice alien project surround orchard ball twist worth innocent arrange assume dragon rotate enough flee rapid rookie swim addict ice destroy run"} # tac15lvhklny0khnwy7hgrxsxut6t6ku2cgknw79fr
+export VALIDATOR_2_MNEMONIC=${VALIDATOR_2_MNEMONIC:-"margin funny awkward answer squirrel inner venue spell expose close tank salute series neck oval real bunker can text chronic capital teach arena extend"} # tac16p9nqhd348aaungp5p5vjuwedaw03pvywdzwdk
+export VALIDATOR_3_MNEMONIC=${VALIDATOR_3_MNEMONIC:-"that away spike absorb aspect loan shuffle purchase number knock cover night library shock mask cheese upset float churn wall fox veteran actress motor"} # tac1qp4h82jgqqa5ezgzck8z75dn8q0t0nv45pzh6v
+export VALIDATOR_4_MNEMONIC=${VALIDATOR_4_MNEMONIC:-"floor wrong idle cloth nose material forward urge grape always into buyer atom excuse odor decade crouch purchase shadow energy voyage pact skate pigeon"} # tac1d30q62hl0wn6n5m39sd0yqswq6jr3hntt2cm4n
 export GENESIS_ACC_ADDRESS=${GENESIS_ACC_ADDRESS:-}
 export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 export MAX_GAS=${MAX_GAS:-90000000}
 export MIN_GAS_PRICE=${MIN_GAS_PRICE:-25000000000}
 export GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-43200}
-export MIN_GOV_DEPOSIT=${MIN_GOV_DEPOSIT:-10000000000000000}
-export MIN_EXPEDITED_GOV_DEPOSIT=${MIN_EXPEDITED_GOV_DEPOSIT:-50000000000000000}
+export GOV_MIN_DEPOSIT=${GOV_MIN_DEPOSIT:-10000000000000000}
+export GOV_MIN_EXPEDITED_DEPOSIT=${GOV_MIN_EXPEDITED_DEPOSIT:-50000000000000000}
+export GOV_MIN_INITIAL_DEPOSIT_RATIO=${GOV_MIN_INITIAL_DEPOSIT_RATIO:-1}
 export INFLATION_MAX=${INFLATION_MAX:-0.05}
 export INFLATION_MIN=${INFLATION_MIN:-0}
 export GOAL_BONDED=${GOAL_BONDED:-0.6}
 export SLASH_DOWNTIME_PENALTY=${SLASH_DOWNTIME_PENALTY:-0.001}
 export SLASH_SIGNED_BLOCKS_WINDOW=${SLASH_SIGNED_BLOCKS_WINDOW:-21600}
-
-# validate validators count is at least 2
-if [[ "$VALIDATORS_COUNT" -le 1 ]]; then
-  echo "Error: VALIDATORS_COUNT must at least 2. For single node setup, use init.sh (make localnet-init)."
-  exit 1
-fi
+export MAX_VALIDATORS=${MAX_VALIDATORS:-14}
 
 # prompt user for confirmation before cleanup
 read -p "This will remove all existing data in $HOMEDIR. Do you want to proceed? (y/n): " confirm
@@ -74,6 +74,10 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   
   export INITIAL_BALANCE=$VALIDATOR_BALANCE
   export INITIAL_STAKE=$VALIDATOR_SELF_DELEGATION
+
+  # dynamically get mnemonic env var for each validator
+  mnemonic_var="VALIDATOR_$((i+1))_MNEMONIC"
+  export VALIDATOR_MNEMONIC="${!mnemonic_var}"
 
   # call init.sh script to initialize the node
   echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh

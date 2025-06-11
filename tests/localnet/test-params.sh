@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
-export GENESIS_ACC_ADDRESS=tac1zg69v7ys40x77y352eufp27daufrg4nckcjrx2
+export GENESIS_ACC_1_ADDRESS=tac1zg69v7ys40x77y352eufp27daufrg4nckcjrx2
+export GENESIS_ACC_2_ADDRESS=tac167a5p268zlj2tgmlrmhkcqyex07stu5k6s23lq
 export HOMEDIR=./.test-localnet-params
 export CHAIN_ID=tacchain_239-1
 export VALIDATOR_1_MNEMONIC="spray retire festival globe nuclear festival install lunch deal bench unlock car solution vague witness weasel ankle rebel slush allow wing seek tobacco carbon" # tac1tg73cpsxxca3m2t6w09gezvcg37zrqqxglwsgv
@@ -72,19 +73,34 @@ done
 # verify token distribution
 echo "Verifying token distribution"
 
-# verify genesis account balance
-echo "Verifying genesis account balance"
-expected_genesis_acc_balance="9980000000000000000000000000"
-genesis_acc_balance=$(tacchaind q bank balances $GENESIS_ACC_ADDRESS --node http://localhost:45111 --output json | jq -r '.balances[0].amount')
-if [[ "$genesis_acc_balance" != "$expected_genesis_acc_balance" ]]; then
-  echo "Failed to verify genesis account balance"
-  echo "Expected: $expected_genesis_acc_balance"
-  echo "Got:      $genesis_acc_balance"
+# verify genesis account 1 balance
+echo "Verifying genesis account 1 balance"
+expected_genesis_acc_1_balance="9979990000000000000000000000"
+genesis_acc_1_balance=$(tacchaind q bank balances $GENESIS_ACC_1_ADDRESS --node http://localhost:45111 --output json | jq -r '.balances[0].amount')
+if [[ "$genesis_acc_1_balance" != "$expected_genesis_acc_1_balance" ]]; then
+  echo "Failed to verify genesis account 1 balance"
+  echo "Expected: $expected_genesis_acc_1_balance"
+  echo "Got:      $genesis_acc_1_balance"
   
   killall tacchaind
   exit 1
 else
-  echo "Verified genesis account balance successfully"
+  echo "Verified genesis account 1 balance successfully"
+fi
+
+# verify genesis account 2 balance
+echo "Verifying genesis account 2 balance"
+expected_genesis_acc_2_balance="10000000000000000000000"
+genesis_acc_2_balance=$(tacchaind q bank balances $GENESIS_ACC_2_ADDRESS --node http://localhost:45111 --output json | jq -r '.balances[0].amount')
+if [[ "$genesis_acc_2_balance" != "$expected_genesis_acc_2_balance" ]]; then
+  echo "Failed to verify genesis account 2 balance"
+  echo "Expected: $expected_genesis_acc_2_balance"
+  echo "Got:      $genesis_acc_2_balance"
+  
+  killall tacchaind
+  exit 1
+else
+  echo "Verified genesis account 2 balance successfully"
 fi
 
 # verify validators emergency balances, self delegations and description
@@ -121,7 +137,7 @@ for i in $(seq 0 3); do
   echo "Verifying validator $i description"
   expected_description="{
   \"moniker\": \"TAC Validator $((i + 1))\",
-  \"identity\": \"TAC\",
+  \"identity\": \"4DD1A5E1D03FA12D\",
   \"website\": \"https://tac.build/\"
 }"
   description=$(tacchaind q staking validator $valoper_addr --node http://localhost:45111 --output json | jq -r '.validator .description')

@@ -7,13 +7,14 @@ export CHAIN_ID=${CHAIN_ID:-tacchain_239-1}
 export KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 export VALIDATORS_COUNT=4
 export VALIDATOR_NAME=${VALIDATOR_NAME:-TAC Validator}
-export VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-TAC}
+export VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-4DD1A5E1D03FA12D}
 export VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
 export VALIDATOR_1_MNEMONIC=${VALIDATOR_1_MNEMONIC:-"island mail dice alien project surround orchard ball twist worth innocent arrange assume dragon rotate enough flee rapid rookie swim addict ice destroy run"} # tac15lvhklny0khnwy7hgrxsxut6t6ku2cgknw79fr
 export VALIDATOR_2_MNEMONIC=${VALIDATOR_2_MNEMONIC:-"margin funny awkward answer squirrel inner venue spell expose close tank salute series neck oval real bunker can text chronic capital teach arena extend"} # tac16p9nqhd348aaungp5p5vjuwedaw03pvywdzwdk
 export VALIDATOR_3_MNEMONIC=${VALIDATOR_3_MNEMONIC:-"that away spike absorb aspect loan shuffle purchase number knock cover night library shock mask cheese upset float churn wall fox veteran actress motor"} # tac1qp4h82jgqqa5ezgzck8z75dn8q0t0nv45pzh6v
 export VALIDATOR_4_MNEMONIC=${VALIDATOR_4_MNEMONIC:-"floor wrong idle cloth nose material forward urge grape always into buyer atom excuse odor decade crouch purchase shadow energy voyage pact skate pigeon"} # tac1d30q62hl0wn6n5m39sd0yqswq6jr3hntt2cm4n
-export GENESIS_ACC_ADDRESS=${GENESIS_ACC_ADDRESS:-}
+export GENESIS_ACC_1_ADDRESS=${GENESIS_ACC_1_ADDRESS:-}
+export GENESIS_ACC_2_ADDRESS=${GENESIS_ACC_2_ADDRESS:-}
 export INITIAL_SUPPLY=${INITIAL_SUPPLY:-10000000000000000000000000000}
 export BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 export MAX_GAS=${MAX_GAS:-90000000}
@@ -43,14 +44,22 @@ rm -rf $HOMEDIR
 mkdir -p $HOMEDIR/gentxs
 
 # token distribution
-# allocating 0.2% of initial supply split between all validators
+# - genesis acc 1: initial supply - 0.2% (validators) - 10k (genesis acc 2)
+# - genesis acc 2: 10k TAC
+# - validators: 0.2% of initial supply split between 4 validators, self-delegation - 0.2% / validators_count - 100TAC for emergency
+
+# allocating 0.2% of initial supply split between 4 validators
 VALIDATOR_BALANCE=$(echo "$INITIAL_SUPPLY * 0.002 / $VALIDATORS_COUNT" | bc)
 # keeping 100TAC for emergency, e.g. unjailing tx fees
 VALIDATOR_EMERGENCY_BALANCE=100000000000000000000
 # self delegeting the rest
 VALIDATOR_SELF_DELEGATION=$(echo "$VALIDATOR_BALANCE - $VALIDATOR_EMERGENCY_BALANCE" | bc)
+
+# allocating 10k TAC to genesis account 2
+GENESIS_ACC_2_BALANCE=10000000000000000000000
+
 # deduct validator balances from initial supply and mint to genesis account
-GENESIS_ACC_BALANCE=$(echo "$INITIAL_SUPPLY - ($VALIDATOR_BALANCE * $VALIDATORS_COUNT)" | bc)
+GENESIS_ACC_1_BALANCE=$(echo "$INITIAL_SUPPLY - ($VALIDATOR_BALANCE * $VALIDATORS_COUNT) - $GENESIS_ACC_2_BALANCE" | bc)
 
 # initialize config folder for each validator
 for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
@@ -90,12 +99,19 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   cp $NODEDIR/config/gentx/* "$HOMEDIR/gentxs/"
 done
 
-# add genesis account
-if [ -z "$GENESIS_ACC_ADDRESS" ]; then
-  $TACCHAIND keys add faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
-  GENESIS_ACC_ADDRESS=$($TACCHAIND keys show faucet --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0 -a)
+# add genesis account 1
+if [ -z "$GENESIS_ACC_1_ADDRESS" ]; then
+  $TACCHAIND keys add genesis_acc_1 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+  GENESIS_ACC_1_ADDRESS=$($TACCHAIND keys show genesis_acc_1 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0 -a)
 fi
-$TACCHAIND genesis add-genesis-account $GENESIS_ACC_ADDRESS ${GENESIS_ACC_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+$TACCHAIND genesis add-genesis-account $GENESIS_ACC_1_ADDRESS ${GENESIS_ACC_1_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+
+# add genesis account 2
+if [ -z "$GENESIS_ACC_2_ADDRESS" ]; then
+  $TACCHAIND keys add genesis_acc_2 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
+  GENESIS_ACC_2_ADDRESS=$($TACCHAIND keys show genesis_acc_2 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0 -a)
+fi
+$TACCHAIND genesis add-genesis-account $GENESIS_ACC_2_ADDRESS ${GENESIS_ACC_2_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR/node0
 
 # collect gentxs from first node, then copy updated genesis to all validators, then update persistent peers
 cp $HOMEDIR/gentxs/* "$HOMEDIR/node0/config/gentx/"

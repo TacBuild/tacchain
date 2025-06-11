@@ -1,0 +1,38 @@
+services:
+  tac-mainnet-init:
+    user: "${USER_ID}:${GROUP_ID}"
+    image: tacchain:v1.0.0
+    env_file:
+      - .env.mainnet
+    volumes:
+      - "./:/data"
+    entrypoint: /bin/sh
+    command: >
+      -c "[ ! -e /data/config/config.toml ] && tacchaind init $MONIKER --chain-id tacchain_239-1 --home /data && cd /data/config && rm genesis.json && wget https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/networks/tacchain_239-1/genesis.json || exit 0"
+
+  tac-mainnet-validator-1:
+    user: "${USER_ID}:${GROUP_ID}"
+    network_mode: host
+    restart: unless-stopped
+    image: tacchain:v1.0.0
+    env_file:
+      - .env.mainnet
+    volumes:
+      - "./:/data"
+    depends_on:
+      tac-mainnet-init:
+        condition: service_completed_successfully
+    entrypoint: tacchaind
+    command: >
+      start
+      --chain-id=tacchain_239-1
+      --home=/data
+      --db_dir=data
+      --pruning=default
+      --log_level=info
+      --p2p.persistent_peers=${P2P_PERSISTENT_PEERS}
+      --p2p.laddr=tcp://0.0.0.0:${P2P_PORT}
+      --p2p.external-address=${EXT_IP}:${P2P_PORT}
+      --rpc.laddr=tcp://0.0.0.0:${RPC_PORT}
+      --json-rpc.address=0.0.0.0:${RPC_PORT_EVM}
+      --json-rpc.ws-address=0.0.0.0:${WS_PORT_EVM}

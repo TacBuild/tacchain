@@ -16,8 +16,8 @@
 | gRPC                        | <https://grpc.rpc.tac.build>                                                                                           |
 | REST API                    | <https://cosmos-api.rpc.tac.build>                                                                                           |
 | EVM JSON RPC                | <https://rpc.tac.build>                                                                                           |
-| EVM Explorer                | <https://explorer.tac.build/>                                                                                           |
-| Cosmos Explorer             | <https://pp-explorer.tac.build/>                                                                                           |
+| EVM Explorer                | <https://evm.explorer.tac.build/>                                                                                           |
+| Cosmos Explorer             | <https://ping.explorer.tac.build/>                                                                                           |
 | Staking UI                  | <https://staking.tac.build/>                                                           |
 | Timeout commit | 1s                                                                                            |
 | Block time | 2s                                                                                            |

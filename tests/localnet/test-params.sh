@@ -344,7 +344,7 @@ expected_mint_params='{
   "mint_denom": "utac",
   "inflation_rate_change": "0.130000000000000000",
   "inflation_max": "0.050000000000000000",
-  "inflation_min": "0.000000000000000000",
+  "inflation_min": "0.010000000000000000",
   "goal_bonded": "0.600000000000000000",
   "blocks_per_year": "15768000"
 }'

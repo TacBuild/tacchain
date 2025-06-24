@@ -241,8 +241,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/StackExchange/wmi v1.2.1 h1:VIkavFPXSjcnS+O8yTq7NI32k0R5Aj+v39y29VYDOSA=
 github.com/StackExchange/wmi v1.2.1/go.mod h1:rcmrprowKIVzvc+NUiLncP2uuArMWLCbu9SBzvHz7e8=
-github.com/TacBuild/evm v0.0.0-20250604085412-f683909f629c h1:sby6GxoiQbUelMYP2PIcD5v1wbJ0Mgm4WnmyIFGqEDE=
-github.com/TacBuild/evm v0.0.0-20250604085412-f683909f629c/go.mod h1:kthk/QmpstaPB5USt4OIIoxqRBDcSqTv37fKWGFNUPM=
+github.com/TacBuild/evm v0.0.0-20250624105602-124c5baba48e h1:7e5tuwZMAELcoTrwrQMSl6ZhSx3FstGWay/QpgLfUa0=
+github.com/TacBuild/evm v0.0.0-20250624105602-124c5baba48e/go.mod h1:kthk/QmpstaPB5USt4OIIoxqRBDcSqTv37fKWGFNUPM=
 github.com/TacBuild/go-ethereum v0.0.0-20250428082551-b4f5a8f8420a h1:d5s3in80qbAEpMLo2gVHKPrR6qn60nyxV+rK17tqZ1Q=
 github.com/TacBuild/go-ethereum v0.0.0-20250428082551-b4f5a8f8420a/go.mod h1:TN8ZiHrdJwSe8Cb6x+p0hs5CxhJZPbqB7hHkaUXcmIU=
 github.com/VictoriaMetrics/fastcache v1.12.1 h1:i0mICQuojGDL3KblA7wUNlY5lOK6a4bwt3uRKnkZU40=

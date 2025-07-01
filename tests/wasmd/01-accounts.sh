@@ -12,7 +12,7 @@ NEW_ACCOUNT=$(tacchaind keys show fred -a --keyring-backend=test)
 tacchaind q bank balances "$NEW_ACCOUNT" -o json || true
 
 echo "## Transfer tokens"
-tacchaind tx bank send validator "$NEW_ACCOUNT" 1000000000utac --gas 1000000 -y -b sync -o json --keyring-backend=test | jq
+tacchaind tx bank send validator "$NEW_ACCOUNT" 1000000000utac --gas 1000000 --gas-prices 25000000000utac -y -b sync -o json --keyring-backend=test | jq
 sleep 6
 
 echo "## Check balance again"

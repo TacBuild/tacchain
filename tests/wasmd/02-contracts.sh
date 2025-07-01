@@ -26,7 +26,7 @@ tacchaind query wasm list-code --node=http://localhost:26657 -o json --home $HOM
 echo "-----------------------"
 echo "## Create new contract instance"
 INIT="{\"verifier\":\"$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)\", \"beneficiary\":\"$(tacchaind keys show fred -a --keyring-backend=test --home $HOMEDIR)\"}"
-RESP=$(tacchaind tx wasm instantiate "$CODE_ID" "$INIT" --admin="$(tacchaind keys show validator -a --keyring-backend=test)" \
+RESP=$(tacchaind tx wasm instantiate "$CODE_ID" "$INIT" --admin="$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)" \
   --from validator --amount="100utac" --label "local0.1.0" \
   --gas 1000000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
@@ -37,7 +37,7 @@ echo "* Contract address: $CONTRACT"
 
 echo "## Create new contract instance with predictable address"
 RESP=$(tacchaind tx wasm instantiate2 "$CODE_ID" "$INIT" $(echo -n "tacchain_2391-1" | xxd -ps) \
-  --admin="$(tacchaind keys show validator -a --keyring-backend=test)" \
+  --admin="$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)" \
   --from validator --amount="100utac" --label "local0.1.0" \
   --fix-msg \
   --gas 1000000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)

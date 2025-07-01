@@ -12,6 +12,8 @@ import (
 	"github.com/cosmos/evm/evmd/eips"
 	evmvmtypes "github.com/cosmos/evm/x/vm/types"
 	evmvmcore "github.com/ethereum/go-ethereum/core/vm"
+
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const (
@@ -108,4 +110,5 @@ func setAddressPrefixes() {
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+	config.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 }

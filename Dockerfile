@@ -11,8 +11,16 @@ RUN set -eux; apk add --no-cache ca-certificates build-base libusb-dev linux-hea
 WORKDIR /code
 COPY . /code/
 
-RUN LEDGER_ENABLED=true make build
+# See https://github.com/CosmWasm/wasmvm/releases
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm_muslc.aarch64.a /lib/libwasmvm_muslc.aarch64.a
+ADD https://github.com/CosmWasm/wasmvm/releases/download/v2.2.1/libwasmvm_muslc.x86_64.a /lib/libwasmvm_muslc.x86_64.a
+RUN sha256sum /lib/libwasmvm_muslc.aarch64.a | grep ba6cb5db6b14a265c8556326c045880908db9b1d2ffb5d4aa9f09ac09b24cecc
+RUN sha256sum /lib/libwasmvm_muslc.x86_64.a | grep b3bd755efac0ff39c01b59b8110f961c48aa3eb93588071d7a628270cc1f2326
 
+# force it to use static lib (from above) not standard libgo_cosmwasm.so file
+RUN LEDGER_ENABLED=true BUILD_TAGS=muslc LINK_STATICALLY=true make build
+RUN echo "Ensuring binary is statically linked ..." \
+    && (file /code/build/tacchaind | grep "statically linked")
 
 # --------------------------------------------------------
 FROM alpine:3.18

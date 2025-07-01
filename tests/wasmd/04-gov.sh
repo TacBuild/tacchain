@@ -13,8 +13,8 @@ RESP=$(tacchaind tx wasm submit-proposal store-instantiate "$DIR/testdata/reflec
   --keyring-backend=test \
   --gas 1500000 \
   --gas-prices 25000000000utac \
-  --from validator -y --node=http://localhost:26657 -b sync -o json)
+  --from validator -y --node=http://localhost:26657 -b sync -o json --home $HOMEDIR)
 echo $RESP
 sleep 6
-tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json | jq
+tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 set -o errexit -o nounset -o pipefail
 
 BASE_ACCOUNT=$(tacchaind keys show validator -a --keyring-backend=test)

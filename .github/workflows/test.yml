@@ -132,8 +132,5 @@ jobs:
       - run: go install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest
       - run: sudo apt-get update && sudo apt-get install -y xxd
       - run: make install
-      - run: |
-          echo y | make localnet &
-          while ! tacchaind query block --type=height 3; do sleep 5; done
-          make test-wasmd
+      - run: make test-wasmd
         timeout-minutes: 3

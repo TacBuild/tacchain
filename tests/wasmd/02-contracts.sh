@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 set -o errexit -o nounset -o pipefail -x
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"

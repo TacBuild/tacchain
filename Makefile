@@ -125,10 +125,7 @@ test-solidity:
 	./tests/solidity/run-solidity-tests.sh
 
 test-wasmd:
-	./contrib/test-wasmd/01-accounts.sh
-	./contrib/test-wasmd/02-contracts.sh
-	./contrib/test-wasmd/03-grpc-queries.sh
-	./contrib/test-wasmd/04-gov.sh
+	./tests/wasmd/test-wasmd.sh
 
 ###############################################################################
 ###                                Networks                                 ###

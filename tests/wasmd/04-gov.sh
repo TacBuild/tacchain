@@ -3,12 +3,14 @@ set -o errexit -o nounset -o pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
+HOMEDIR=.test-wasmd
+
 sleep 1
 echo "## Submit a CosmWasm gov proposal"
 RESP=$(tacchaind tx wasm submit-proposal store-instantiate "$DIR/testdata/reflect_2_0.wasm" \
   '{}' --label="testing" \
   --title "testing" --summary "Testing" --deposit "1000000000utac" \
-  --admin $(tacchaind keys show -a validator --keyring-backend=test) \
+  --admin $(tacchaind keys show -a validator --keyring-backend=test --home $HOMEDIR) \
   --amount 123utac \
   --keyring-backend=test \
   --gas 1500000 \

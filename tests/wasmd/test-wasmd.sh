@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-export HOMEDIR=.test-localnet-wasmd
+export HOMEDIR=.test-wasmd
 
 # start new network
 echo "Starting localnet"
@@ -25,22 +25,38 @@ echo "Network started successfully"
 
 # test accounts
 echo "Testing accounts"
-$(dirname "$0")/01-accounts.sh
+if ! $(dirname "$0")/01-accounts.sh; then
+  echo "Accounts test failed"
+  killall tacchaind
+  exit 1
+fi
 echo "Accounts test passed successfully"
 
 # test contracts
 echo "Testing contracts"
-$(dirname "$0")/02-contracts.sh
+if ! $(dirname "$0")/02-contracts.sh; then
+  echo "Contracts test failed"
+  killall tacchaind
+  exit 1
+fi
 echo "Contracts test passed successfully"
 
-# test grpc queries
+# test gRPC queries
 echo "Testing gRPC queries"
-$(dirname "$0")/03-grpc-queries.sh
+if ! $(dirname "$0")/03-grpc-queries.sh; then
+  echo "gRPC queries test failed"
+  killall tacchaind
+  exit 1
+fi
 echo "gRPC queries test passed successfully"
 
 # test governance
 echo "Testing governance"
-$(dirname "$0")/04-gov.sh
+if ! $(dirname "$0")/04-gov.sh; then
+  echo "Governance test failed"
+  killall tacchaind
+  exit 1
+fi
 echo "Governance test passed successfully"
 
 killall tacchaind

@@ -2,12 +2,12 @@
 set -o errexit -o nounset -o pipefail -x
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
-HOMEDIR=.test-localnet-wasmd
+HOMEDIR=.test-wasmd
 
 echo "-----------------------"
 echo "## Add new CosmWasm contract"
 RESP=$(tacchaind tx wasm store "$DIR/testdata/hackatom.wasm" \
-  --from validator --gas 1500000 -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --from validator --gas 1500000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 RESP=$(tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR)
 CODE_ID=$(echo "$RESP" | jq -r '.events[]| select(.type=="store_code").attributes[]| select(.key=="code_id").value')

@@ -26,10 +26,9 @@
 | Peer 2                      | 10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960                                                                                           |
 | Peer 3                      | 0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960                                                                                           |
 | Peer 4                      | 78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960                                                                                           |
-| Snapshots                   |                                                                                               |
-| - full                      | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.tar.{lz4,shasum}          |
-| - archive                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-full-latest.tar.{lz4,shasum}             |
-
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| - full                      | http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4                                  |
+| - archive                   | http://snapshot.tac.ankr.com/tac-mainnet-archive-latest.tar.lz4                               |
 ### Hardware Requirements
 
   - CPU: 8 cores
@@ -161,7 +160,9 @@ docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_239-1/{docker-compose.yaml,.env.mainnet} $TAC_HOME/
 cd $TAC_HOME
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.shasum
+shasum -c tac-mainnet-full-latest.shasum
 lz4 -dc < tac-mainnet-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.mainnet up -d
 ## Test
@@ -276,9 +277,9 @@ pex = false
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
 | Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
 | Peer 4                      | ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120                                                                                           |
-| Snapshots                   |                                                                                               |
-| - full                      | TBD                                                                                           |
-| - archive                   | TBD                                                                                           |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| - full                      | http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4                                      |
+| - archive                   | http://snapshot.tac.ankr.com/tac-spb-archive-latest.tar.lz4                                   |
 
 ### Hardware Requirements
 
@@ -441,7 +442,9 @@ docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2391-1/{docker-compose.yaml,.env.spb} $TAC_HOME/
 cd $TAC_HOME
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-spb-full-latest.shasum
+shasum -c tac-spb-full-latest.shasum
 lz4 -dc < tac-spb-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.spb up -d
 ## Test
@@ -558,9 +561,9 @@ pex = false
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |
 | Peer 3                      | ea5719fe6587b18ed0fee81f960e23c65c0e0ccc@206.217.210.164:45130                                |
-| Snapshots                   |                                                                                               |
-| - full                      | <http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4>                            |
-| - archive                   | <http://snapshot.tac-turin.ankr.com/tac-turin-archive-latest.tar.lz4>                         |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| - full                      | http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4                                    |
+| - archive                   | http://snapshot.tac.ankr.com/tac-turin-archive-latest.tar.lz4                                 |
 | Frontend                    | TBD                                                                                           |
 
 #### Hardware Requirements
@@ -649,7 +652,9 @@ docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2390-1/{docker-compose.yaml,.env.turin} $TAC_HOME/
 cd $TAC_HOME
-wget http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-turin-full-latest.shasum
+shasum -c tac-turin-full-latest.shasum
 lz4 -dc < tac-turin-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.turin up -d
 ## Test

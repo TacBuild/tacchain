@@ -1,0 +1,299 @@
+services:
+  babylond:
+    build:
+      context: https://github.com/babylonlabs-io/babylon.git#v2.2.0
+      dockerfile: contrib/images/babylond/Dockerfile
+    volumes:
+      - "./.babylond:/data"
+    command: >
+      bash -c "babylond testnet --v 1 -o /data --starting-ip-address 192.168.10.2 --keyring-backend=test --chain-id chain-test --epoch-interval 10 --btc-finalization-timeout 2 --btc-confirmation-depth 1 --minimum-gas-prices 1ubbn --btc-base-header 0100000000000000000000000000000000000000000000000000000000000000000000003ba3edfd7a7b12b27ac72c3e67768f617fc81bc3888a51323a9fb8aa4b1e5e4adae5494dffff7f2002000000 --btc-network regtest --additional-sender-account --slashing-pk-script "76a914010101010101010101010101010101010101010188ac" --slashing-rate 0.1 --min-staking-time-blocks 10 --min-commission-rate 0.05 --covenant-quorum 1 --activation-height 39 --unbonding-time 5 --covenant-pks 2d4ccbe538f846a750d82a77cd742895e51afcf23d86d05004a356b783902748 && babylond --home /data/node0/babylond start"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      - BABYLON_BLS_PASSWORD=password
+    ports:
+      - "26656-26657:26656-26657"
+      - "1317:1317"
+      - "9090:9090"
+      - "2345:2345"
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.2
+
+  # TODO: finish setup
+  
+  # babylondnode1:
+  #   container_name: babylondnode1
+  #   image: "babylonlabs-io/babylond"
+  #   command: >
+  #     babylond --home /babylondhome start --log_format 'plain' 2>&1 | tee /babylondhome/babylond.log
+  #   cap_add:
+  #     - SYS_PTRACE
+  #   security_opt:
+  #     - seccomp:unconfined
+  #   environment:
+  #     - BABYLON_BLS_PASSWORD=password
+  #   ports:
+  #     - "26666-26667:26656-26657"
+  #     - "1318:1317"
+  #     - "9091:9090"
+  #     - "2346:2345"
+  #   volumes:
+  #     - ../.babylond/node1/babylond:/babylondhome:Z
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.3
+
+  # bitcoindsim:
+  #   build:
+  #     context: contrib/images/bitcoindsim/
+  #     dockerfile: ./Dockerfile
+  #   image: babylonlabs-io/bitcoindsim:latest
+  #   platform: linux/amd64
+  #   container_name: bitcoindsim
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.30
+  #   environment:
+  #     - ZMQ_SEQUENCE_PORT=29000
+  #     - ZMQ_RAWBLOCK_PORT=29001
+  #     - ZMQ_RAWTR_PORT=29002
+  #     - RPC_PORT=18443
+  #     - RPC_USER=rpcuser
+  #     - RPC_PASS=rpcpass
+  #     - WALLET_PASS=walletpass
+  #     - WALLET_NAME=default
+  #     - BTCSTAKER_WALLET_NAME=btcstaker
+  #     - BTCSTAKER_WALLET_ADDR_COUNT=3
+  #     - GENERATE_INTERVAL_SECS=10
+  #   ports:
+  #     - "18443:18443"
+  #     - "29000-29002:29000-29002"
+  #   volumes:
+  #     - ../.babylond/bitcoin:/bitcoindsim/.bitcoin:Z
+
+  # vigilante-reporter:
+  #   container_name: vigilante-reporter
+  #   image: babylonlabs-io/vigilante
+  #   command: >
+  #     vigilante reporter --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/reporter.log
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.7
+  #   volumes:
+  #     - ../.babylond/vigilante:/home/vigilante/config
+  #   depends_on:
+  #     - bitcoindsim
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # vigilante-submitter:
+  #   container_name: vigilante-submitter
+  #   image: babylonlabs-io/vigilante
+  #   command: >
+  #     vigilante submitter --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.8
+  #   volumes:
+  #     - ../.babylond/vigilante:/home/vigilante/config
+  #   depends_on:
+  #     - bitcoindsim
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # vigilante-monitor:
+  #   container_name: vigilante-monitor
+  #   image: babylonlabs-io/vigilante
+  #   command: >
+  #     vigilante monitor --config /home/vigilante/config/vigilante.yml --genesis /home/vigilante/config/bbnconfig/genesis.json 2>&1 | tee /home/vigilante/config/monitor.log
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.9
+  #   volumes:
+  #     - ../.babylond/vigilante:/home/vigilante/config
+  #   depends_on:
+  #     - bitcoindsim
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # vigilante-bstracker:
+  #   container_name: vigilante-bstracker
+  #   image: babylonlabs-io/vigilante
+  #   command: >
+  #     vigilante bstracker --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/unbonding-watcher.log
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.10
+  #   volumes:
+  #     - ../.babylond/vigilante:/home/vigilante/config
+  #   depends_on:
+  #     - bitcoindsim
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # btc-staker:
+  #   container_name: btc-staker
+  #   image: babylonlabs-io/btc-staker
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.11
+  #   environment:
+  #     - BTCSTAKER_USERNAME=rpcuser
+  #     - BTCSTAKER_PASSWORD=rpcpass
+  #   volumes:
+  #     - ../.babylond/btc-staker:/home/btcstaker/.stakerd
+  #   ports:
+  #     - "15912:15812"
+  #   depends_on:
+  #     - bitcoindsim
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # finality-provider:
+  #   container_name: finality-provider
+  #   image: babylonlabs-io/finality-provider
+  #   command: fpd start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.12
+  #   ports:
+  #     - "15822:15812"
+  #   volumes:
+  #     - ../.babylond/finality-provider:/home/finality-provider/.fpd
+  #   depends_on:
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # consumer-fp:
+  #   container_name: consumer-fp
+  #   image: babylonlabs-io/finality-provider
+  #   command: fpd start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.13
+  #   volumes:
+  #     - ../.babylond/consumer-fp:/home/finality-provider/.fpd
+  #   depends_on:
+  #     - babylondnode0
+  #     - consumer-eotsmanager
+  #     - ibcsim-bcd
+  #   restart: unless-stopped
+
+  # eotsmanager:
+  #   container_name: eotsmanager
+  #   image: babylonlabs-io/finality-provider
+  #   command: eotsd start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.14
+  #   ports:
+  #     - "15825:15813"
+  #   volumes:
+  #     - ../.babylond/eotsmanager:/home/finality-provider/.eotsd
+  #   depends_on:
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # consumer-eotsmanager:
+  #   container_name: consumer-eotsmanager
+  #   image: babylonlabs-io/finality-provider
+  #   command: eotsd start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.15
+  #   volumes:
+  #     - ../.babylond/consumer-eotsmanager:/home/finality-provider/.eotsd
+  #   depends_on:
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # covenant-signer:
+  #   container_name: covenant-signer
+  #   image: babylonlabs-io/covenant-signer
+  #   command: covenant-signer start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.16
+  #   volumes:
+  #     - ../.babylond/covenant-signer:/home/covenant-signer/.signer
+  #   depends_on:
+  #     - babylondnode0
+  #   restart: unless-stopped
+
+  # covenant-emulator:
+  #   container_name: covenant-emulator
+  #   image: babylonlabs-io/covenant-emulator
+  #   command: covd start
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.17
+  #   volumes:
+  #     - ../.babylond/covenant-emulator:/home/covenant-emulator/.covd
+  #   depends_on:
+  #     - babylondnode0
+  #     - covenant-signer
+  #   restart: unless-stopped
+
+  # ibcsim-bcd:
+  #   container_name: ibcsim-bcd
+  #   image: babylonlabs-io/ibcsim-bcd
+  #   ports:
+  #     - "5183:5183"
+  #     - "26676-26677:26656-26657"
+  #     - "1319:1317"
+  #     - "9092:9090"
+  #     - "2347:2345"
+  #   volumes:
+  #     - ../.babylond:/data:Z
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.20
+  #   depends_on:
+  #     - babylondnode0
+  #     - babylondnode1
+  #   restart: unless-stopped
+
+  # electrs:
+  #   image: mempool/electrs:v3.1.0
+  #   container_name: electrs
+  #   platform: linux/amd64
+  #   networks:
+  #     localnet:
+  #       ipv4_address: 192.168.10.31
+  #   depends_on:
+  #     - bitcoindsim
+  #   environment:
+  #     - ELECTRS_NETWORK=regtest
+  #     - ELECTRS_COOKIE=rpcuser:rpcpass
+  #     - ELECTRS_DAEMON_RPC_ADDR=bitcoindsim:18443
+  #     - ELECTRS_DB_DIR=/electrs/.electrs/db
+  #   ports:
+  #     - "8080:8080"
+  #     - "3000:3000"
+  #   volumes:
+  #     - ../.babylond/electrs:/data:Z
+  #     - ../.babylond/bitcoin:/bitcoin/.bitcoin:Z
+  #   command:
+  #     [ "--cookie", "rpcuser:rpcpass",
+  #       "--network", "regtest",
+  #       "--electrum-rpc-addr", "0.0.0.0:8080",
+  #       "--http-addr", "0.0.0.0:3000",
+  #       "--db-dir", "/electrs/.electrs/db/",
+  #       "--daemon-rpc-addr", "bitcoindsim:18443",
+  #       "--daemon-dir", "/bitcoin/.bitcoin",
+  #       "-v",
+  #       "--address-search",
+  #       "--cors", "*",
+  #       "--timestamp"
+  #     ]
+
+networks:
+  localnet:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.10.0/25

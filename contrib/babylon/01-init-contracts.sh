@@ -7,10 +7,10 @@ OWNER_KEY=${OWNER_KEY:-validator}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 RPC_URL=${RPC_URL:-http://localhost:26657}
 
-BABYLON_CONTRACT_FILE=${BABYLON_CONTRACT_FILE:-"./artifacts/contracts/babylon_contract_v0.14.0.wasm"}
-BTC_LIGHT_CLIENT_CONTRACT_FILE=${BTC_LIGHT_CLIENT_CONTRACT_FILE:-"./artifacts/contracts/btc_light_client_v0.14.0.wasm"}
-BTC_STAKING_CONTRACT_FILE=${BTC_STAKING_CONTRACT_FILE:-"./artifacts/contracts/btc_staking_v0.14.0.wasm"}
-BTC_FINALITY_CONTRACT_FILE=${BTC_FINALITY_CONTRACT_FILE:-"./artifacts/contracts/btc_finality_v0.14.0.wasm"}
+BABYLON_CONTRACT_FILE=${BABYLON_CONTRACT_FILE:-"./contracts/babylon_contract_v0.14.0.wasm"}
+BTC_LIGHT_CLIENT_CONTRACT_FILE=${BTC_LIGHT_CLIENT_CONTRACT_FILE:-"./contracts/btc_light_client_v0.14.0.wasm"}
+BTC_STAKING_CONTRACT_FILE=${BTC_STAKING_CONTRACT_FILE:-"./contracts/btc_staking_v0.14.0.wasm"}
+BTC_FINALITY_CONTRACT_FILE=${BTC_FINALITY_CONTRACT_FILE:-"./contracts/btc_finality_v0.14.0.wasm"}
 
 # TODO: check if already initialized
 

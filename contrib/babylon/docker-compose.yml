@@ -22,57 +22,31 @@ services:
       localnet:
         ipv4_address: 192.168.10.2
 
-  # TODO: finish setup
-  
-  # babylondnode1:
-  #   container_name: babylondnode1
-  #   image: "babylonlabs-io/babylond"
-  #   command: >
-  #     babylond --home /babylondhome start --log_format 'plain' 2>&1 | tee /babylondhome/babylond.log
-  #   cap_add:
-  #     - SYS_PTRACE
-  #   security_opt:
-  #     - seccomp:unconfined
-  #   environment:
-  #     - BABYLON_BLS_PASSWORD=password
-  #   ports:
-  #     - "26666-26667:26656-26657"
-  #     - "1318:1317"
-  #     - "9091:9090"
-  #     - "2346:2345"
-  #   volumes:
-  #     - ../.babylond/node1/babylond:/babylondhome:Z
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.3
-
-  # bitcoindsim:
-  #   build:
-  #     context: contrib/images/bitcoindsim/
-  #     dockerfile: ./Dockerfile
-  #   image: babylonlabs-io/bitcoindsim:latest
-  #   platform: linux/amd64
-  #   container_name: bitcoindsim
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.30
-  #   environment:
-  #     - ZMQ_SEQUENCE_PORT=29000
-  #     - ZMQ_RAWBLOCK_PORT=29001
-  #     - ZMQ_RAWTR_PORT=29002
-  #     - RPC_PORT=18443
-  #     - RPC_USER=rpcuser
-  #     - RPC_PASS=rpcpass
-  #     - WALLET_PASS=walletpass
-  #     - WALLET_NAME=default
-  #     - BTCSTAKER_WALLET_NAME=btcstaker
-  #     - BTCSTAKER_WALLET_ADDR_COUNT=3
-  #     - GENERATE_INTERVAL_SECS=10
-  #   ports:
-  #     - "18443:18443"
-  #     - "29000-29002:29000-29002"
-  #   volumes:
-  #     - ../.babylond/bitcoin:/bitcoindsim/.bitcoin:Z
+  bitcoindsim:
+    build:
+      context: ./bitcoindsim/
+      dockerfile: ./Dockerfile
+    platform: linux/amd64
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.30
+    environment:
+      - ZMQ_SEQUENCE_PORT=29000
+      - ZMQ_RAWBLOCK_PORT=29001
+      - ZMQ_RAWTR_PORT=29002
+      - RPC_PORT=18443
+      - RPC_USER=rpcuser
+      - RPC_PASS=rpcpass
+      - WALLET_PASS=walletpass
+      - WALLET_NAME=default
+      - BTCSTAKER_WALLET_NAME=btcstaker
+      - BTCSTAKER_WALLET_ADDR_COUNT=3
+      - GENERATE_INTERVAL_SECS=10
+    ports:
+      - "18443:18443"
+      - "29000-29002:29000-29002"
+    volumes:
+      - ./.babylond/bitcoin:/bitcoindsim/.bitcoin:Z
 
   # vigilante-reporter:
   #   container_name: vigilante-reporter

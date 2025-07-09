@@ -26,7 +26,7 @@
 | Peer 2                      | 10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960                                                                                           |
 | Peer 3                      | 0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960                                                                                           |
 | Peer 4                      | 78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960                                                                                           |
-| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
 | - full                      | http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4                                  |
 | - archive                   | http://snapshot.tac.ankr.com/tac-mainnet-archive-latest.tar.lz4                               |
 ### Hardware Requirements
@@ -277,7 +277,7 @@ pex = false
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
 | Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
 | Peer 4                      | ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120                                                                                           |
-| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
 | - full                      | http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4                                      |
 | - archive                   | http://snapshot.tac.ankr.com/tac-spb-archive-latest.tar.lz4                                   |
 
@@ -561,7 +561,7 @@ pex = false
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |
 | Peer 3                      | ea5719fe6587b18ed0fee81f960e23c65c0e0ccc@206.217.210.164:45130                                |
-| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-archive-latest.{tar.lz4,shasum}          |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
 | - full                      | http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4                                    |
 | - archive                   | http://snapshot.tac.ankr.com/tac-turin-archive-latest.tar.lz4                                 |
 | Staking UI                  | https://staking.spb.tac.build/                                                                |

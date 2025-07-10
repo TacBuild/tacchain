@@ -19,8 +19,8 @@ RUN set -ex \
 
 WORKDIR /bitcoindsim
 
-ENV BITCOIN_DATA=/bitcoindsim/.bitcoin
-ENV BITCOIN_CONF=/bitcoindsim/.bitcoin/bitcoin.conf
+ENV BITCOIN_DATA=/bitcoindsim/bitcoin
+ENV BITCOIN_CONF=/bitcoindsim/bitcoin/bitcoin.conf
 
 COPY wrapper.sh /bitcoindsim/wrapper.sh
 

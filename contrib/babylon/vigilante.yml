@@ -1,0 +1,100 @@
+common:
+  retry-sleep-time: 1s
+  max-retry-sleep-time: 1m
+  log-format: "auto"
+  log-level: "debug"
+btc:
+  disable-tls: true
+  no-client-tls: true # use true for bitcoind as it does not support tls
+  ca-file: ~
+  endpoint: bitcoindsim:18443 # use port 18443 for bitcoind regtest
+  estimate-mode: CONSERVATIVE # only needed by bitcoind
+  tx-fee-max: 10000 # maximum tx fee, 10,000sat/kvb
+  tx-fee-min: 1000 # minimum tx fee, 1,000sat/kvb
+  default-fee: 1000 # 1,000sat/kvb
+  target-block-num: 2
+  wallet-endpoint: ~
+  wallet-password: walletpass
+  wallet-name: default
+  wallet-lock-time: 10
+  wallet-ca-file: ~
+  net-params: regtest # use regtest for bitcoind as it does not support simnet
+  username: rpcuser
+  password: rpcpass
+  reconnect-attempts: 3
+  btc-backend: bitcoind # {btcd, bitcoind}
+  zmq-seq-endpoint: tcp://bitcoindsim:29000
+  zmq-block-endpoint: tcp://bitcoindsim:29001
+  zmq-tx-endpoint: tcp://bitcoindsim:29002
+babylon:
+  key: vigilante
+  chain-id: chain-test
+  rpc-addr: http://babylond:26657
+  grpc-addr: https://babylond:9090
+  account-prefix: bbn
+  keyring-backend: test
+  gas-adjustment: 1.5
+  gas-prices: 2ubbn
+  key-directory: /home/vigilante/config
+  debug: true
+  timeout: 20s
+  block-timeout: 10s
+  output-format: json
+  submitter-address: bbn1v6k7k9s8md3k29cu9runasstq5zaa0lpznk27w
+  sign-mode: direct
+grpc:
+  onetime-tls-key: true
+  rpc-key: ""
+  rpc-cert: /home/vigilante/config/rpc.cert
+  endpoints:
+    - localhost:8080
+grpcweb:
+  placeholder: grpcwebconfig
+metrics:
+  host: 0.0.0.0
+  server-port: 2112
+submitter:
+  netparams: regtest
+  buffer-size: 100
+  polling-interval-seconds: 60
+  resend-interval-seconds: 1800
+  resubmit-fee-multiplier: 2
+  dbconfig:
+    dbpath: /home/vigilante/submitter/data
+    dbfilename: submitter.db
+    nofreelistsync: true
+    autocompact: false
+    autocompactminage: 168h0m0s
+    dbtimeout: 1m0s
+reporter:
+  netparams: regtest
+  btc_cache_size: 1000
+  max_headers_in_msg: 100
+monitor:
+  checkpoint-buffer-size: 1000
+  btc-block-buffer-size: 1000
+  btc-cache-size: 1000
+  btc-confirmation-depth: 6
+  liveness-check-interval-seconds: 100
+  max-live-btc-heights: 200
+  enable-liveness-checker: true
+  enable-slasher: true
+  btcnetparams: regtest
+  dbconfig:
+    dbpath: /home/vigilante/monitor/data
+    dbfilename: monitor.db
+    nofreelistsync: true
+    autocompact: false
+    autocompactminage: 168h0m0s
+    dbtimeout: 1m0s
+btcstaking-tracker:
+  check-delegations-interval: 10s
+  delegations-batch-size: 100
+  check-if-delegation-active-interval: 10s
+  retry-submit-unbonding-interval: 10s
+  max-jitter-interval: 30s
+  btcnetparams: regtest
+  max-slashing-concurrency: 20
+  indexer-addr: http://electrs:3000
+  fetch-comet-block-interval: 3s
+  fetch-evidence-interval: 10s

@@ -1,7 +1,7 @@
 services:
   babylond:
     build:
-      context: https://github.com/babylonlabs-io/babylon.git#v2.2.0
+      context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
       dockerfile: contrib/images/babylond/Dockerfile
     volumes:
       - "./.babylond:/data"
@@ -46,67 +46,73 @@ services:
       - "18443:18443"
       - "29000-29002:29000-29002"
     volumes:
-      - ./.babylond/bitcoin:/bitcoindsim/.bitcoin:Z
+      - ./.babylond/bitcoin:/bitcoindsim/bitcoin:Z
 
-  # vigilante-reporter:
-  #   container_name: vigilante-reporter
-  #   image: babylonlabs-io/vigilante
-  #   command: >
-  #     vigilante reporter --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/reporter.log
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.7
-  #   volumes:
-  #     - ../.babylond/vigilante:/home/vigilante/config
-  #   depends_on:
-  #     - bitcoindsim
-  #     - babylondnode0
-  #   restart: unless-stopped
+  vigilante-reporter:
+    build:
+      context: https://github.com/babylonlabs-io/vigilante.git#v0.23.7
+    command: >
+      vigilante reporter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/reporter.log
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.7
+    volumes:
+      - ./.babylond/vigilante:/home/vigilante/config
+      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+    depends_on:
+      - bitcoindsim
+      - babylond
+    restart: unless-stopped
 
-  # vigilante-submitter:
-  #   container_name: vigilante-submitter
-  #   image: babylonlabs-io/vigilante
-  #   command: >
-  #     vigilante submitter --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.8
-  #   volumes:
-  #     - ../.babylond/vigilante:/home/vigilante/config
-  #   depends_on:
-  #     - bitcoindsim
-  #     - babylondnode0
-  #   restart: unless-stopped
+  vigilante-submitter:
+    build:
+      context: https://github.com/babylonlabs-io/vigilante.git#v0.23.7
+    command: >
+      vigilante submitter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.8
+    volumes:
+      - ./.babylond/vigilante:/home/vigilante/config
+      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+    depends_on:
+      - bitcoindsim
+      - babylond
+    restart: unless-stopped
 
-  # vigilante-monitor:
-  #   container_name: vigilante-monitor
-  #   image: babylonlabs-io/vigilante
-  #   command: >
-  #     vigilante monitor --config /home/vigilante/config/vigilante.yml --genesis /home/vigilante/config/bbnconfig/genesis.json 2>&1 | tee /home/vigilante/config/monitor.log
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.9
-  #   volumes:
-  #     - ../.babylond/vigilante:/home/vigilante/config
-  #   depends_on:
-  #     - bitcoindsim
-  #     - babylondnode0
-  #   restart: unless-stopped
+# TODO: fix 'error: unknown field "timeout_timestamp" in tx.TxBody: tx parse error' in vigilante-monitor, also appears in babylon-edge-deployment example
+  vigilante-monitor:
+    build:
+      context: https://github.com/babylonlabs-io/vigilante.git#v0.23.7
+    command: >
+      vigilante monitor --config /home/vigilante/vigilante.yml --genesis /home/vigilante/genesis.json 2>&1 | tee /home/vigilante/config/monitor.log
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.9
+    volumes:
+      - ./.babylond/vigilante:/home/vigilante/config
+      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+      - ./.babylond/node0/babylond/config/genesis.json:/home/vigilante/genesis.json:ro
+    depends_on:
+      - bitcoindsim
+      - babylond
+    restart: unless-stopped
 
-  # vigilante-bstracker:
-  #   container_name: vigilante-bstracker
-  #   image: babylonlabs-io/vigilante
-  #   command: >
-  #     vigilante bstracker --config /home/vigilante/config/vigilante.yml 2>&1 | tee /home/vigilante/config/unbonding-watcher.log
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.10
-  #   volumes:
-  #     - ../.babylond/vigilante:/home/vigilante/config
-  #   depends_on:
-  #     - bitcoindsim
-  #     - babylondnode0
-  #   restart: unless-stopped
+  vigilante-bstracker:
+    build:
+      context: https://github.com/babylonlabs-io/vigilante.git#v0.23.7
+    command: >
+      vigilante bstracker --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.10
+    volumes:
+      - ./.babylond/vigilante:/home/vigilante/config
+      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+    depends_on:
+      - bitcoindsim
+      - babylond
+    restart: unless-stopped
 
   # btc-staker:
   #   container_name: btc-staker

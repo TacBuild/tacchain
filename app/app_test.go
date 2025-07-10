@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
@@ -62,6 +63,7 @@ func TestExportAndBlockedAddrs(t *testing.T) {
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 		evmdcmd.NoOpEvmAppOptions,
+		[]wasmkeeper.Option{},
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")

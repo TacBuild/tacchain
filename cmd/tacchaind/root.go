@@ -24,10 +24,12 @@ import (
 
 	"github.com/Asphere-xyz/tacchain/app"
 
+	evmdcmd "github.com/cosmos/evm/cmd/evmd/cmd"
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
 	evmserverconfig "github.com/cosmos/evm/server/config"
 
-	evmdcmd "github.com/cosmos/evm/cmd/evmd/cmd"
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // NewRootCmd creates a new root command for tacchaind. It is called once in the
@@ -45,6 +47,7 @@ func NewRootCmd() *cobra.Command {
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(temp),
 		evmdcmd.NoOpEvmAppOptions,
+		[]wasmkeeper.Option{},
 	)
 
 	encodingConfig := params.EncodingConfig{
@@ -168,6 +171,8 @@ func initAppConfig() (string, interface{}) {
 		EVM     evmserverconfig.EVMConfig
 		JSONRPC evmserverconfig.JSONRPCConfig
 		TLS     evmserverconfig.TLSConfig
+
+		Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 	}
 
 	// Optionally allow the chain developer to overwrite the SDK's default
@@ -191,12 +196,14 @@ func initAppConfig() (string, interface{}) {
 
 	customAppConfig := CustomAppConfig{
 		Config:  *srvCfg,
+		Wasm:    wasmtypes.DefaultNodeConfig(),
 		EVM:     *evmserverconfig.DefaultEVMConfig(),
 		JSONRPC: *evmserverconfig.DefaultJSONRPCConfig(),
 		TLS:     *evmserverconfig.DefaultTLSConfig(),
 	}
 
 	customAppTemplate := serverconfig.DefaultConfigTemplate +
+		wasmtypes.DefaultConfigTemplate() +
 		evmserverconfig.DefaultEVMConfigTemplate
 
 	return customAppTemplate, customAppConfig

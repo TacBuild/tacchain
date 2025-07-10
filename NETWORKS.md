@@ -155,10 +155,10 @@ export TAC_HOME="~/.tacchain"
 export VERSION="v1.0.0"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_239-1/{docker-compose.yaml,.env.mainnet} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
 wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4
 wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.shasum
@@ -437,10 +437,10 @@ export TAC_HOME="~/.tacchain"
 export VERSION="v0.0.11"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2391-1/{docker-compose.yaml,.env.spb} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
 wget http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4
 wget http://snapshot.tac.ankr.com/tac-spb-full-latest.shasum
@@ -647,10 +647,10 @@ export TAC_HOME="~/.tacchain"
 export VERSION="v0.0.7-testnet"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2390-1/{docker-compose.yaml,.env.turin} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
 wget http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4
 wget http://snapshot.tac.ankr.com/tac-turin-full-latest.shasum

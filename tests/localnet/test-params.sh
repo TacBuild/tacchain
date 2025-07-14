@@ -503,7 +503,6 @@ if [[ "$community_tax" != "$expected_community_tax" ]]; then
   echo "Failed to verify community tax"
   echo "Expected: $expected_community_tax"
   echo "Got:      $community_tax"
-fi
 else
   echo "Verified community tax successfully"
 fi

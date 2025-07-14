@@ -8,7 +8,7 @@ fi
 export HOMEDIR=.test-localnet-evm
 
 # reduce gas price to 25gwei, as current price (400gwei) is too high for the presigned tx we broadcast in the test
-export MIN_GAS_PRICE=25000000000utac
+export MIN_GAS_PRICE=25000000000
 
 # start new network
 echo "Starting localnet"

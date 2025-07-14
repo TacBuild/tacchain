@@ -6,6 +6,8 @@ if ! command -v cast >/dev/null 2>&1; then
 fi
 
 export HOMEDIR=.test-localnet-evm
+
+# reduce gas price to 25gwei, as current price (400gwei) is too high for the presigned tx we broadcast in the test
 export MIN_GAS_PRICE=25000000000utac
 
 # start new network

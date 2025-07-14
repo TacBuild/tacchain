@@ -549,14 +549,14 @@ pex = false
 | Chain ID                    | `tacchain_2390-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
 | Tacchaind version           | `v0.0.7-testnet`                                                                              |
-| RPC                         | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1>         |
-| Genesis                     | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1/genesis> |
-| gRPC                        | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_grpc_web_1>    |
-| REST API                    | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rest_1>        |
-| EVM JSON RPC                | <https://newyork-inap-72-251-230-233.ankr.com:443/tac_tacd_testnet_full_rpc_1>                |
-| Faucet                      | <https://turin.faucet.tac.build>                                                           |
-| EVM Explorer                | <https://turin.explorer.tac.build>                                                         |
-| Cosmos Explorer             | <https://turin.bd-explorer.tac.build>                                                |
+| RPC                         | <https://turin.tendermint.rpc.tac.build>                                                      |
+| Genesis                     | <https://turin.tendermint-rest.rpc.tac.build/genesis>                                         |
+| gRPC                        | <https://turin-grpc.rpc.tac.build>                                                            |
+| REST API                    | <https://turin.cosmos-api.rpc.tac.build>                                                      |
+| EVM JSON RPC                | <https://turin.rpc.tac.build>                                                                 |
+| Faucet                      | <https://turin.faucet.tac.build>                                                              |
+| EVM Explorer                | <https://turin.explorer.tac.build>                                                            |
+| Cosmos Explorer             | <https://turin.bd-explorer.tac.build>                                                         |
 | Timeout commit (block time) | 3s                                                                                            |
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |

@@ -2,7 +2,7 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_239-1 | `mainnet` | **Active** | `v1.0.0`         | Mainnet |
+| tacchain_239-1 | `mainnet` | **Active** | `v1.0.1`         | Mainnet |
 | tacchain_2391-1 | `testnet` | **Active** | `v0.0.12`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
@@ -10,7 +10,7 @@
 
 | Chain ID                    | `tacchain_239-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v1.0.0`                                                                                      |
+| Tacchaind version           | `v1.0.1`                                                                                      |
 | RPC                         | <https://tendermint.rpc.tac.build>                                                                                           |
 | Genesis                     | <https://tendermint-rest.rpc.tac.build/genesis>                                                                                           |
 | gRPC                        | <https://grpc.rpc.tac.build>                                                                                           |
@@ -78,6 +78,16 @@ curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/network
 #### 5. Start node
 
 ``` shell
+tacchaind start --chain-id tacchain_239-1 --home .mainnet
+```
+
+#### Upgrade binary to v1.0.1 and restart
+
+At block height TBD your node should halt and throw error `"UPGRADE "v1.0.1" NEEDED at height: TBD: enable inflation. module=x/upgrade"`. Now you need to stop your node, upgrade binary and restart.
+
+``` shell
+git checkout v1.0.1
+make install
 tacchaind start --chain-id tacchain_239-1 --home .mainnet
 ```
 

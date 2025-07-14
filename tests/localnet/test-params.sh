@@ -467,7 +467,7 @@ fi
 
 # verify x/staking max validators
 echo "Verifying x/staking max validators"
-expected_max_validators="24"
+expected_max_validators="20"
 max_validators=$(tacchaind q staking params --node http://localhost:45111 --output json | jq -r '.params .max_validators')
 if [[ "$max_validators" != "$expected_max_validators" ]]; then
   echo "Failed to verify x/staking max validators"

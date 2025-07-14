@@ -32,7 +32,7 @@ echo "Network started successfully"
 echo "Testing multicall"
 
 echo "Funding multicall deployer"
-tacchaind tx bank send validator tac1qhejk0xr3zz98lm3kqgntv60lrjpycljdj3tjz 10000000000000000000utac --home $HOMEDIR --keyring-backend test --chain-id tacchain_2391-1 --gas-prices 100000000000utac --gas 200000 -y
+tacchaind tx bank send validator tac1qhejk0xr3zz98lm3kqgntv60lrjpycljdj3tjz 10000000000000000000utac --home $HOMEDIR --keyring-backend test --chain-id tacchain_2391-1 --gas-prices 400000000000utac --gas 200000 -y
 sleep 5
 echo "Multicall deployer funded successfully"
 

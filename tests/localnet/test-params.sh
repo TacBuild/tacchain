@@ -294,7 +294,7 @@ fi
 
 # verify x/feemarket min gas price
 echo "Verifying x/feemarket min gas price"
-expected_feemarket_min_gas_price='25000000000.000000000000000000'
+expected_feemarket_min_gas_price='400000000000.000000000000000000'
 feemarket_min_gas_price=$(tacchaind q feemarket params --node http://localhost:45111 --output json | jq -r '.params .min_gas_price')
 if [[ "$feemarket_min_gas_price" != "$expected_feemarket_min_gas_price" ]]; then
   echo "Failed to verify x/feemarket min gas price"
@@ -370,13 +370,13 @@ expected_gov_params='{
     }
   ],
   "max_deposit_period": "48h0m0s",
-  "voting_period": "12h0m0s",
+  "voting_period": "168h0m0s",
   "quorum": "0.334000000000000000",
   "threshold": "0.500000000000000000",
   "veto_threshold": "0.334000000000000000",
   "min_initial_deposit_ratio": "1",
   "proposal_cancel_ratio": "0.500000000000000000",
-  "expedited_voting_period": "6h0m0s",
+  "expedited_voting_period": "84h0m0s",
   "expedited_threshold": "0.667000000000000000",
   "expedited_min_deposit": [
     {
@@ -467,7 +467,7 @@ fi
 
 # verify x/staking max validators
 echo "Verifying x/staking max validators"
-expected_max_validators="14"
+expected_max_validators="24"
 max_validators=$(tacchaind q staking params --node http://localhost:45111 --output json | jq -r '.params .max_validators')
 if [[ "$max_validators" != "$expected_max_validators" ]]; then
   echo "Failed to verify x/staking max validators"
@@ -493,6 +493,19 @@ if [[ "$inflation" != "$expected_inflation" ]]; then
   exit 1
 else
   echo "Verified 0 inflation successfully"
+fi
+
+# verify community tax
+echo "Verifying community tax"
+expected_community_tax="0.000000000000000000"
+community_tax=$(tacchaind q distribution params --node http://localhost:45111 --output json | jq -r '.params .community_tax')
+if [[ "$community_tax" != "$expected_community_tax" ]]; then
+  echo "Failed to verify community tax"
+  echo "Expected: $expected_community_tax"
+  echo "Got:      $community_tax"
+fi
+else
+  echo "Verified community tax successfully"
 fi
 
 killall tacchaind

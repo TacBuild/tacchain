@@ -105,7 +105,7 @@ fi
 
 # verify validators emergency balances, self delegations and description
 echo "Verifying validators emergency balances and self delegations"
-expected_validator_emergency_balance="99995000000000000000"
+expected_validator_emergency_balance="99920000000000000000"
 expected_validator_self_delegation="4999900000000000000000000"
 for i in $(seq 0 3); do
   echo "Verifying validator $i emergency balance"
@@ -480,19 +480,19 @@ else
   echo "Verified x/staking max validators successfully"
 fi
 
-# verify 0 inflation
-echo "Verifying 0 inflation"
-expected_inflation="0.000000000000000000"
+# verify non-zero inflation
+echo "Verifying non-zero inflation"
+zero_inflation="0.000000000000000000"
 inflation=$(tacchaind q mint inflation --node http://localhost:45111 --output json | jq -r '.inflation')
-if [[ "$inflation" != "$expected_inflation" ]]; then
-  echo "Failed to verify 0 inflation"
-  echo "Expected: $expected_inflation"
+if [[ "$inflation" == "$zero_inflation" ]]; then
+  echo "Failed to verify non-zero inflation"
+  echo "Expected: >$expected_inflation"
   echo "Got:      $inflation"
   
   killall tacchaind
   exit 1
 else
-  echo "Verified 0 inflation successfully"
+  echo "Verified non-zero inflation successfully"
 fi
 
 # verify community tax

@@ -5,4 +5,8 @@ coverage.txt
 .testnet
 .test-localnet-params
 .test-localnet-evm
+.test-wasmd
 .mainnet
+
+# babylon
+.babylond

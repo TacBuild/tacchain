@@ -36,3 +36,4 @@ services:
       --rpc.laddr=tcp://0.0.0.0:${RPC_PORT}
       --json-rpc.address=0.0.0.0:${RPC_PORT_EVM}
       --json-rpc.ws-address=0.0.0.0:${WS_PORT_EVM}
+      --json-rpc.enable

@@ -9,6 +9,7 @@ KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-4DD1A5E1D03FA12D}
 VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
 VALIDATOR_MNEMONIC=${VALIDATOR_MNEMONIC:-"island mail dice alien project surround orchard ball twist worth innocent arrange assume dragon rotate enough flee rapid rookie swim addict ice destroy run"} # tac15lvhklny0khnwy7hgrxsxut6t6ku2cgknw79fr
+VALIDATOR_IP=${VALIDATOR_IP:-192.168.10.8}
 INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000000}
 INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000000}
 BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
@@ -26,22 +27,28 @@ SLASH_SIGNED_BLOCKS_WINDOW=${SLASH_SIGNED_BLOCKS_WINDOW:-21600}
 MAX_VALIDATORS=${MAX_VALIDATORS:-14}
 
 # ports
-RPC_PORT=${RPC_PORT:-26657}
-P2P_PORT=${P2P_PORT:-26656}
-GRPC_PORT=${GRPC_PORT:-9090}
-GRPC_WEB_PORT=${GRPC_WEB_PORT:-9091}
-API_PORT=${API_PORT:-1317}
-JSON_RPC_PORT=${JSON_RPC_PORT:-8545}
-JSON_WS_PORT=${JSON_WS_PORT:-8546}
-METRICS_PORT=${METRICS_PORT:-6065}
-PROMETHEUS_PORT=${PROMETHEUS_PORT:-26660}
-PPROF_PORT=${PPROF_PORT:-6060}
-PROXY_PORT=${PROXY_PORT:-26658}
+RPC_PORT=${RPC_PORT:-27657}
+P2P_PORT=${P2P_PORT:-27656}
+GRPC_PORT=${GRPC_PORT:-9190}
+GRPC_WEB_PORT=${GRPC_WEB_PORT:-9191}
+API_PORT=${API_PORT:-1417}
+JSON_RPC_PORT=${JSON_RPC_PORT:-8645}
+JSON_WS_PORT=${JSON_WS_PORT:-8646}
+METRICS_PORT=${METRICS_PORT:-6165}
+PROMETHEUS_PORT=${PROMETHEUS_PORT:-27660}
+PPROF_PORT=${PPROF_PORT:-6160}
+PROXY_PORT=${PROXY_PORT:-27658}
 
 # set cli options default values
 $TACCHAIND config set client chain-id $CHAIN_ID
 $TACCHAIND config set client keyring-backend $KEYRING_BACKEND
 $TACCHAIND config set client output json
+
+# if HOMEDIR already exists, skip initialization
+if [ -f "$HOMEDIR/config/genesis.json" ]; then
+  echo "HOMEDIR already exists, skipping initialization."
+  exit 0
+fi
 
 # init genesis file
 $TACCHAIND init "$NODE_MONIKER" --chain-id $CHAIN_ID --default-denom utac --home $HOMEDIR
@@ -221,7 +228,7 @@ jq '
 sed -i.bak "s/\"max_validators\": 100/\"max_validators\": $MAX_VALIDATORS/g" $HOMEDIR/config/genesis.json
 
 # set ports
-sed -i.bak "s/26657/$RPC_PORT/g" $HOMEDIR/config/config.toml
+sed -i.bak "s/127.0.0.1:26657/0.0.0.0:$RPC_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/26656/$P2P_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/9090/$GRPC_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/9091/$GRPC_WEB_PORT/g" $HOMEDIR/config/app.toml
@@ -236,5 +243,5 @@ sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 # setup and add validator to genesis
 echo $VALIDATOR_MNEMONIC | $TACCHAIND keys add validator --recover --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
-$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --gas-prices ${MIN_GAS_PRICE}utac --gas 200000 --home $HOMEDIR
+$TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --ip $VALIDATOR_IP --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --gas-prices ${MIN_GAS_PRICE}utac --gas 200000 --home $HOMEDIR
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

@@ -119,11 +119,9 @@ services:
       context: ../..
       dockerfile: ./Dockerfile
     ports:
-      - "5183:5183"
-      - "26676-26677:26656-26657"
-      - "1319:1317"
-      - "9092:9090"
-      - "2347:2345"
+      - "27656-27657:27656-27657"
+      - "1417:1417"
+      - "9190:9190"
     volumes:
       - ./.babylond/tacchaind:/home/tacchaind/.tacchaind
       - ./init-tacchaind.sh:/home/init-tacchaind.sh
@@ -131,10 +129,32 @@ services:
       HOMEDIR: /home/tacchaind/.tacchaind
     command: >
       bash -c "/home/init-tacchaind.sh && tacchaind start --home /home/tacchaind/.tacchaind --chain-id tacchain_2391-1"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
     networks:
       localnet:
         ipv4_address: 192.168.10.8
     restart: unless-stopped
+
+  tacchaind-init-babylon-contracts:
+    build:
+      context: ../..
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./.babylond/tacchaind:/home/tacchaind/.tacchaind
+      - ./contracts:/home/tacchaind/contracts
+      - ./init-contracts.sh:/home/tacchaind/init-contracts.sh
+    environment:
+      HOMEDIR: /home/tacchaind/.tacchaind
+    command: >
+      bash -c "/home/tacchaind/init-contracts.sh"
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.9
+    depends_on:
+      - tacchaind
 
   # btc-staker:
   #   container_name: btc-staker

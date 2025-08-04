@@ -5,18 +5,38 @@ TACCHAIND=${TACCHAIND:-$(which tacchaind)}
 HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 OWNER_KEY=${OWNER_KEY:-validator}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
-RPC_URL=${RPC_URL:-http://localhost:26657}
+RPC_URL=${RPC_URL:-http://tacchaind:27657}
+CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
 
 BABYLON_CONTRACT_FILE=${BABYLON_CONTRACT_FILE:-"$(dirname "$0")/contracts/babylon_contract_v0.14.0.wasm"}
 BTC_LIGHT_CLIENT_CONTRACT_FILE=${BTC_LIGHT_CLIENT_CONTRACT_FILE:-"$(dirname "$0")/contracts/btc_light_client_v0.14.0.wasm"}
 BTC_STAKING_CONTRACT_FILE=${BTC_STAKING_CONTRACT_FILE:-"$(dirname "$0")/contracts/btc_staking_v0.14.0.wasm"}
 BTC_FINALITY_CONTRACT_FILE=${BTC_FINALITY_CONTRACT_FILE:-"$(dirname "$0")/contracts/btc_finality_v0.14.0.wasm"}
 
+# wait for network to start
+echo "Waiting for network to start"
+timeout=120
+elapsed=0
+interval=2
+while ! tacchaind query block --type=height 3 --node $RPC_URL > /dev/null 2>&1; do
+  sleep $interval
+  elapsed=$((elapsed + interval))
+  if [ $elapsed -ge $timeout ]; then
+    echo "Failed to start network. Timeout waiting for block height 3"
+
+    killall tacchaind
+    exit 1
+  fi
+done
+echo "Network started successfully"
+
+$TACCHAIND config set client chain-id $CHAIN_ID
+
 # check if already initialized
 DEFAULT_PARAMS='{"babylon_contract_code_id":"0","btc_light_client_contract_code_id":"0","btc_staking_contract_code_id":"0","btc_finality_contract_code_id":"0","babylon_contract_address":"","btc_light_client_contract_address":"","btc_staking_contract_address":"","btc_finality_contract_address":"","max_gas_begin_blocker":500000}'
 CURRENT_PARAMS=$($TACCHAIND q babylon params --node $RPC_URL --output json)
 if [ "$CURRENT_PARAMS" != "$DEFAULT_PARAMS" ]; then
-  echo "Babylon Contracts already initialized. Exiting."
+  echo "Babylon Contracts already initialized. Skipping babylon contract init."
   exit 0
 fi
 
@@ -91,6 +111,7 @@ echo STAKING_MSG="$STAKING_MSG"
 echo FINALITY_MSG="$FINALITY_MSG"
 echo ADMIN="$ADMIN"
 
+# TODO: currently after initialising the node logs throw warning on each block "cannot get tx contracts from context module=x/wasm", seems to be from x/babylon abci.go?
 $TACCHAIND tx babylon instantiate-babylon-contracts "$BABYLON_CONTRACT_CODE_ID" "$BTC_LIGHT_CLIENT_CONTRACT_CODE_ID" "$BTC_STAKING_CONTRACT_CODE_ID" "$BTC_FINALITY_CONTRACT_CODE_ID" "regtest" "01020304" 1 2 false "$STAKING_MSG" "$FINALITY_MSG" "test-consumer" "test-consumer-description" \
   --admin=$ADMIN \
   --ibc-transfer-channel-id=channel-0 \

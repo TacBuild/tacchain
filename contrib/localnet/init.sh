@@ -148,6 +148,7 @@ sed -i.bak "s/\"active_static_precompiles\": \[\]/\"active_static_precompiles\":
 
 # set x/feemarket min gas price
 sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"base_fee\": \"1000000000.000000000000000000\"/\"base_fee\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
 
 # set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json

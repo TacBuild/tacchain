@@ -7,7 +7,7 @@ HOMEDIR=.test-wasmd
 echo "-----------------------"
 echo "## Add new CosmWasm contract"
 RESP=$(tacchaind tx wasm store "$DIR/testdata/hackatom.wasm" \
-  --from validator --gas 1500000 --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --from validator --gas 1500000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 RESP=$(tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR)
 CODE_ID=$(echo "$RESP" | jq -r '.events[]| select(.type=="store_code").attributes[]| select(.key=="code_id").value')
@@ -28,7 +28,7 @@ echo "## Create new contract instance"
 INIT="{\"verifier\":\"$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)\", \"beneficiary\":\"$(tacchaind keys show fred -a --keyring-backend=test --home $HOMEDIR)\"}"
 RESP=$(tacchaind tx wasm instantiate "$CODE_ID" "$INIT" --admin="$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)" \
   --from validator --amount="100utac" --label "local0.1.0" \
-  --gas 1000000 --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --gas 1000000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 
@@ -40,7 +40,7 @@ RESP=$(tacchaind tx wasm instantiate2 "$CODE_ID" "$INIT" $(echo -n "tacchain_239
   --admin="$(tacchaind keys show validator -a --keyring-backend=test --home $HOMEDIR)" \
   --from validator --amount="100utac" --label "local0.1.0" \
   --fix-msg \
-  --gas 1000000 --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --gas 1000000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 
@@ -62,7 +62,7 @@ echo "## Execute contract $CONTRACT"
 MSG='{"release":{}}'
 RESP=$(tacchaind tx wasm execute "$CONTRACT" "$MSG" \
   --from validator \
-  --gas 1000000 --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --gas 1000000 --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json | jq
 
@@ -72,7 +72,7 @@ echo "## Set new admin"
 echo "### Query old admin: $(tacchaind q wasm contract "$CONTRACT" -o json --home $HOMEDIR | jq -r '.contract_info.admin')"
 echo "### Update contract"
 RESP=$(tacchaind tx wasm set-contract-admin "$CONTRACT" "$(tacchaind keys show fred -a --keyring-backend=test --home $HOMEDIR)" \
-  --from validator --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --from validator --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 
@@ -82,7 +82,7 @@ echo "-----------------------"
 echo "## Migrate contract"
 echo "### Upload new code"
 RESP=$(tacchaind tx wasm store "$DIR/testdata/burner.wasm" \
-  --from validator --gas 1100000 --gas-prices 40000000000utac -y  --node=http://localhost:26657 -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --from validator --gas 1100000 --gas-prices 25000000000utac -y  --node=http://localhost:26657 -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 RESP=$(tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR)
 BURNER_CODE_ID=$(echo "$RESP" | jq -r '.events[]| select(.type=="store_code").attributes[]| select(.key=="code_id").value')
@@ -91,7 +91,7 @@ echo "### Migrate to code id: $BURNER_CODE_ID"
 
 DEST_ACCOUNT=$(tacchaind keys show fred -a --keyring-backend=test --home $HOMEDIR)
 RESP=$(tacchaind tx wasm migrate "$CONTRACT" "$BURNER_CODE_ID" "{\"payout\": \"$DEST_ACCOUNT\"}" --from fred \
-   -b sync --gas-prices 40000000000utac -y -o json --keyring-backend=test --home $HOMEDIR)
+   -b sync --gas-prices 25000000000utac -y -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 
@@ -108,7 +108,7 @@ echo "## Clear contract admin"
 echo "### Query old admin: $(tacchaind q wasm contract "$CONTRACT" -o json --home $HOMEDIR | jq -r '.contract_info.admin')"
 echo "### Update contract"
 RESP=$(tacchaind tx wasm clear-contract-admin "$CONTRACT" \
-  --from fred --gas-prices 40000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
+  --from fred --gas-prices 25000000000utac -y  -b sync -o json --keyring-backend=test --home $HOMEDIR)
 sleep 6
 tacchaind q tx $(echo "$RESP"| jq -r '.txhash') -o json --home $HOMEDIR | jq
 echo "### Query new admin: $(tacchaind q wasm contract "$CONTRACT" -o json --home $HOMEDIR | jq -r '.contract_info.admin')"

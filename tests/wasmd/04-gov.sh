@@ -14,7 +14,7 @@ RESP=$(tacchaind tx wasm submit-proposal store-instantiate "$DIR/testdata/reflec
   --amount 123utac \
   --keyring-backend=test \
   --gas 1500000 \
-  --gas-prices 40000000000utac \
+  --gas-prices 25000000000utac \
   --from validator -y --node=http://localhost:26657 -b sync -o json --home $HOMEDIR)
 echo $RESP
 sleep 6

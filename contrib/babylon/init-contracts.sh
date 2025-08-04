@@ -23,8 +23,6 @@ while ! tacchaind query block --type=height 3 --node $RPC_URL > /dev/null 2>&1; 
   elapsed=$((elapsed + interval))
   if [ $elapsed -ge $timeout ]; then
     echo "Failed to start network. Timeout waiting for block height 3"
-
-    killall tacchaind
     exit 1
   fi
 done

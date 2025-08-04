@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 export HOMEDIR=.test-wasmd
+export MIN_GAS_PRICE=25000000000
 
 # start new network
 echo "Starting localnet"

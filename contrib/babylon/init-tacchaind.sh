@@ -230,7 +230,7 @@ sed -i.bak "s/\"max_validators\": 100/\"max_validators\": $MAX_VALIDATORS/g" $HO
 # set ports
 sed -i.bak "s/127.0.0.1:26657/0.0.0.0:$RPC_PORT/g" $HOMEDIR/config/config.toml
 sed -i.bak "s/26656/$P2P_PORT/g" $HOMEDIR/config/config.toml
-sed -i.bak "s/9090/$GRPC_PORT/g" $HOMEDIR/config/app.toml
+sed -i.bak "s/localhost:9090/0.0.0.0:$GRPC_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/9091/$GRPC_WEB_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/1317/$API_PORT/g" $HOMEDIR/config/app.toml
 sed -i.bak "s/8545/$JSON_RPC_PORT/g" $HOMEDIR/config/app.toml

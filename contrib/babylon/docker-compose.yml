@@ -188,6 +188,25 @@ services:
     depends_on:
       - tacchaind
 
+  hermes-ibc-relayer:
+    image: informalsystems/hermes:1.13.1
+    restart: unless-stopped
+    volumes:
+      - ./.babylond/hermes:/home/hermes
+      - ./hermes-ibc-relayer/mnemonic.txt:/home/hermes-ibc-relayer/mnemonic.txt
+      - ./hermes-ibc-relayer/start.sh:/home/hermes-ibc-relayer/start.sh
+      - ./hermes-ibc-relayer/config.toml:/home/hermes/.hermes/config.toml
+    entrypoint: /home/hermes-ibc-relayer/start.sh
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.11
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    depends_on:
+      - tacchaind-fund-relayer
+      - babylond-fund-relayer
+
   # btc-staker:
   #   container_name: btc-staker
   #   image: babylonlabs-io/btc-staker

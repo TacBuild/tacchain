@@ -29,7 +29,7 @@ services:
     platform: linux/amd64
     networks:
       localnet:
-        ipv4_address: 192.168.10.30
+        ipv4_address: 192.168.10.3
     environment:
       - ZMQ_SEQUENCE_PORT=29000
       - ZMQ_RAWBLOCK_PORT=29001
@@ -55,7 +55,7 @@ services:
       vigilante reporter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/reporter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.7
+        ipv4_address: 192.168.10.4
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
       - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
@@ -71,7 +71,7 @@ services:
       vigilante submitter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.8
+        ipv4_address: 192.168.10.5
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
       - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
@@ -88,7 +88,7 @@ services:
       vigilante monitor --config /home/vigilante/vigilante.yml --genesis /home/vigilante/genesis.json 2>&1 | tee /home/vigilante/config/monitor.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.9
+        ipv4_address: 192.168.10.6
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
       - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
@@ -105,13 +105,35 @@ services:
       vigilante bstracker --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.10
+        ipv4_address: 192.168.10.7
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
       - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
     depends_on:
       - bitcoindsim
       - babylond
+    restart: unless-stopped
+
+  tacchaind:
+    build:
+      context: ../..
+      dockerfile: ./Dockerfile
+    ports:
+      - "5183:5183"
+      - "26676-26677:26656-26657"
+      - "1319:1317"
+      - "9092:9090"
+      - "2347:2345"
+    volumes:
+      - ./.babylond/tacchaind:/home/tacchaind/.tacchaind
+      - ./init-tacchaind.sh:/home/init-tacchaind.sh
+    environment:
+      HOMEDIR: /home/tacchaind/.tacchaind
+    command: >
+      bash -c "/home/init-tacchaind.sh && tacchaind start --home /home/tacchaind/.tacchaind --chain-id tacchain_2391-1"
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.8
     restart: unless-stopped
 
   # btc-staker:

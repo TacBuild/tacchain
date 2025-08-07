@@ -1,4 +1,33 @@
 services:
+
+# Local Bitcoin Network
+  bitcoindsim:
+    build:
+      context: ./bitcoindsim/
+      dockerfile: ./Dockerfile
+    platform: linux/amd64
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.2
+    environment:
+      - ZMQ_SEQUENCE_PORT=29000
+      - ZMQ_RAWBLOCK_PORT=29001
+      - ZMQ_RAWTR_PORT=29002
+      - RPC_PORT=18443
+      - RPC_USER=rpcuser
+      - RPC_PASS=rpcpass
+      - WALLET_PASS=walletpass
+      - WALLET_NAME=default
+      - BTCSTAKER_WALLET_NAME=btcstaker
+      - BTCSTAKER_WALLET_ADDR_COUNT=3
+      - GENERATE_INTERVAL_SECS=10
+    ports:
+      - "18443:18443"
+      - "29000-29002:29000-29002"
+    volumes:
+      - ./.babylond/bitcoin:/bitcoindsim/bitcoin:Z
+
+# Local Babylon Network and Services
   babylond:
     build:
       context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
@@ -22,48 +51,34 @@ services:
       - "2345:2345"
     networks:
       localnet:
-        ipv4_address: 192.168.10.2
+        ipv4_address: 192.168.10.3
 
-  babylond-fund-relayer:
+  babylond-fund-accounts:
     build:
       context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
       dockerfile: contrib/images/babylond/Dockerfile
     volumes:
       - "./.babylond/node0/babylond:/data"
-      - "./fund-babylond-relayer.sh:/fund-babylond-relayer.sh"
+      - "./fund-accounts.sh:/fund-accounts.sh"
+    environment:
+      - BINARY=babylond
+      - HOMEDIR=/data
+      - SENDER_KEY=test-spending-key
+      - CHAIN_ID=babylon-localnet
+      - RPC_URL=http://babylond:26657
+      - AMOUNT=100000000000
+      - GAS_PRICES=1
+      - DENOM=ubbn
+      - RELAYER_ADDRESS=bbn1mjyd6ksf0ay5j5ta3x7hqeptxs6j3cr9lawv3d
+      - FPD_ADDRESS=bbn1jswmc6x22vlgs507n2wuqmparcqun67v0mg93p
+      - EOTSMANAGER_ADDRESS=bbn1fezaz37eqxxgg5rzm3xg5u53qahp0q6ae55ktt
     command: >
-      bash -c "/fund-babylond-relayer.sh"
+      bash -c "/fund-accounts.sh"
     networks:
       localnet:
-        ipv4_address: 192.168.10.3
+        ipv4_address: 192.168.10.4
     depends_on:
       - babylond
-
-  bitcoindsim:
-    build:
-      context: ./bitcoindsim/
-      dockerfile: ./Dockerfile
-    platform: linux/amd64
-    networks:
-      localnet:
-        ipv4_address: 192.168.10.3
-    environment:
-      - ZMQ_SEQUENCE_PORT=29000
-      - ZMQ_RAWBLOCK_PORT=29001
-      - ZMQ_RAWTR_PORT=29002
-      - RPC_PORT=18443
-      - RPC_USER=rpcuser
-      - RPC_PASS=rpcpass
-      - WALLET_PASS=walletpass
-      - WALLET_NAME=default
-      - BTCSTAKER_WALLET_NAME=btcstaker
-      - BTCSTAKER_WALLET_ADDR_COUNT=3
-      - GENERATE_INTERVAL_SECS=10
-    ports:
-      - "18443:18443"
-      - "29000-29002:29000-29002"
-    volumes:
-      - ./.babylond/bitcoin:/bitcoindsim/bitcoin:Z
 
   vigilante-reporter:
     build:
@@ -72,10 +87,10 @@ services:
       vigilante reporter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/reporter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.4
+        ipv4_address: 192.168.10.5
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
-      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+      - ./vigilante.yml:/home/vigilante/vigilante.yml
     depends_on:
       - bitcoindsim
       - babylond
@@ -88,10 +103,10 @@ services:
       vigilante submitter --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.5
+        ipv4_address: 192.168.10.6
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
-      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+      - ./vigilante.yml:/home/vigilante/vigilante.yml
     depends_on:
       - bitcoindsim
       - babylond
@@ -105,11 +120,11 @@ services:
       vigilante monitor --config /home/vigilante/vigilante.yml --genesis /home/vigilante/genesis.json 2>&1 | tee /home/vigilante/config/monitor.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.6
+        ipv4_address: 192.168.10.7
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
-      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
-      - ./.babylond/node0/babylond/config/genesis.json:/home/vigilante/genesis.json:ro
+      - ./vigilante.yml:/home/vigilante/vigilante.yml
+      - ./.babylond/node0/babylond/config/genesis.json:/home/vigilante/genesis.json
     depends_on:
       - bitcoindsim
       - babylond
@@ -122,15 +137,49 @@ services:
       vigilante bstracker --config /home/vigilante/vigilante.yml 2>&1 | tee /home/vigilante/config/submitter.log
     networks:
       localnet:
-        ipv4_address: 192.168.10.7
+        ipv4_address: 192.168.10.8
     volumes:
       - ./.babylond/vigilante:/home/vigilante/config
-      - ./vigilante.yml:/home/vigilante/vigilante.yml:ro
+      - ./vigilante.yml:/home/vigilante/vigilante.yml
     depends_on:
       - bitcoindsim
       - babylond
     restart: unless-stopped
 
+  eotsmanager:
+    build:
+      context: https://github.com/babylonlabs-io/finality-provider.git#951d696f9bf7ad2a55631907983a92eb42cbb1c6
+    command: bash -c "/home/finality-provider/init-eotsmanager.sh && eotsd start"
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.9
+    ports:
+      - "15825:15813"
+    volumes:
+      - ./.babylond/eotsmanager:/home/finality-provider/.eotsd
+      - ./eotsd.conf:/home/finality-provider/.eotsd/eotsd.conf
+      - ./init-eotsmanager.sh:/home/finality-provider/init-eotsmanager.sh
+    depends_on:
+      - babylond
+    restart: unless-stopped
+
+  finality-provider:
+    build:
+      context: https://github.com/babylonlabs-io/finality-provider.git#951d696f9bf7ad2a55631907983a92eb42cbb1c6
+    command: fpd start
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.10
+    ports:
+      - "15822:15812"
+    volumes:
+      - ./.babylond/finality-provider:/home/finality-provider/.fpd
+      - ./fpd.conf:/home/finality-provider/.fpd/fpd.conf
+    depends_on:
+      - babylond
+    restart: unless-stopped
+
+# Local BSN Tacchain Network and Services
   tacchaind:
     build:
       context: ../..
@@ -152,7 +201,7 @@ services:
       - seccomp:unconfined
     networks:
       localnet:
-        ipv4_address: 192.168.10.8
+        ipv4_address: 192.168.10.11
     restart: unless-stopped
 
   tacchaind-init-babylon-contracts:
@@ -169,25 +218,26 @@ services:
       bash -c "/home/tacchaind/init-contracts.sh"
     networks:
       localnet:
-        ipv4_address: 192.168.10.9
+        ipv4_address: 192.168.10.12
     depends_on:
       - tacchaind
 
-  tacchaind-fund-relayer:
+  tacchaind-fund-accounts:
     build:
-      context: ../..
-      dockerfile: ./Dockerfile
+      context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
+      dockerfile: contrib/images/babylond/Dockerfile
     volumes:
       - ./.babylond/tacchaind:/home/tacchaind/.tacchaind
-      - ./fund-tacchaind-relayer.sh:/home/tacchaind/fund-tacchaind-relayer.sh
+      - "./fund-accounts.sh:/fund-accounts.sh"
     command: >
-      bash -c "/home/tacchaind/fund-tacchaind-relayer.sh"
+      bash -c "/fund-accounts.sh"
     networks:
       localnet:
-        ipv4_address: 192.168.10.10
+        ipv4_address: 192.168.10.13
     depends_on:
       - tacchaind
 
+# IBC Relayer
   hermes-ibc-relayer:
     image: informalsystems/hermes:1.13.1
     restart: unless-stopped
@@ -199,13 +249,13 @@ services:
     entrypoint: /home/hermes-ibc-relayer/start.sh
     networks:
       localnet:
-        ipv4_address: 192.168.10.11
+        ipv4_address: 192.168.10.14
     ports:
       - "3000:3000"
       - "3001:3001"
     depends_on:
       - tacchaind-fund-relayer
-      - babylond-fund-relayer
+      - babylond-fund-accounts
 
   # btc-staker:
   #   container_name: btc-staker

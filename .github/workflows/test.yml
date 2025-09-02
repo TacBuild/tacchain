@@ -14,7 +14,7 @@ jobs:
         arch: [amd64, arm64]
         targetos: [darwin, linux]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"
@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: docker/build-push-action@v6
         with:
           context: .
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"
@@ -56,7 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
       - uses: foundry-rs/foundry-toolchain@v1
         with:
@@ -69,7 +69,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"
@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"
@@ -92,7 +92,7 @@ jobs:
   test-tac-address-converter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
       - run: cd ./contrib/tac-address-converter && npm install && npm run test
 
@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"
@@ -112,7 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: test-build
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23.6"

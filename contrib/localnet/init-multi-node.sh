@@ -137,7 +137,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
     # add all nodes except the current one
     if [ "$i" != "$j" ]; then
       CURRENT_PEER=$((CURRENT_PEER + 1))
-      NODE_ID=$($TACCHAIND tendermint show-node-id --home $HOMEDIR/node$j)
+      NODE_ID=$($TACCHAIND comet show-node-id --home $HOMEDIR/node$j)
       P2P_PORT=451$((j+1))0
       PERSISTENT_PEERS+=$NODE_ID@127.0.0.1:$P2P_PORT
       # add comma if not last node

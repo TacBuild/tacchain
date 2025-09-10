@@ -200,7 +200,7 @@ NOTE: The provided examples use `--keyring-backend test`. This is not recommende
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .mainnet tendermint show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .mainnet comet show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx
@@ -488,7 +488,7 @@ tacchaind --home .testnet keys unsafe-import-eth-key validator <PRIVATE_KEY> --k
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .testnet comet show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx
@@ -814,7 +814,7 @@ tacchaind --home .testnet keys unsafe-import-eth-key validator <PRIVATE_KEY> --k
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amount\":\"1000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .testnet comet show-validator),\"amount\":\"1000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx

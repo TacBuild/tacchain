@@ -95,6 +95,6 @@ btcstaking-tracker:
   max-jitter-interval: 30s
   btcnetparams: regtest
   max-slashing-concurrency: 20
-  indexer-addr: http://electrs:3000
+  indexer-addr: http://electrs:3003
   fetch-comet-block-interval: 3s
   fetch-evidence-interval: 10s

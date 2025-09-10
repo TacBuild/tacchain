@@ -13,20 +13,20 @@ BTC_LIGHT_CLIENT_CONTRACT_FILE=${BTC_LIGHT_CLIENT_CONTRACT_FILE:-"$(dirname "$0"
 BTC_STAKING_CONTRACT_FILE=${BTC_STAKING_CONTRACT_FILE:-"$(dirname "$0")/contracts/btc_staking_v0.14.0.wasm"}
 BTC_FINALITY_CONTRACT_FILE=${BTC_FINALITY_CONTRACT_FILE:-"$(dirname "$0")/contracts/btc_finality_v0.14.0.wasm"}
 
-# wait for network to start
-echo "Waiting for network to start"
+# establish connection with the network
+echo "Establishing connection with the network..."
 timeout=120
 elapsed=0
 interval=2
-while ! tacchaind query block --type=height 3 --node $RPC_URL > /dev/null 2>&1; do
+while ! $TACCHAIND query block --type=height 3 --node $RPC_URL > /dev/null 2>&1; do
   sleep $interval
   elapsed=$((elapsed + interval))
   if [ $elapsed -ge $timeout ]; then
-    echo "Failed to start network. Timeout waiting for block height 3"
+    echo "Failed to establish connection with the network. Timeout waiting for block height 3"
     exit 1
   fi
 done
-echo "Network started successfully"
+echo "Connection established successfully."
 
 $TACCHAIND config set client chain-id $CHAIN_ID
 

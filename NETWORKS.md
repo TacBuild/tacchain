@@ -153,7 +153,7 @@ tacchaind start --chain-id tacchain_239-1 --home .mainnet
 
 ``` shell
 export TAC_HOME="~/.tacchain"
-export VERSION="v1.0.0"
+export VERSION="v1.0.1"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
 git checkout ${VERSION}

@@ -1,6 +1,6 @@
 services:
 
-# Local Bitcoin Network
+# 1. Spin up local bitcoin network
   bitcoindsim:
     build:
       context: ./bitcoindsim/
@@ -27,7 +27,42 @@ services:
     volumes:
       - ./.babylond/bitcoin:/bitcoindsim/bitcoin:Z
 
-# Local Babylon Network and Services
+# 2. Spin up bitcoin indexer
+  electrs:
+    image: mempool/electrs:v3.1.0
+    container_name: electrs
+    platform: linux/amd64
+    networks:
+      localnet:
+        ipv4_address: 192.168.10.31
+    depends_on:
+      - bitcoindsim
+    environment:
+      - ELECTRS_NETWORK=regtest
+      - ELECTRS_COOKIE=rpcuser:rpcpass
+      - ELECTRS_DAEMON_RPC_ADDR=bitcoindsim:18443
+      - ELECTRS_DB_DIR=/electrs/.electrs/db
+    ports:
+      - "8080:8080"
+      - "3003:3003"
+    volumes:
+      - ../.babylond/electrs:/data:Z
+      - ../.babylond/bitcoin:/bitcoin/.bitcoin:Z
+    command:
+      [ "--cookie", "rpcuser:rpcpass",
+        "--network", "regtest",
+        "--electrum-rpc-addr", "0.0.0.0:8080",
+        "--http-addr", "0.0.0.0:3003",
+        "--db-dir", "/electrs/.electrs/db/",
+        "--daemon-rpc-addr", "bitcoindsim:18443",
+        "--daemon-dir", "/bitcoin/.bitcoin",
+        "-v",
+        "--address-search",
+        "--cors", "*",
+        "--timestamp"
+      ]
+
+# 3. Spin up local babylon network
   babylond:
     build:
       context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
@@ -53,6 +88,7 @@ services:
       localnet:
         ipv4_address: 192.168.10.3
 
+# 4. Fund all service accounts on babylon network (ibc relayer, finality provider, etc.)
   babylond-fund-accounts:
     build:
       context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
@@ -80,6 +116,7 @@ services:
     depends_on:
       - babylond
 
+# 5. Spin up vigilante services on babylon network
   vigilante-reporter:
     build:
       context: https://github.com/babylonlabs-io/vigilante.git#v0.23.7
@@ -146,6 +183,9 @@ services:
       - babylond
     restart: unless-stopped
 
+# TODO: 5. Spin up covenant services on babylon network
+
+# 6. Spin up finality provider services on babylon network
   eotsmanager:
     build:
       context: https://github.com/babylonlabs-io/finality-provider.git#951d696f9bf7ad2a55631907983a92eb42cbb1c6
@@ -179,7 +219,7 @@ services:
       - babylond
     restart: unless-stopped
 
-# Local BSN Tacchain Network and Services
+# 6. Spin up a local tacchain network as a BSN consumer network
   tacchaind:
     build:
       context: ../..
@@ -204,6 +244,7 @@ services:
         ipv4_address: 192.168.10.11
     restart: unless-stopped
 
+# 7. Initialize babylon contracts on tacchain network
   tacchaind-init-babylon-contracts:
     build:
       context: ../..
@@ -222,6 +263,7 @@ services:
     depends_on:
       - tacchaind
 
+# 8. Fund all service accounts on tacchain network (ibc relayer, finality provider, etc.)
   tacchaind-fund-accounts:
     build:
       context: https://github.com/babylonlabs-io/babylon.git#ec3dc80bff2c15e4c44525b3e91d963f53bb617d
@@ -235,9 +277,11 @@ services:
       localnet:
         ipv4_address: 192.168.10.13
     depends_on:
-      - tacchaind
+      - tacchaind-init-babylon-contracts
 
-# IBC Relayer
+# TODO: 9. Spin up finality provider services on tacchain network
+
+# 10. Spin up ibc relayer
   hermes-ibc-relayer:
     image: informalsystems/hermes:1.13.1
     restart: unless-stopped
@@ -254,8 +298,13 @@ services:
       - "3000:3000"
       - "3001:3001"
     depends_on:
-      - tacchaind-fund-relayer
+      - tacchaind-fund-accounts
       - babylond-fund-accounts
+
+# TODO: 11. Register tacchain as a consumer chain on babylon network
+
+# TODO: 12. Spin up btcstaker
+# TODO: 13.
 
   # btc-staker:
   #   container_name: btc-staker
@@ -275,20 +324,6 @@ services:
   #     - babylondnode0
   #   restart: unless-stopped
 
-  # finality-provider:
-  #   container_name: finality-provider
-  #   image: babylonlabs-io/finality-provider
-  #   command: fpd start
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.12
-  #   ports:
-  #     - "15822:15812"
-  #   volumes:
-  #     - ../.babylond/finality-provider:/home/finality-provider/.fpd
-  #   depends_on:
-  #     - babylondnode0
-  #   restart: unless-stopped
 
   # consumer-fp:
   #   container_name: consumer-fp
@@ -303,21 +338,6 @@ services:
   #     - babylondnode0
   #     - consumer-eotsmanager
   #     - ibcsim-bcd
-  #   restart: unless-stopped
-
-  # eotsmanager:
-  #   container_name: eotsmanager
-  #   image: babylonlabs-io/finality-provider
-  #   command: eotsd start
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.14
-  #   ports:
-  #     - "15825:15813"
-  #   volumes:
-  #     - ../.babylond/eotsmanager:/home/finality-provider/.eotsd
-  #   depends_on:
-  #     - babylondnode0
   #   restart: unless-stopped
 
   # consumer-eotsmanager:
@@ -359,59 +379,6 @@ services:
   #     - babylondnode0
   #     - covenant-signer
   #   restart: unless-stopped
-
-  # ibcsim-bcd:
-  #   container_name: ibcsim-bcd
-  #   image: babylonlabs-io/ibcsim-bcd
-  #   ports:
-  #     - "5183:5183"
-  #     - "26676-26677:26656-26657"
-  #     - "1319:1317"
-  #     - "9092:9090"
-  #     - "2347:2345"
-  #   volumes:
-  #     - ../.babylond:/data:Z
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.20
-  #   depends_on:
-  #     - babylondnode0
-  #     - babylondnode1
-  #   restart: unless-stopped
-
-  # electrs:
-  #   image: mempool/electrs:v3.1.0
-  #   container_name: electrs
-  #   platform: linux/amd64
-  #   networks:
-  #     localnet:
-  #       ipv4_address: 192.168.10.31
-  #   depends_on:
-  #     - bitcoindsim
-  #   environment:
-  #     - ELECTRS_NETWORK=regtest
-  #     - ELECTRS_COOKIE=rpcuser:rpcpass
-  #     - ELECTRS_DAEMON_RPC_ADDR=bitcoindsim:18443
-  #     - ELECTRS_DB_DIR=/electrs/.electrs/db
-  #   ports:
-  #     - "8080:8080"
-  #     - "3000:3000"
-  #   volumes:
-  #     - ../.babylond/electrs:/data:Z
-  #     - ../.babylond/bitcoin:/bitcoin/.bitcoin:Z
-  #   command:
-  #     [ "--cookie", "rpcuser:rpcpass",
-  #       "--network", "regtest",
-  #       "--electrum-rpc-addr", "0.0.0.0:8080",
-  #       "--http-addr", "0.0.0.0:3000",
-  #       "--db-dir", "/electrs/.electrs/db/",
-  #       "--daemon-rpc-addr", "bitcoindsim:18443",
-  #       "--daemon-dir", "/bitcoin/.bitcoin",
-  #       "-v",
-  #       "--address-search",
-  #       "--cors", "*",
-  #       "--timestamp"
-  #     ]
 
 networks:
   localnet:

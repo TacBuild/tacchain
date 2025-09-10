@@ -195,6 +195,7 @@ type TacChainApp struct {
 	legacyAmino       *codec.LegacyAmino
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
+	clientCtx         client.Context
 	interfaceRegistry types.InterfaceRegistry
 
 	pendingTxListeners []evmante.PendingTxListener
@@ -751,7 +752,7 @@ func NewTacChainApp(
 		bank.NewAppModule(encodingConfig.Codec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
 		feegrantmodule.NewAppModule(encodingConfig.Codec, app.AccountKeeper, app.BankKeeper, app.FeeGrantKeeper, app.interfaceRegistry),
 		gov.NewAppModule(encodingConfig.Codec, &app.GovKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
-		mint.NewAppModule(encodingConfig.Codec, app.MintKeeper, app.AccountKeeper, TacZeroInflation, app.GetSubspace(minttypes.ModuleName)),
+		mint.NewAppModule(encodingConfig.Codec, app.MintKeeper, app.AccountKeeper, nil, app.GetSubspace(minttypes.ModuleName)),
 		slashing.NewAppModule(encodingConfig.Codec, app.SlashingKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.interfaceRegistry),
 		distr.NewAppModule(encodingConfig.Codec, app.DistrKeeper, app.AccountKeeper, app.BankKeeper, app.StakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(encodingConfig.Codec, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
@@ -1122,6 +1123,10 @@ func (app *TacChainApp) InterfaceRegistry() types.InterfaceRegistry {
 // TxConfig returns TacChainApp's TxConfig
 func (app *TacChainApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+func (app *TacChainApp) SetClientCtx(clientCtx client.Context) {
+	app.clientCtx = clientCtx
 }
 
 // AutoCliOpts returns the autocli options for the app.

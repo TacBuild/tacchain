@@ -20,7 +20,7 @@ require (
 	github.com/cosmos/cosmos-db v1.1.3
 	github.com/cosmos/cosmos-sdk v0.53.4
 	github.com/cosmos/evm v0.4.1
-	github.com/cosmos/evm/evmd v0.0.0-20250907184600-67950ad934f3
+	github.com/cosmos/evm/evmd v0.0.0-20250814184252-f0609d9c06e6
 	github.com/cosmos/gogoproto v1.7.0
 	github.com/cosmos/ibc-go/v10 v10.0.0-beta.0.0.20250528142215-7d579b91ac6b
 	github.com/ethereum/go-ethereum v1.15.11

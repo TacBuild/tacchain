@@ -126,11 +126,13 @@ jq '
 
 # set EVM config
 # get ethereum chain id from CHAIN_ID
-# EVM_CHAIN_ID=$(echo $CHAIN_ID | sed -E 's/.*_([0-9]+)-.*/\1/')
-# if [[ -z $EVM_CHAIN_ID ]]; then
-#     echo "Invalid CHAIN_ID format. Expected format: <any_string>_<number>-<number>"
-#     exit 1
-# fi
+EVM_CHAIN_ID=$(echo $CHAIN_ID | sed -E 's/.*_([0-9]+)-.*/\1/')
+if [[ -z $EVM_CHAIN_ID ]]; then
+    echo "Invalid CHAIN_ID format. Expected format: <any_string>_<number>-<number>"
+    exit 1
+fi
+
+sed -i.bak "s/evm-chain-id = 262144/evm-chain-id = $EVM_CHAIN_ID/g" $HOMEDIR/config/app.toml
 
 # sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMEDIR/config/genesis.json
 # sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json

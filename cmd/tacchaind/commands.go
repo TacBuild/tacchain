@@ -39,14 +39,18 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 	cfg := sdk.GetConfig()
 	cfg.Seal()
 
+	sdkAppCreator := func(l log.Logger, d dbm.DB, w io.Writer, ao servertypes.AppOptions) servertypes.Application {
+		return newApp(l, d, w, ao)
+	}
+
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome),
 		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, app.DefaultNodeHome),
-		snapshot.Cmd(newApp),
+		pruning.Cmd(sdkAppCreator, app.DefaultNodeHome),
+		snapshot.Cmd(sdkAppCreator),
 	)
 
 	// add Cosmos EVM' flavored TM commands to start server, etc.
@@ -100,6 +104,8 @@ func queryCommand() *cobra.Command {
 		server.QueryBlockResultsCmd(),
 	)
 
+	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
+
 	return cmd
 }
 
@@ -135,7 +141,7 @@ func newApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) evmserver.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	evmChainID, err := app.GetEVMChainID(cast.ToString(appOpts.Get(flags.FlagChainID)))

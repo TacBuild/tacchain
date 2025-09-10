@@ -727,7 +727,6 @@ func NewTacChainApp(
 			app.EVMKeeper,
 			app.GovKeeper,
 			app.SlashingKeeper,
-			app.EvidenceKeeper,
 			app.AppCodec(),
 		),
 	)
@@ -1015,12 +1014,13 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 			ExtensionOptionChecker: evmcosmostypes.HasDynamicFeeExtensionOption,
 			TxFeeChecker:           evmcosmosante.NewDynamicFeeChecker(app.FeeMarketKeeper),
 		},
-		AccountKeeper:   app.AccountKeeper,
-		IBCKeeper:       app.IBCKeeper,
-		CircuitKeeper:   &app.CircuitKeeper,
-		EvmKeeper:       app.EVMKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		MaxTxGasWanted:  maxGasWanted,
+		AccountKeeper:     app.AccountKeeper,
+		IBCKeeper:         app.IBCKeeper,
+		CircuitKeeper:     &app.CircuitKeeper,
+		EvmKeeper:         app.EVMKeeper,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		MaxTxGasWanted:    maxGasWanted,
+		PendingTxListener: app.onPendingTx,
 	},
 	)
 	if err != nil {
@@ -1029,6 +1029,12 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *TacChainApp) onPendingTx(hash common.Hash) {
+	for _, listener := range app.pendingTxListeners {
+		listener(hash)
+	}
 }
 
 // RegisterPendingTxListener is used by json-rpc server to listen to pending transactions callback.

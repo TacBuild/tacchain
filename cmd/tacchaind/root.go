@@ -25,7 +25,6 @@ import (
 	"github.com/Asphere-xyz/tacchain/app"
 
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
-	evmtestutil "github.com/cosmos/evm/evmd/testutil"
 	evmserverconfig "github.com/cosmos/evm/server/config"
 )
 
@@ -44,7 +43,7 @@ func NewRootCmd() *cobra.Command {
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(temp),
 		app.DefaultEVMChainID,
-		evmtestutil.NoOpEvmAppOptions,
+		app.NoOpEvmAppOptions,
 	)
 
 	encodingConfig := params.EncodingConfig{

@@ -12,7 +12,7 @@ import (
 
 	evmhd "github.com/cosmos/evm/crypto/hd"
 	evmencoding "github.com/cosmos/evm/encoding"
-	evmledgermocks "github.com/cosmos/evm/tests/integration/ledger/mocks"
+	evmledgermocks "github.com/cosmos/evm/evmd/tests/ledger/mocks"
 	evmtestutil "github.com/cosmos/evm/testutil"
 	evmutiltx "github.com/cosmos/evm/testutil/tx"
 

@@ -107,5 +107,8 @@ func GetEVMChainID(chainID string) (uint64, error) {
 	}
 
 	return res, nil
+}
 
+func NoOpEvmAppOptions(_ uint64) error {
+	return nil
 }

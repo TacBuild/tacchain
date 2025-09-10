@@ -29,7 +29,7 @@ import (
 	evmhd "github.com/cosmos/evm/crypto/hd"
 	evmcosmoskeyring "github.com/cosmos/evm/crypto/keyring"
 
-	evmledgermocks "github.com/cosmos/evm/tests/integration/ledger/mocks"
+	evmledgermocks "github.com/cosmos/evm/evmd/tests/ledger/mocks"
 	evmconstants "github.com/cosmos/evm/testutil/constants"
 	evmutiltx "github.com/cosmos/evm/testutil/tx"
 

@@ -8,7 +8,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
+	evmdconfig "github.com/cosmos/evm/evmd/cmd/evmd/config"
 	"github.com/cosmos/evm/evmd/eips"
 	evmvmtypes "github.com/cosmos/evm/x/vm/types"
 	evmvmcore "github.com/ethereum/go-ethereum/core/vm"

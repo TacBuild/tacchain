@@ -9,6 +9,7 @@ import (
 	"sort"
 
 	// Force-load the tracer engines to trigger registration due to Go-Ethereum v1.10.15 changes
+	"github.com/ethereum/go-ethereum/common"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/js"
 	_ "github.com/ethereum/go-ethereum/eth/tracers/native"
 
@@ -32,6 +33,7 @@ import (
 	// ibcfeekeeper "github.com/cosmos/ibc-go/v10/modules/apps/29-fee/keeper"
 	// ibcfeetypes "github.com/cosmos/ibc-go/v10/modules/apps/29-fee/types"
 	ibctransferv2 "github.com/cosmos/evm/x/ibc/transfer/v2"
+	ibccallbacks "github.com/cosmos/ibc-go/v10/modules/apps/callbacks"
 	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
 	ibctransfertypes "github.com/cosmos/ibc-go/v10/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v10/modules/core"
@@ -149,13 +151,16 @@ import (
 	"github.com/cosmos/evm/x/feemarket"
 	evmfeemarketkeeper "github.com/cosmos/evm/x/feemarket/keeper"
 	evmfeemarkettypes "github.com/cosmos/evm/x/feemarket/types"
-	"github.com/cosmos/evm/x/vm"
+	evmvm "github.com/cosmos/evm/x/vm"
 	evmcorevm "github.com/ethereum/go-ethereum/core/vm"
 
 	evmcosmosante "github.com/cosmos/evm/ante/evm"
+	evmconfig "github.com/cosmos/evm/config"
 	evmcosmostypes "github.com/cosmos/evm/types"
+	evmibccallbackskeeper "github.com/cosmos/evm/x/ibc/callbacks/keeper"
 	evmibctransfer "github.com/cosmos/evm/x/ibc/transfer" // NOTE: override ICS20 keeper to support IBC transfers of ERC20 tokens
 	evmibctransferkeeper "github.com/cosmos/evm/x/ibc/transfer/keeper"
+
 	evmvmkeeper "github.com/cosmos/evm/x/vm/keeper"
 	evmvmtypes "github.com/cosmos/evm/x/vm/types"
 )
@@ -192,6 +197,8 @@ type TacChainApp struct {
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
 
+	pendingTxListeners []evmante.PendingTxListener
+
 	// keys to access the substores
 	keys  map[string]*storetypes.KVStoreKey
 	tkeys map[string]*storetypes.TransientStoreKey
@@ -222,6 +229,7 @@ type TacChainApp struct {
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	IBCTransferKeeper   evmibctransferkeeper.Keeper
+	CallbackKeeper      evmibccallbackskeeper.ContractKeeper
 
 	// ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
 	// ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
@@ -254,7 +262,7 @@ func NewTacChainApp(
 	invCheckPeriod uint,
 	appOpts servertypes.AppOptions,
 	evmChainID uint64,
-	evmAppOptions evmd.EVMOptionsFn,
+	evmAppOptions evmconfig.EVMOptionsFn,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TacChainApp {
 	encodingConfig := evmencoding.MakeConfig(evmChainID)
@@ -419,7 +427,7 @@ func NewTacChainApp(
 		app.BankKeeper,
 		authtypes.FeeCollectorName,
 		authAddr,
-		mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(TacZeroInflationFormula)),
+		mintkeeper.WithMintFn(mintkeeper.DefaultMintFn(TacLinearInflationFormula)),
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -551,15 +559,6 @@ func NewTacChainApp(
 		runtime.ProvideCometInfoService(),
 	)
 	// If evidence needs to be handled for the app, set routes in router here and seal
-	// Note: The evidence precompile allows evidence to be submitted through an EVM transaction.
-	// If you implement a custom evidence handler in the router that changes token balances (e.g. penalizing
-	// addresses, deducting fees, etc.), be aware that the precompile logic (e.g. SetBalanceChangeEntries)
-	// must be properly integrated to reflect these balance changes in the EVM state. Otherwise, there is a risk
-	// of desynchronization between the Cosmos SDK state and the EVM state when evidence is submitted via the EVM.
-	//
-	// For example, if your custom evidence handler deducts tokens from a user’s account, ensure that the evidence
-	// precompile also applies these deductions through the EVM’s balance tracking. Failing to do so may cause
-	// inconsistencies in reported balances and break state synchronization.
 	app.EvidenceKeeper = *evidenceKeeper
 
 	// Cosmos EVM keepers
@@ -578,11 +577,13 @@ func NewTacChainApp(
 		encodingConfig.Codec,
 		keys[evmvmtypes.StoreKey],
 		tkeys[evmvmtypes.TransientKey],
+		keys,
 		authtypes.NewModuleAddress(govtypes.ModuleName),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.StakingKeeper,
 		app.FeeMarketKeeper,
+		&app.ConsensusParamsKeeper,
 		&app.Erc20Keeper,
 		tracer,
 	)
@@ -678,9 +679,18 @@ func NewTacChainApp(
 	icaHostStack := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// Create Transfer Stack
+	// create IBC module from top to bottom of stack
 	var ibcTransferStack porttypes.IBCModule
+
 	ibcTransferStack = evmibctransfer.NewIBCModule(app.IBCTransferKeeper)
+	maxCallbackGas := uint64(1_000_000)
 	ibcTransferStack = evmerc20.NewIBCMiddleware(app.Erc20Keeper, ibcTransferStack)
+	app.CallbackKeeper = evmibccallbackskeeper.NewKeeper(
+		app.AccountKeeper,
+		app.EVMKeeper,
+		app.Erc20Keeper,
+	)
+	ibcTransferStack = ibccallbacks.NewIBCMiddleware(ibcTransferStack, app.IBCKeeper.ChannelKeeper, app.CallbackKeeper, maxCallbackGas)
 
 	var ibcv2TransferStack ibcapi.IBCModule
 	ibcv2TransferStack = ibctransferv2.NewIBCModule(app.IBCTransferKeeper)
@@ -757,14 +767,14 @@ func NewTacChainApp(
 		// non sdk modules
 		// capability.NewAppModule(encodingConfig.Codec, *app.CapabilityKeeper, false),
 		ibc.NewAppModule(app.IBCKeeper),
-		evmibctransfer.NewAppModule(app.IBCTransferKeeper),
 		// ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		ibctm.NewAppModule(tmLightClientModule),
+		evmibctransfer.NewAppModule(app.IBCTransferKeeper),
 		// sdk
 		crisis.NewAppModule(app.CrisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)), // always be last to make sure that it checks for all invariants and not only part of them
 		// Cosmos EVM modules
-		vm.NewAppModule(app.EVMKeeper, app.AccountKeeper),
+		evmvm.NewAppModule(app.EVMKeeper, app.AccountKeeper, app.AccountKeeper.AddressCodec()),
 		feemarket.NewAppModule(app.FeeMarketKeeper),
 		evmerc20.NewAppModule(app.Erc20Keeper, app.AccountKeeper),
 	)
@@ -1021,6 +1031,11 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 	app.SetAnteHandler(anteHandler)
 }
 
+// RegisterPendingTxListener is used by json-rpc server to listen to pending transactions callback.
+func (app *TacChainApp) RegisterPendingTxListener(listener func(common.Hash)) {
+	app.pendingTxListeners = append(app.pendingTxListeners, listener)
+}
+
 func (app *TacChainApp) setPostHandler() {
 	postHandler, err := posthandler.NewPostHandler(
 		posthandler.HandlerOptions{},
@@ -1249,7 +1264,7 @@ func BlockedAddresses() map[string]bool {
 	}
 
 	blockedPrecompilesHex := evmvmtypes.AvailableStaticPrecompiles
-	for _, addr := range evmcorevm.PrecompiledAddressesBerlin {
+	for _, addr := range evmcorevm.PrecompiledAddressesPrague {
 		blockedPrecompilesHex = append(blockedPrecompilesHex, addr.Hex())
 	}
 

@@ -694,9 +694,8 @@ func NewTacChainApp(
 		consensus.NewAppModule(encodingConfig.Codec, app.ConsensusParamsKeeper),
 		circuit.NewAppModule(encodingConfig.Codec, app.CircuitKeeper),
 		// non sdk modules
-		// capability.NewAppModule(encodingConfig.Codec, *app.CapabilityKeeper, false),
+
 		ibc.NewAppModule(app.IBCKeeper),
-		// ibcfee.NewAppModule(app.IBCFeeKeeper),
 		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		ibctm.NewAppModule(tmLightClientModule),
 		evmibctransfer.NewAppModule(app.IBCTransferKeeper),
@@ -737,7 +736,6 @@ func NewTacChainApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
-	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,

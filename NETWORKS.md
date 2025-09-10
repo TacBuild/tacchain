@@ -42,7 +42,7 @@ This example guide connects to mainnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 
@@ -88,7 +88,7 @@ This example guide connects to mainnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - tar
@@ -144,7 +144,7 @@ tacchaind start --chain-id tacchain_239-1 --home .mainnet
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - lz4
@@ -292,7 +292,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 
@@ -368,7 +368,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - tar
@@ -424,7 +424,7 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - lz4
@@ -665,7 +665,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 ### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 

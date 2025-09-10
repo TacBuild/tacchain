@@ -105,7 +105,7 @@ fi
 
 # verify validators emergency balances, self delegations and description
 echo "Verifying validators emergency balances and self delegations"
-expected_validator_emergency_balance="99995000000000000000"
+expected_validator_emergency_balance="99920000000000000000"
 expected_validator_self_delegation="4999900000000000000000000"
 for i in $(seq 0 3); do
   echo "Verifying validator $i emergency balance"
@@ -269,7 +269,7 @@ fi
 
 # verify x/feemarket min gas price
 echo "Verifying x/feemarket min gas price"
-expected_feemarket_min_gas_price='25000000000.000000000000000000'
+expected_feemarket_min_gas_price='400000000000.000000000000000000'
 feemarket_min_gas_price=$(tacchaind q feemarket params --node http://localhost:45111 --output json | jq -r '.params .min_gas_price')
 if [[ "$feemarket_min_gas_price" != "$expected_feemarket_min_gas_price" ]]; then
   echo "Failed to verify x/feemarket min gas price"
@@ -319,7 +319,7 @@ expected_mint_params='{
   "mint_denom": "utac",
   "inflation_rate_change": "0.130000000000000000",
   "inflation_max": "0.050000000000000000",
-  "inflation_min": "0.000000000000000000",
+  "inflation_min": "0.010000000000000000",
   "goal_bonded": "0.600000000000000000",
   "blocks_per_year": "15768000"
 }'
@@ -345,13 +345,13 @@ expected_gov_params='{
     }
   ],
   "max_deposit_period": "48h0m0s",
-  "voting_period": "12h0m0s",
+  "voting_period": "168h0m0s",
   "quorum": "0.334000000000000000",
   "threshold": "0.500000000000000000",
   "veto_threshold": "0.334000000000000000",
   "min_initial_deposit_ratio": "1",
   "proposal_cancel_ratio": "0.500000000000000000",
-  "expedited_voting_period": "6h0m0s",
+  "expedited_voting_period": "84h0m0s",
   "expedited_threshold": "0.667000000000000000",
   "expedited_min_deposit": [
     {
@@ -442,7 +442,7 @@ fi
 
 # verify x/staking max validators
 echo "Verifying x/staking max validators"
-expected_max_validators="14"
+expected_max_validators="20"
 max_validators=$(tacchaind q staking params --node http://localhost:45111 --output json | jq -r '.params .max_validators')
 if [[ "$max_validators" != "$expected_max_validators" ]]; then
   echo "Failed to verify x/staking max validators"
@@ -455,19 +455,31 @@ else
   echo "Verified x/staking max validators successfully"
 fi
 
-# verify 0 inflation
-echo "Verifying 0 inflation"
-expected_inflation="0.000000000000000000"
+# verify non-zero inflation
+echo "Verifying non-zero inflation"
+zero_inflation="0.000000000000000000"
 inflation=$(tacchaind q mint inflation --node http://localhost:45111 --output json | jq -r '.inflation')
-if [[ "$inflation" != "$expected_inflation" ]]; then
-  echo "Failed to verify 0 inflation"
-  echo "Expected: $expected_inflation"
+if [[ "$inflation" == "$zero_inflation" ]]; then
+  echo "Failed to verify non-zero inflation"
+  echo "Expected: >$expected_inflation"
   echo "Got:      $inflation"
   
   killall tacchaind
   exit 1
 else
-  echo "Verified 0 inflation successfully"
+  echo "Verified non-zero inflation successfully"
+fi
+
+# verify community tax
+echo "Verifying community tax"
+expected_community_tax="0.000000000000000000"
+community_tax=$(tacchaind q distribution params --node http://localhost:45111 --output json | jq -r '.params .community_tax')
+if [[ "$community_tax" != "$expected_community_tax" ]]; then
+  echo "Failed to verify community tax"
+  echo "Expected: $expected_community_tax"
+  echo "Got:      $community_tax"
+else
+  echo "Verified community tax successfully"
 fi
 
 killall tacchaind

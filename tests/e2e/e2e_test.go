@@ -148,7 +148,7 @@ func (s *TacchainTestSuite) TestDelegation() {
 	require.NoError(s.T(), err, "Failed to parse delegation amount")
 
 	_, err = ExecuteCommand(ctx, params, "tx", "staking", "delegate", validatorAddr,
-		delegationAmount, "--from", "delegator", "--gas-prices", "100000000000utac", "-y")
+		delegationAmount, "--from", "delegator", "--gas-prices", "400000000000utac", "-y")
 	require.NoError(s.T(), err, "Failed to delegate tokens")
 
 	waitForNewBlock(s, nil)
@@ -187,7 +187,7 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 
 	delegationAmount := UTacAmount("10000000000000000")
 	output, err := ExecuteCommand(ctx, params, "tx", "staking", "delegate", validatorAddr,
-		delegationAmount, "--from", "apr_delegator", "--gas", "200000", "--gas-prices", "100000000000utac", "-y")
+		delegationAmount, "--from", "apr_delegator", "--gas", "200000", "--gas-prices", "400000000000utac", "-y")
 	require.NoError(s.T(), err, "Failed to delegate tokens: %s", output)
 
 	waitForNewBlock(s, nil)

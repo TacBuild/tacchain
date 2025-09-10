@@ -7,6 +7,9 @@ fi
 
 export HOMEDIR=.test-localnet-evm
 
+# reduce gas price to 25gwei, as current price (400gwei) is too high for the presigned tx we broadcast in the test
+export MIN_GAS_PRICE=25000000000
+
 # start new network
 echo "Starting localnet"
 echo y | make localnet > /dev/null 2>&1 &
@@ -32,7 +35,7 @@ echo "Network started successfully"
 echo "Testing multicall"
 
 echo "Funding multicall deployer"
-tacchaind tx bank send validator tac1qhejk0xr3zz98lm3kqgntv60lrjpycljdj3tjz 10000000000000000000utac --home $HOMEDIR --keyring-backend test --chain-id tacchain_2391-1 --gas-prices 100000000000utac --gas 200000 -y
+tacchaind tx bank send validator tac1qhejk0xr3zz98lm3kqgntv60lrjpycljdj3tjz 10000000000000000000utac --home $HOMEDIR --keyring-backend test --chain-id tacchain_2391-1 --gas-prices 25000000000utac --gas 200000 -y
 sleep 5
 echo "Multicall deployer funded successfully"
 

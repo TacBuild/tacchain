@@ -109,7 +109,7 @@ func QueryBankBalances(ctx context.Context, s *TacchainTestSuite, address string
 
 func TxBankSend(ctx context.Context, s *TacchainTestSuite, from, to string, utacAmount string) (string, error) {
 	params := s.DefaultCommandParams()
-	output, err := ExecuteCommand(ctx, params, "tx", "bank", "send", from, to, utacAmount, "--gas", "200000", "--gas-prices", "100000000000utac", "-y")
+	output, err := ExecuteCommand(ctx, params, "tx", "bank", "send", from, to, utacAmount, "--gas", "200000", "--gas-prices", "400000000000utac", "-y")
 	return output, err
 }
 

@@ -2,7 +2,7 @@
 
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
-| tacchain_239-1 | `mainnet` | **Active** | `v1.0.0`         | Mainnet |
+| tacchain_239-1 | `mainnet` | **Active** | `v1.0.1`         | Mainnet |
 | tacchain_2391-1 | `testnet` | **Active** | `v0.0.12`         | Saint Petersburg Testnet |
 | tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
 
@@ -10,7 +10,7 @@
 
 | Chain ID                    | `tacchain_239-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v1.0.0`                                                                                      |
+| Tacchaind version           | `v1.0.1`                                                                                      |
 | RPC                         | <https://tendermint.rpc.tac.build>                                                                                           |
 | Genesis                     | <https://tendermint-rest.rpc.tac.build/genesis>                                                                                           |
 | gRPC                        | <https://grpc.rpc.tac.build>                                                                                           |
@@ -24,12 +24,11 @@
 | Minimum gas price           | 25000000000utac                                                                                            |
 | Peer 1                      | d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960                                                                                           |
 | Peer 2                      | 10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960                                                                                           |
-| Peer 3                      | 0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960                                                                                           |
+| Peer 3                      | 0efae9d157f0ef60ad7d25507d6939799f832e34@173.244.202.99:58960                                                                                           |
 | Peer 4                      | 78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960                                                                                           |
-| Snapshots                   |                                                                                               |
-| - full                      | TBD                                                                                           |
-| - archive                   | TBD                                                                                           |
-
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
+| - full                      | http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4                                  |
+| - archive                   | http://snapshot.tac.ankr.com/tac-mainnet-archive-latest.tar.lz4                               |
 ### Hardware Requirements
 
   - CPU: 8 cores
@@ -66,7 +65,7 @@ tacchaind init testnode --chain-id tacchain_239-1 --home .mainnet
 - config.toml:
 ``` toml
 ..
-persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
+persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@173.244.202.99:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
 ..
 ```
 
@@ -82,7 +81,17 @@ curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/network
 tacchaind start --chain-id tacchain_239-1 --home .mainnet
 ```
 
-### Join Tac Mainnet Using Official Snapshots (TBD)
+#### 6. Upgrade binary to v1.0.1 and restart
+
+At block height 2176500 your node should halt and throw error `"UPGRADE "v1.0.1" NEEDED at height: 2176500: enable inflation. module=x/upgrade"`. Now you need to stop your node, upgrade binary and restart.
+
+``` shell
+git checkout v1.0.1
+make install
+tacchaind start --chain-id tacchain_239-1 --home .mainnet
+```
+
+### Join Tac Mainnet Using Official Snapshots
 
 This example guide connects to mainnet. You can replace `chain-id`, `persistent_peers`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.mainnet](.mainnet) folder.
 
@@ -95,10 +104,10 @@ This example guide connects to mainnet. You can replace `chain-id`, `persistent_
   - lz4
   - wget
 
-#### 1. Install `tacchaind` [v0.0.11](https://github.com/TacBuild/tacchain/tree/v0.0.11)
+#### 1. Install `tacchaind` [v1.0.0](https://github.com/TacBuild/tacchain/tree/v1.0.0)
 
 ``` shell
-git checkout v0.0.11
+git checkout v1.0.0
 make install
 ```
 
@@ -115,7 +124,7 @@ tacchaind init testnode --chain-id tacchain_239-1 --home .mainnet
 - config.toml:
 ``` toml
 ..
-persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
+persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@173.244.202.99:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
 ..
 ```
 
@@ -130,7 +139,7 @@ curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/network
 ``` sh
 cd .mainnet
 rm -rf data
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4
 lz4 -dc < tac-mainnet-full-latest.tar.lz4 | tar -xvf -
 ```
 
@@ -153,15 +162,17 @@ tacchaind start --chain-id tacchain_239-1 --home .mainnet
 
 ``` shell
 export TAC_HOME="~/.tacchain"
-export VERSION="v0.0.11"
+export VERSION="v1.0.0"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_239-1/{docker-compose.yaml,.env.mainnet} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-mainnet-full-latest.shasum
+shasum -c tac-mainnet-full-latest.shasum
 lz4 -dc < tac-mainnet-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.mainnet up -d
 ## Test
@@ -195,7 +206,7 @@ echo "{\"pubkey\":$(tacchaind --home .mainnet tendermint show-validator),\"amoun
 2. Broadcast tx
 
 ``` sh
-tacchaind --home .mainnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 400000 --gas-prices 100000000000utac -y
+tacchaind --home .mainnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 400000 --gas-prices 400000000000utac -y
 ```
 
 #### 4. Delegate more tokens (optional)
@@ -203,7 +214,7 @@ tacchaind --home .mainnet tx staking create-validator validatortx.json --from va
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-tacchaind --home .mainnet tx staking delegate $(tacchaind --home .mainnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 400000 --gas-prices 100000000000utac -y
+tacchaind --home .mainnet tx staking delegate $(tacchaind --home .mainnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 400000 --gas-prices 400000000000utac -y
 ```
 
 ### Tac Mainnet Validator Sentry Node Setup
@@ -233,7 +244,7 @@ To setup your sentry node architecture you can follow the instructions below:
 
 ``` toml
 ..
-persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@69.4.239.26:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
+persistent_peers = "d0a80c43a10a6b60475864728db6d9ba4ead42d2@107.6.113.60:58960,10550a03e4f7fa487c78fbd07e0770e2b0f085c7@64.46.115.78:58960,0efae9d157f0ef60ad7d25507d6939799f832e34@173.244.202.99:58960,78079166d06e345dbf4a5c932ee3c69a04148e92@107.6.91.38:58960"
 ..
 private_peer_ids = "<VALIDATOR_PEER_ID>@<VALIDATOR_IP:PORT>
 ..
@@ -276,9 +287,9 @@ pex = false
 | Peer 2                      | 04a2152eed9f73dc44779387a870ea6480c41fe7@206.217.210.164:45140                                                                                           |
 | Peer 3                      | 5aaaf8140262d7416ac53abe4e0bd13b0f582168@23.92.177.41:45110                                                                                           |
 | Peer 4                      | ddb3e8b8f4d051e914686302dafc2a73adf9b0d2@23.92.177.41:45120                                                                                           |
-| Snapshots                   |                                                                                               |
-| - full                      | TBD                                                                                           |
-| - archive                   | TBD                                                                                           |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
+| - full                      | http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4                                      |
+| - archive                   | http://snapshot.tac.ankr.com/tac-spb-archive-latest.tar.lz4                                   |
 
 ### Hardware Requirements
 
@@ -362,7 +373,7 @@ make install
 tacchaind start --chain-id tacchain_2391-1 --home .testnet
 ```
 
-### Join Tac Saint Petersburg Testnet Using Official Snapshots (TBD)
+### Join Tac Saint Petersburg Testnet Using Official Snapshots
 
 This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
 
@@ -410,7 +421,7 @@ curl https://raw.githubusercontent.com/TacBuild/tacchain/refs/heads/main/network
 ``` sh
 cd .testnet
 rm -rf data
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4
 lz4 -dc < tac-spb-full-latest.tar.lz4 | tar -xvf -
 ```
 
@@ -436,12 +447,14 @@ export TAC_HOME="~/.tacchain"
 export VERSION="v0.0.11"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2391-1/{docker-compose.yaml,.env.spb} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
-wget TBD
+wget http://snapshot.tac.ankr.com/tac-spb-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-spb-full-latest.shasum
+shasum -c tac-spb-full-latest.shasum
 lz4 -dc < tac-spb-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.spb up -d
 ## Test
@@ -481,7 +494,7 @@ echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amoun
 2. Broadcast tx
 
 ``` sh
-tacchaind --home .testnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 400000 --gas-prices 100000000000utac -y
+tacchaind --home .testnet tx staking create-validator validatortx.json --from validator --keyring-backend test --gas 400000 --gas-prices 400000000000utac -y
 ```
 
 #### 4. Delegate more tokens (optional)
@@ -489,7 +502,7 @@ tacchaind --home .testnet tx staking create-validator validatortx.json --from va
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-tacchaind --home .testnet tx staking delegate $(tacchaind --home .testnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 400000 --gas-prices 100000000000utac -y
+tacchaind --home .testnet tx staking delegate $(tacchaind --home .testnet q staking validators --output json | jq -r '.validators[] | select(.description.moniker == "testnode") | .operator_address') 1000000000000000000utac --keyring-backend test --from validator --gas 400000 --gas-prices 400000000000utac -y
 ```
 
 ### Tac Saint Petersburg Testnet Validator Sentry Node Setup
@@ -546,22 +559,22 @@ pex = false
 | Chain ID                    | `tacchain_2390-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
 | Tacchaind version           | `v0.0.7-testnet`                                                                              |
-| RPC                         | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1>         |
-| Genesis                     | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rpc_1/genesis> |
-| gRPC                        | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_grpc_web_1>    |
-| REST API                    | <https://newyork-inap-72-251-230-233.ankr.com/tac_tacd_testnet_full_tendermint_rest_1>        |
-| EVM JSON RPC                | <https://newyork-inap-72-251-230-233.ankr.com:443/tac_tacd_testnet_full_rpc_1>                |
-| Faucet                      | <https://faucet.tac-turin.ankr.com>                                                           |
-| EVM Explorer                | <https://turin.explorer.tac.build>                                                         |
-| Cosmos Explorer             | <https://turin.bd-explorer.tac.build>                                                |
+| RPC                         | <https://turin.tendermint.rpc.tac.build>                                                      |
+| Genesis                     | <https://turin.tendermint-rest.rpc.tac.build/genesis>                                         |
+| gRPC                        | <https://turin-grpc.rpc.tac.build>                                                            |
+| REST API                    | <https://turin.cosmos-api.rpc.tac.build>                                                      |
+| EVM JSON RPC                | <https://turin.rpc.tac.build>                                                                 |
+| Faucet                      | <https://turin.faucet.tac.build>                                                              |
+| EVM Explorer                | <https://turin.explorer.tac.build>                                                            |
+| Cosmos Explorer             | <https://turin.bd-explorer.tac.build>                                                         |
 | Timeout commit (block time) | 3s                                                                                            |
 | Peer 1                      | f8124878e3526a9814c0a5f865820c5ea7eb26f8@72.251.230.233:45130                                 |
 | Peer 2                      | 4a03d6622a2ad923d79e81951fe651a17faf0be8@107.6.94.246:45130                                   |
 | Peer 3                      | ea5719fe6587b18ed0fee81f960e23c65c0e0ccc@206.217.210.164:45130                                |
-| Snapshots                   |                                                                                               |
-| - full                      | <http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4>                            |
-| - archive                   | <http://snapshot.tac-turin.ankr.com/tac-turin-archive-latest.tar.lz4>                         |
-| Frontend                    | TBD                                                                                           |
+| Snapshots                   | http://snapshot.tac.ankr.com/tac-{mainnet,spb,turin}-{full,archive}-latest.{tar.lz4,shasum}   |
+| - full                      | http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4                                    |
+| - archive                   | http://snapshot.tac.ankr.com/tac-turin-archive-latest.tar.lz4                                 |
+| Staking UI                  | https://staking.spb.tac.build/                                                                |
 
 #### Hardware Requirements
 
@@ -644,12 +657,14 @@ export TAC_HOME="~/.tacchain"
 export VERSION="v0.0.7-testnet"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
-git checkout ${VERSION}
-docker build -t tacchain:${VERSION} .
 mkdir -p $TAC_HOME
 cp networks/tacchain_2390-1/{docker-compose.yaml,.env.turin} $TAC_HOME/
+git checkout ${VERSION}
+docker build -t tacchain:${VERSION} .
 cd $TAC_HOME
-wget http://snapshot.tac-turin.ankr.com/tac-turin-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-turin-full-latest.tar.lz4
+wget http://snapshot.tac.ankr.com/tac-turin-full-latest.shasum
+shasum -c tac-turin-full-latest.shasum
 lz4 -dc < tac-turin-full-latest.tar.lz4 | tar -xvf -
 docker compose --env-file=.env.turin up -d
 ## Test

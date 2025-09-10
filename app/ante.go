@@ -19,10 +19,13 @@ import (
 	evmante "github.com/cosmos/evm/ante/evm"
 	evmanteinterfaces "github.com/cosmos/evm/ante/interfaces"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 // HandlerOptions extend the SDK's AnteHandler options by requiring the IBC
-// channel keeper and Ethermint keeper.
+// channel keeper, CosmWasm keeper and cosmosevm keeper.
 type HandlerOptions struct {
 	authante.HandlerOptions
 
@@ -37,6 +40,10 @@ type HandlerOptions struct {
 	FeeMarketKeeper evmanteinterfaces.FeeMarketKeeper
 	EvmKeeper       evmanteinterfaces.EVMKeeper
 	MaxTxGasWanted  uint64
+
+	// CosmWasm
+	WasmConfig *wasmtypes.NodeConfig
+	WasmKeeper *wasmkeeper.Keeper
 }
 
 // NewAnteHandler returns an ante handler responsible for attempting to route an
@@ -61,6 +68,15 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 	if options.EvmKeeper == nil {
 		return nil, errors.New("evm keeper is required for ante builder")
+	}
+	if options.TXCounterStoreService == nil {
+		return nil, errors.New("wasm store service is required for ante builder")
+	}
+	if options.WasmConfig == nil {
+		return nil, errors.New("wasm config is required for ante builder")
+	}
+	if options.WasmKeeper == nil {
+		return nil, errors.New("wasm keeper is required for ante builder")
 	}
 
 	return func(
@@ -122,6 +138,10 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 			sdk.MsgTypeURL(&sdkvesting.MsgCreateVestingAccount{}),
 		),
 		authante.NewSetUpContextDecorator(),
+		wasmkeeper.NewLimitSimulationGasDecorator(options.WasmConfig.SimulationGasLimit), // after setup context to enforce limits early
+		wasmkeeper.NewCountTXDecorator(options.TXCounterStoreService),
+		wasmkeeper.NewGasRegisterDecorator(options.WasmKeeper.GetGasRegister()),
+		wasmkeeper.NewTxContractsDecorator(),
 		circuitante.NewCircuitBreakerDecorator(options.CircuitKeeper),
 		authante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		authante.NewValidateBasicDecorator(),

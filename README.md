@@ -1,6 +1,6 @@
 # Tac Chain
 
-`tacchaind` is a TAC EVM Node based on CosmosSDK with EVM support.
+`tacchaind` is a TAC EVM Node based on CosmosSDK with EVM and WASM support.
 
 ### Quickstart
 
@@ -40,4 +40,5 @@ Check our [tool](./contrib/tac-address-converter/) for converting between EVM <>
 
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [CosmosEVM docs](https://evm.cosmos.network/)
+- [CosmWasm docs](https://docs.cosmwasm.com/)
 

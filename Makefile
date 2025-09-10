@@ -56,6 +56,9 @@ ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=tacchain \
 ifeq ($(WITH_CLEVELDB),yes)
   ldflags += -X github.com/cosmos/cosmos-sdk/types.DBBackend=cleveldb
 endif
+ifeq ($(LINK_STATICALLY),true)
+	ldflags += -linkmode=external -extldflags "-Wl,-z,muldefs -static"
+endif
 ldflags += $(LDFLAGS)
 ldflags := $(strip $(ldflags))
 
@@ -92,7 +95,7 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger test-solidity
+test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger test-solidity test-wasmd
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests")
@@ -120,6 +123,9 @@ test-ledger:
 
 test-solidity:
 	./tests/solidity/run-solidity-tests.sh
+
+test-wasmd:
+	./tests/wasmd/test-wasmd.sh
 
 ###############################################################################
 ###                                Networks                                 ###

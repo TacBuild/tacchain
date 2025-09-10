@@ -17,9 +17,6 @@ import (
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
 
-	// "github.com/cosmos/ibc-go/modules/capability"
-	// capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	// capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
 	ica "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts"
 	icacontroller "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller"
 	icacontrollerkeeper "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/controller/keeper"
@@ -29,9 +26,6 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v10/modules/apps/27-interchain-accounts/types"
 
-	// ibcfee "github.com/cosmos/ibc-go/v10/modules/apps/29-fee"
-	// ibcfeekeeper "github.com/cosmos/ibc-go/v10/modules/apps/29-fee/keeper"
-	// ibcfeetypes "github.com/cosmos/ibc-go/v10/modules/apps/29-fee/types"
 	ibctransferv2 "github.com/cosmos/evm/x/ibc/transfer/v2"
 	ibccallbacks "github.com/cosmos/ibc-go/v10/modules/apps/callbacks"
 	ibctransfer "github.com/cosmos/ibc-go/v10/modules/apps/transfer"
@@ -176,8 +170,7 @@ var maccPerms = map[string][]string{
 	nft.ModuleName:                 nil,
 	// non sdk modules
 	ibctransfertypes.ModuleName: {authtypes.Minter, authtypes.Burner},
-	// ibcfeetypes.ModuleName:      nil,
-	icatypes.ModuleName: nil,
+	icatypes.ModuleName:         nil,
 	// Cosmos EVM modules
 	evmvmtypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 	evmfeemarkettypes.ModuleName: nil,
@@ -203,12 +196,10 @@ type TacChainApp struct {
 	// keys to access the substores
 	keys  map[string]*storetypes.KVStoreKey
 	tkeys map[string]*storetypes.TransientStoreKey
-	// memKeys map[string]*storetypes.MemoryStoreKey
 
 	// keepers
-	AccountKeeper authkeeper.AccountKeeper
-	BankKeeper    bankkeeper.BaseKeeper
-	// CapabilityKeeper      *capabilitykeeper.Keeper
+	AccountKeeper         authkeeper.AccountKeeper
+	BankKeeper            bankkeeper.BaseKeeper
 	StakingKeeper         *stakingkeeper.Keeper
 	SlashingKeeper        slashingkeeper.Keeper
 	MintKeeper            mintkeeper.Keeper
@@ -225,18 +216,11 @@ type TacChainApp struct {
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	CircuitKeeper         circuitkeeper.Keeper
 
-	IBCKeeper *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
-	// IBCFeeKeeper        ibcfeekeeper.Keeper
+	IBCKeeper           *ibckeeper.Keeper // IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	ICAControllerKeeper icacontrollerkeeper.Keeper
 	ICAHostKeeper       icahostkeeper.Keeper
 	IBCTransferKeeper   evmibctransferkeeper.Keeper
 	CallbackKeeper      evmibccallbackskeeper.ContractKeeper
-
-	// ScopedIBCKeeper           capabilitykeeper.ScopedKeeper
-	// ScopedICAHostKeeper       capabilitykeeper.ScopedKeeper
-	// ScopedICAControllerKeeper capabilitykeeper.ScopedKeeper
-	// ScopedTransferKeeper      capabilitykeeper.ScopedKeeper
-	// ScopedIBCFeeKeeper        capabilitykeeper.ScopedKeeper
 
 	// the module manager
 	ModuleManager      *module.Manager
@@ -314,16 +298,13 @@ func NewTacChainApp(
 		evidencetypes.StoreKey, circuittypes.StoreKey,
 		authzkeeper.StoreKey, nftkeeper.StoreKey, group.StoreKey,
 		// non sdk store keys
-		// capabilitytypes.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
-		// ibcfeetypes.StoreKey,
 		icahosttypes.StoreKey, icacontrollertypes.StoreKey,
 		// Cosmos EVM store keys
 		evmvmtypes.StoreKey, evmfeemarkettypes.StoreKey, evmerc20types.StoreKey,
 	)
 
 	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey, evmvmtypes.TransientKey, evmfeemarkettypes.TransientKey)
-	// memKeys := storetypes.NewMemoryStoreKeys(capabilitytypes.MemStoreKey)
 
 	// register streaming services
 	if err := bApp.RegisterStreamingServices(appOpts, keys); err != nil {
@@ -338,7 +319,6 @@ func NewTacChainApp(
 		interfaceRegistry: encodingConfig.InterfaceRegistry,
 		keys:              keys,
 		tkeys:             tkeys,
-		// memKeys:           memKeys,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(
@@ -359,22 +339,6 @@ func NewTacChainApp(
 		runtime.EventService{},
 	)
 	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
-
-	// add capability keeper and ScopeToModule for ibc module
-	// app.CapabilityKeeper = capabilitykeeper.NewKeeper(
-	// 	encodingConfig.Codec,
-	// 	keys[capabilitytypes.StoreKey],
-	// 	memKeys[capabilitytypes.MemStoreKey],
-	// )
-
-	// app.ScopedIBCKeeper = app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	// app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	// app.ScopedICAControllerKeeper = app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
-	// app.ScopedTransferKeeper = app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-
-	// Applications that wish to enforce statically created ScopedKeepers should call `Seal` after creating
-	// their scoped modules in `NewApp` with `ScopeToModule`
-	// app.CapabilityKeeper.Seal()
 
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
@@ -489,7 +453,6 @@ func NewTacChainApp(
 	*/
 	app.GroupKeeper = groupkeeper.NewKeeper(
 		keys[group.StoreKey],
-		// runtime.NewKVStoreService(keys[group.StoreKey]),
 		encodingConfig.Codec,
 		app.MsgServiceRouter(),
 		app.AccountKeeper,
@@ -614,66 +577,32 @@ func NewTacChainApp(
 		authAddr,
 	)
 
-	// IBC Fee Module keeper
-	// app.IBCFeeKeeper = ibcfeekeeper.NewKeeper(
-	// 	encodingConfig.Codec, keys[ibcfeetypes.StoreKey],
-	// 	app.IBCKeeper.ChannelKeeper, // may be replaced with IBC middleware
-	// 	app.IBCKeeper.ChannelKeeper,
-	// 	app.IBCKeeper.PortKeeper, app.AccountKeeper, app.BankKeeper,
-	// )
-
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[icahosttypes.StoreKey]),
 		app.GetSubspace(icahosttypes.SubModuleName),
-		// app.IBCFeeKeeper, // use ics29 fee as ics4Wrapper in middleware stack
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
 		app.AccountKeeper,
-		// app.ScopedICAHostKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		authAddr,
 	)
-	// set grpc router for ica host
-	// app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 
 	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		encodingConfig.Codec,
 		runtime.NewKVStoreService(keys[icacontrollertypes.StoreKey]),
 		app.GetSubspace(icacontrollertypes.SubModuleName),
-		// app.IBCFeeKeeper, // use ics29 fee as ics4Wrapper in middleware stack
 		app.IBCKeeper.ChannelKeeper,
 		app.IBCKeeper.ChannelKeeper,
-		// app.ScopedICAControllerKeeper,
 		app.MsgServiceRouter(),
 		authAddr,
 	)
 
 	// Create Interchain Accounts Stack
 	// SendPacket, since it is originating from the application to core IBC:
-	// icaAuthModuleKeeper.SendTx -> icaController.SendPacket -> fee.SendPacket -> channel.SendPacket
-	// var icaControllerStack porttypes.IBCModule
-	// integration point for custom authentication modules
-	// see https://medium.com/the-interchain-foundation/ibc-go-v6-changes-to-interchain-accounts-and-how-it-impacts-your-chain-806c185300d7
-	// var noAuthzModule porttypes.IBCModule
-	// icaControllerStack = icacontroller.NewIBCMiddleware(noAuthzModule, app.ICAControllerKeeper)
-	// icaControllerStack = icacontroller.NewIBCMiddleware(icaControllerStack, app.ICAControllerKeeper)
-	// icaICS4Wrapper := icaControllerStack.(porttypes.ICS4Wrapper)
-	// icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.IBCFeeKeeper)
-	// Since the callbacks middleware itself is an ics4wrapper, it needs to be passed to the ica controller keeper
-	// app.ICAControllerKeeper.WithICS4Wrapper(icaICS4Wrapper)
-
-	// Create Interchain Accounts Stack
-	// SendPacket, since it is originating from the application to core IBC:
 	// icaControllerKeeper.SendTx -> channel.SendPacket
 	icaControllerStack := icacontroller.NewIBCMiddleware(app.ICAControllerKeeper)
-
-	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
-	// channel.RecvPacket -> fee.OnRecvPacket -> icaHost.OnRecvPacket
-	// var icaHostStack porttypes.IBCModule
-	// icaHostStack = icahost.NewIBCModule(app.ICAHostKeeper)
-	// icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.IBCFeeKeeper)
 
 	// RecvPacket, message that originates from core IBC and goes down to app, the flow is:
 	// channel.RecvPacket -> icaHost.OnRecvPacket
@@ -810,7 +739,6 @@ func NewTacChainApp(
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	// NOTE: capability module's beginblocker must come before any modules using capabilities (e.g. IBC)
 	app.ModuleManager.SetOrderBeginBlockers(
-		// capabilitytypes.ModuleName,
 		distrtypes.ModuleName,
 		stakingtypes.ModuleName,
 		slashingtypes.ModuleName,
@@ -831,7 +759,6 @@ func NewTacChainApp(
 		govtypes.ModuleName,
 		genutiltypes.ModuleName,
 		icatypes.ModuleName,
-		// ibcfeetypes.ModuleName,
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
@@ -856,8 +783,6 @@ func NewTacChainApp(
 		ibctransfertypes.ModuleName,
 		ibcexported.ModuleName,
 		icatypes.ModuleName,
-		// ibcfeetypes.ModuleName,
-		// capabilitytypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		distrtypes.ModuleName,
@@ -876,7 +801,6 @@ func NewTacChainApp(
 	// properly initialized with tokens from genesis accounts.
 	// NOTE: The genutils module must also occur after auth so that it can access the params from auth.
 	genesisModuleOrder := []string{
-		// capabilitytypes.ModuleName,
 		// simd modules
 		authtypes.ModuleName,
 		banktypes.ModuleName,
@@ -889,7 +813,6 @@ func NewTacChainApp(
 		// additional non simd modules
 		ibcexported.ModuleName,
 		icatypes.ModuleName,
-		// ibcfeetypes.ModuleName,
 
 		// Cosmos EVM modules
 		//
@@ -1188,13 +1111,6 @@ func (app *TacChainApp) GetStoreKeys() []storetypes.StoreKey {
 func (app *TacChainApp) GetTKey(storeKey string) *storetypes.TransientStoreKey {
 	return app.tkeys[storeKey]
 }
-
-// GetMemKey returns the MemStoreKey for the provided mem key.
-//
-// NOTE: This is solely used for testing purposes.
-// func (app *TacChainApp) GetMemKey(storeKey string) *storetypes.MemoryStoreKey {
-// 	return app.memKeys[storeKey]
-// }
 
 // GetSubspace returns a param subspace for a given module name.
 //

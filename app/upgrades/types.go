@@ -13,6 +13,7 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	evmerc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 )
 
 type AppKeepers struct {
@@ -22,6 +23,7 @@ type AppKeepers struct {
 	Codec                 codec.Codec
 	GetStoreKey           func(storeKey string) *storetypes.KVStoreKey
 	IBCKeeper             *ibckeeper.Keeper
+	ERC20Keeper           *evmerc20keeper.Keeper
 }
 
 type ModuleManager interface {

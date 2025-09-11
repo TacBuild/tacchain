@@ -1,6 +1,9 @@
 package app
 
 import (
+	"fmt"
+	"regexp"
+	"strconv"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -55,6 +58,7 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 		true,
 		invCheckPeriod,
 		options.AppOpts,
+		DefaultEVMChainID,
 		SetupEvmConfig,
 		bam.SetChainID(DefaultChainID),
 	)
@@ -78,4 +82,33 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 	}
 
 	return app
+}
+
+// GetEVMChainID extracts the EVM chain ID from a given string.
+// If the string is in format "tacchain_2391-1", it extracts the numeric part.
+// If the string is a simple numeric value, it parses it directly.
+func GetEVMChainID(chainID string) (uint64, error) {
+	match := regexp.MustCompile(`^[a-zA-Z]+_(\d+)-\d+$`).FindStringSubmatch(chainID)
+
+	// If the chain ID is in the format "tacchain_2391-1", we extract the numeric part.
+	if len(match) == 2 {
+		res, err := strconv.ParseUint(match[1], 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid chain ID format: %s", chainID)
+		}
+
+		return res, nil
+	}
+
+	// Otherwise, we assume it's a simple numeric value.
+	res, err := strconv.ParseUint(chainID, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid chain ID format: %s", chainID)
+	}
+
+	return res, nil
+}
+
+func NoOpEvmAppOptions(_ uint64) error {
+	return nil
 }

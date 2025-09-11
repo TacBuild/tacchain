@@ -5,7 +5,7 @@
 ### Quickstart
 
 - Prerequisites
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
 
 ```sh
 git clone https://github.com/TacBuild/tacchain.git

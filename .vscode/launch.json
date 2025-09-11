@@ -31,7 +31,7 @@
         "--chain-id",
         "tacchain_2391-1",
         "--default-denom",
-        "atom"
+        "utac"
       ],
     },
     {

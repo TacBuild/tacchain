@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
-	"github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
+	"github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	corestoretypes "cosmossdk.io/core/store"
 	circuitante "cosmossdk.io/x/circuit/ante"
@@ -15,8 +15,9 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
+	evmante "github.com/cosmos/evm/ante"
 	evmcosmosante "github.com/cosmos/evm/ante/cosmos"
-	evmante "github.com/cosmos/evm/ante/evm"
+	evmevmante "github.com/cosmos/evm/ante/evm"
 	evmanteinterfaces "github.com/cosmos/evm/ante/interfaces"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 )
@@ -34,9 +35,10 @@ type HandlerOptions struct {
 	CircuitKeeper         *circuitkeeper.Keeper
 
 	// Cosmos EVM
-	FeeMarketKeeper evmanteinterfaces.FeeMarketKeeper
-	EvmKeeper       evmanteinterfaces.EVMKeeper
-	MaxTxGasWanted  uint64
+	FeeMarketKeeper   evmanteinterfaces.FeeMarketKeeper
+	EvmKeeper         evmanteinterfaces.EVMKeeper
+	MaxTxGasWanted    uint64
+	PendingTxListener evmante.PendingTxListener
 }
 
 // NewAnteHandler returns an ante handler responsible for attempting to route an
@@ -76,12 +78,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
 					// handle as *evmtypes.MsgEthereumTx
 					anteHandler = sdk.ChainAnteDecorators(
-						evmante.NewEVMMonoDecorator(
+						evmevmante.NewEVMMonoDecorator(
 							options.AccountKeeper,
 							options.FeeMarketKeeper,
 							options.EvmKeeper,
 							options.MaxTxGasWanted,
 						),
+						evmante.NewTxListenerDecorator(options.PendingTxListener),
 					)
 				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
@@ -137,6 +140,6 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		authante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		authante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		evmevmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
 	), nil
 }

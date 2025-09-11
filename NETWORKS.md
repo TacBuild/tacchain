@@ -41,7 +41,7 @@ This example guide connects to mainnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 
@@ -97,7 +97,7 @@ This example guide connects to mainnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - tar
@@ -153,7 +153,7 @@ tacchaind start --chain-id tacchain_239-1 --home .mainnet
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - lz4
@@ -200,7 +200,7 @@ NOTE: The provided examples use `--keyring-backend test`. This is not recommende
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .mainnet tendermint show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .mainnet comet show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx
@@ -303,7 +303,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 
@@ -379,7 +379,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - tar
@@ -435,7 +435,7 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 #### Prerequisites
 
-  - [Go >= v1.23.6](https://go.dev/doc/install)
+  - [Go >= v1.23.8](https://go.dev/doc/install)
   - jq
   - curl
   - lz4
@@ -488,7 +488,7 @@ tacchaind --home .testnet keys unsafe-import-eth-key validator <PRIVATE_KEY> --k
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .testnet comet show-validator),\"amount\":\"1000000000000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx
@@ -680,7 +680,7 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
 
 ### Prerequisites
 
-  - [Go >= 1.23.6](https://go.dev/doc/install)
+  - [Go >= 1.23.8](https://go.dev/doc/install)
   - jq
   - curl
 
@@ -814,7 +814,7 @@ tacchaind --home .testnet keys unsafe-import-eth-key validator <PRIVATE_KEY> --k
 In this example our moniker is `testnode` as named when we initialized our node. Don't forget to replace with your node moniker.
 
 ``` sh
-echo "{\"pubkey\":$(tacchaind --home .testnet tendermint show-validator),\"amount\":\"1000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
+echo "{\"pubkey\":$(tacchaind --home .testnet comet show-validator),\"amount\":\"1000000000utac\",\"moniker\":\"testnode\",\"identity\":null,\"website\":null,\"security\":null,\"details\":null,\"commission-rate\":\"0.1\",\"commission-max-rate\":\"0.2\",\"commission-max-change-rate\":\"0.01\",\"min-self-delegation\":\"1\"}" > validatortx.json
 ```
 
 2. Broadcast tx

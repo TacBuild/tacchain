@@ -3,8 +3,8 @@
 | Chain ID        | Type      | Status     | Version  | Notes         |
 |-----------------|-----------|------------|----------|---------------|
 | tacchain_239-1 | `mainnet` | **Active** | `v1.0.1`         | Mainnet |
-| tacchain_2391-1 | `testnet` | **Active** | `v0.0.12`         | Saint Petersburg Testnet |
-| tacchain_2390-1 | `testnet` | **Active** | `v0.0.7-testnet` | Turin Testnet            |
+| tacchain_2391-1 | `testnet` | **Active** | `v1.0.2`         | Saint Petersburg Testnet |
+| tacchain_2390-1 | `testnet` | **Inactive** | `v0.0.7-testnet` | Turin Testnet            |
 
 # Mainnet (`tacchain_239-1`)
 
@@ -270,7 +270,7 @@ pex = false
 
 | Chain ID                    | `tacchain_2391-1`                                                                             |
 |-----------------------------|-----------------------------------------------------------------------------------------------|
-| Tacchaind version           | `v0.0.12`                                                                                      |
+| Tacchaind version           | `v1.0.2`                                                                                      |
 | RPC                         | <https://spb.tendermint.rpc.tac.build>                                                                                           |
 | Genesis                     | <https://spb.tendermint-rest.rpc.tac.build/genesis>                                                                                           |
 | gRPC                        | <https://spb-grpc.rpc.tac.build>                                                                                           |
@@ -373,6 +373,16 @@ make install
 tacchaind start --chain-id tacchain_2391-1 --home .testnet
 ```
 
+#### 9. Upgrade binary to v1.0.2 and restart
+
+At block height 7769905 your node should halt and throw error `"UPGRADE \"v1.0.2\" NEEDED at height: 7769905"`. Now you need to stop your node, upgrade binary and restart.
+
+``` shell
+git checkout v1.0.2
+make install
+tacchaind start --chain-id tacchain_2391-1 --home .testnet
+```
+
 ### Join Tac Saint Petersburg Testnet Using Official Snapshots
 
 This example guide connects to testnet. You can replace `chain-id`, `persistent_peers`, `genesis url` with the network you want to join. `--home` flag specifies the path to be used. The example will create [.testnet](.testnet) folder.
@@ -386,10 +396,10 @@ This example guide connects to testnet. You can replace `chain-id`, `persistent_
   - lz4
   - wget
 
-#### 1. Install `tacchaind` [v0.0.11](https://github.com/TacBuild/tacchain/tree/v0.0.11)
+#### 1. Install `tacchaind` [v1.0.2](https://github.com/TacBuild/tacchain/tree/v1.0.2)
 
 ``` shell
-git checkout v0.0.11
+git checkout v1.0.2
 make install
 ```
 
@@ -444,7 +454,7 @@ tacchaind start --chain-id tacchain_2391-1 --home .testnet
 
 ``` shell
 export TAC_HOME="~/.tacchain"
-export VERSION="v0.0.11"
+export VERSION="v1.0.2"
 
 git clone https://github.com/TacBuild/tacchain.git && cd tacchain
 mkdir -p $TAC_HOME

@@ -1,7 +1,7 @@
 services:
   tac-spb-testnet-init:
     user: "${USER_ID}:${GROUP_ID}"
-    image: tacchain:v0.0.11
+    image: tacchain:v1.0.2
     env_file:
       - .env.spb
     volumes:
@@ -14,7 +14,7 @@ services:
     user: "${USER_ID}:${GROUP_ID}"
     network_mode: host
     restart: unless-stopped
-    image: tacchain:v0.0.11
+    image: tacchain:v1.0.2
     env_file:
       - .env.spb
     volumes:

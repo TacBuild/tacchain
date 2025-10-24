@@ -16,7 +16,7 @@ import (
 
 const (
 	DisplayDenom  = "tac"
-	BaseDenom     = "utac"
+	BaseDenom     = "atac"
 	BaseDenomUnit = 18
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.

@@ -19,6 +19,8 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	evmerc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	liquidstakekeeper "github.com/cosmos/evm/x/liquidstake/keeper"
+
+	evmvmkeeper "github.com/cosmos/evm/x/vm/keeper"
 )
 
 type AppKeepers struct {
@@ -33,6 +35,7 @@ type AppKeepers struct {
 	BankKeeper            bankkeeper.Keeper
 	Erc20Keeper           *evmerc20keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
+	EVMKeeper             *evmvmkeeper.Keeper
 }
 
 type ModuleManager interface {

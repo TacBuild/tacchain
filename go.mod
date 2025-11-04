@@ -273,8 +273,11 @@ replace (
 	// replace to cosmos-sdk fork for liquid stake support. See: https://github.com/TacBuild/cosmos-sdk/pull/2
 	github.com/cosmos/cosmos-sdk => github.com/TacBuild/cosmos-sdk v0.0.0-20251010131633-e43d8d10a9a9
 
-	// replace to cosmos/evm fork for liquid stake support. See: https://github.com/TacBuild/evm/pull/9
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.0.0-20251010145635-9055209fc1d5
+	// replace to cosmos/evm fork
+	// added liquid stake support. See: https://github.com/TacBuild/evm/pull/9
+	// added ed25519 precompile support. See: https://github.com/TacBuild/evm/pull/8
+	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.0.0-20251030120744-79ed002a3490
 
 	// replace with our fork using geth v1.13.15
 	github.com/ethereum/go-ethereum => github.com/TacBuild/go-ethereum v0.0.0-20250428082551-b4f5a8f8420a

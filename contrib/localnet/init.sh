@@ -156,6 +156,9 @@ sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/conf
 sed -i.bak "s/\"allow_unprotected_txs\": false/\"allow_unprotected_txs\": true/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/allow-unprotected-txs = false/allow-unprotected-txs = true/g" $HOMEDIR/config/app.toml
 
+# add tac namespace to json-rpc api
+sed -i.bak "s/api = \"eth,net,web3\"/api = \"eth,net,web3,tac\"/g" $HOMEDIR/config/app.toml
+
 # set evm precompiles
 jq '
   .app_state.evm.params.active_static_precompiles = [

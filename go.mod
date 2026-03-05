@@ -279,7 +279,7 @@ replace (
 	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
 	// add new rpc command `tac_simulate` wich supports state overriding, See: https://github.com/TacBuild/evm/pull/12
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.0.0-20260225154349-f8f2d3cc96b4
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.0.0-20260305112544-30f9287c190f
 
 	// replace with our fork using geth v1.13.15
 	github.com/ethereum/go-ethereum => github.com/TacBuild/go-ethereum v0.0.0-20250428082551-b4f5a8f8420a

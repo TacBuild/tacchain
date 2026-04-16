@@ -12,6 +12,7 @@ import (
 	v101 "github.com/Asphere-xyz/tacchain/app/upgrades/v1.0.1"
 	v102 "github.com/Asphere-xyz/tacchain/app/upgrades/v1.0.2"
 	v104 "github.com/Asphere-xyz/tacchain/app/upgrades/v1.0.4"
+	v105 "github.com/Asphere-xyz/tacchain/app/upgrades/v1.0.5"
 )
 
 // Upgrades list of chain upgrades
@@ -22,6 +23,7 @@ var Upgrades = []upgrades.Upgrade{
 	v101.Upgrade,
 	v102.Upgrade, // liquid stake
 	v104.Upgrade, // ed25519 precompile
+	v105.Upgrade, // vesting account migration (compromised key)
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers
@@ -39,6 +41,7 @@ func (app *TacChainApp) RegisterUpgradeHandlers() {
 		Erc20Keeper:           &app.Erc20Keeper,
 		StakingKeeper:         app.StakingKeeper,
 		EVMKeeper:             app.EVMKeeper,
+		DistrKeeper:           &app.DistrKeeper,
 	}
 	app.GetStoreKeys()
 	// register all upgrade handlers

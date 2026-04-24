@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"math/big"
 	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	evmdconfig "github.com/cosmos/evm/cmd/evmd/config"
-	"github.com/cosmos/evm/evmd/eips"
-	evmvmtypes "github.com/cosmos/evm/x/vm/types"
-	evmvmcore "github.com/ethereum/go-ethereum/core/vm"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	evmdconfig "github.com/cosmos/evm/config"
+	"github.com/spf13/cast"
 )
 
 const (
@@ -19,12 +23,19 @@ const (
 	BaseDenom     = "utac"
 	BaseDenomUnit = 18
 
+	// EVMCoinName is the full name of the native EVM coin.
+	EVMCoinName = "TAC"
+	// EVMCoinSymbol is the ticker symbol of the native EVM coin.
+	EVMCoinSymbol = "TAC"
+	// EVMCoinDescription is the description stored in bank denom metadata.
+	EVMCoinDescription = "Native 18-decimal denom metadata for TacChain EVM"
+
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = "tac"
 
 	NodeDir        = ".tacchaind"
 	AppName        = "TacChainApp"
-	DefaultChainID = "tacchain_2391-1"
+	DefaultChainID = "tacchain_2391337-1"
 
 	// Custom timeout commit to ensure faster block times
 	TimeoutCommit = 1 * time.Second
@@ -53,38 +64,6 @@ func init() {
 	setAddressPrefixes()
 }
 
-var evmConfigSealed = false
-
-func SetupEvmConfig(chainID string) error {
-	if evmConfigSealed {
-		return nil
-	}
-
-	baseDenom, err := sdk.GetBaseDenom()
-	if err != nil {
-		return fmt.Errorf("failed to get base denom: %s", err)
-	}
-
-	ethCfg := evmvmtypes.DefaultChainConfig(chainID)
-
-	eips := map[int]func(*evmvmcore.JumpTable){
-		0o000: eips.Enable0000,
-		0o001: eips.Enable0001,
-		0o002: eips.Enable0002,
-	}
-	err = evmvmtypes.NewEVMConfigurator().
-		WithExtendedEips(eips).
-		WithChainConfig(ethCfg).
-		WithEVMCoinInfo(baseDenom, uint8(BaseDenomUnit)).
-		Configure()
-	if err != nil {
-		return fmt.Errorf("failed to setup EVMConfigurator: %s", err)
-	}
-
-	evmConfigSealed = true
-	return nil
-}
-
 // registerDenoms registers token denoms.
 func registerDenoms() {
 	sdk.DefaultBondDenom = BaseDenom
@@ -108,4 +87,58 @@ func setAddressPrefixes() {
 	config.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	config.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
 	config.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
+}
+
+// DefaultBankDenomMetadata returns the bank denom metadata for the native EVM coin.
+// This metadata is required by the EVM module's InitEvmCoinInfo to locate the coin denom.
+func DefaultBankDenomMetadata() []banktypes.Metadata {
+	return []banktypes.Metadata{{
+		Description: EVMCoinDescription,
+		Base:        BaseDenom,
+		DenomUnits: []*banktypes.DenomUnit{
+			{Denom: BaseDenom, Exponent: 0},
+			{Denom: DisplayDenom, Exponent: uint32(BaseDenomUnit)},
+		},
+		Name:    EVMCoinName,
+		Symbol:  EVMCoinSymbol,
+		Display: DisplayDenom,
+	}}
+}
+
+// ParseEVMChainID extracts the EVM chain ID (uint64) from a cosmos chain ID string.
+// Format: "tacchain_2391337-1" → 2391337.
+func ParseEVMChainID(cosmosChainID string) (uint64, error) {
+	re := regexp.MustCompile(`_(\d+)-`)
+	m := re.FindStringSubmatch(cosmosChainID)
+	if len(m) != 2 {
+		return 0, fmt.Errorf("invalid cosmos chain ID format: %q", cosmosChainID)
+	}
+	n, ok := new(big.Int).SetString(m[1], 10)
+	if !ok || !n.IsUint64() {
+		return 0, fmt.Errorf("invalid EVM chain ID in %q", cosmosChainID)
+	}
+	return n.Uint64(), nil
+}
+
+// resolveChainID returns the cosmos chain ID, falling back to genesis file if flag is empty.
+// flags.FlagChainID is only populated during `init`, not during `start`.
+func resolveChainID(appOpts servertypes.AppOptions) string {
+	if chainID := cast.ToString(appOpts.Get(flags.FlagChainID)); chainID != "" {
+		return chainID
+	}
+	homeDir := cast.ToString(appOpts.Get(flags.FlagHome))
+	genesisPath := filepath.Join(homeDir, "config", "genesis.json")
+	f, err := os.Open(genesisPath)
+	if err != nil {
+		// genesis not available (e.g. tempApp during encoding config init).
+		// Return empty string so caller falls back to DefaultEVMChainID (262144),
+		// which allows SetChainConfig to be called again by the real app instance.
+		return ""
+	}
+	defer f.Close()
+	chainID, err := genutiltypes.ParseChainIDFromGenesis(f)
+	if err != nil {
+		panic(fmt.Errorf("cannot parse chain ID from genesis %q: %w", genesisPath, err))
+	}
+	return chainID
 }

@@ -148,6 +148,7 @@ fi
 sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"evm_denom\": \"aatom\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855
 sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/config/genesis.json
@@ -279,12 +280,12 @@ jq '
 jq '
 .app_state.erc20 = {
     "params": {
-        "enable_erc20": true,
-        "native_precompiles": [
-          "0xa29260a07Ec319176A49f2710433F647E49B604f"
-        ],
-        "dynamic_precompiles": []
+        "enable_erc20": true
       },
+      "native_precompiles": [
+        "0xa29260a07Ec319176A49f2710433F647E49B604f"
+      ],
+      "dynamic_precompiles": [],
       "token_pairs": [
         {
             "erc20_address": "0xa29260a07Ec319176A49f2710433F647E49B604f",

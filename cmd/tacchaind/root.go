@@ -22,12 +22,10 @@ import (
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
-	"github.com/Asphere-xyz/tacchain/app"
+	"github.com/TacBuild/tacchain/app"
 
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
 	evmserverconfig "github.com/cosmos/evm/server/config"
-
-	evmdcmd "github.com/cosmos/evm/cmd/evmd/cmd"
 )
 
 // NewRootCmd creates a new root command for tacchaind. It is called once in the
@@ -44,7 +42,6 @@ func NewRootCmd() *cobra.Command {
 		true,
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(temp),
-		evmdcmd.NoOpEvmAppOptions,
 	)
 
 	encodingConfig := params.EncodingConfig{

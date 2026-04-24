@@ -55,12 +55,18 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 		true,
 		invCheckPeriod,
 		options.AppOpts,
-		SetupEvmConfig,
 		bam.SetChainID(DefaultChainID),
 	)
 	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
 	require.NoError(t, err)
+
+	// GenesisStateWithValSet overwrites bank genesis without denom metadata.
+	// Restore it so that InitEvmCoinInfo can find the EVM denom metadata.
+	var bankGenState banktypes.GenesisState
+	app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenState)
+	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, DefaultBankDenomMetadata()...)
+	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenState)
 
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
@@ -79,4 +85,3 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 
 	return app
 }
-

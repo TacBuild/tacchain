@@ -8,7 +8,7 @@ import (
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/Asphere-xyz/tacchain/app/upgrades"
+	"github.com/TacBuild/tacchain/app/upgrades"
 	"github.com/cosmos/cosmos-sdk/types/module"
 
 	evmtypes "github.com/cosmos/evm/x/vm/types"

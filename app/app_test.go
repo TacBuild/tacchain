@@ -15,8 +15,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
-
-	evmdcmd "github.com/cosmos/evm/cmd/evmd/cmd"
 )
 
 func TestExportAndBlockedAddrs(t *testing.T) {
@@ -61,7 +59,6 @@ func TestExportAndBlockedAddrs(t *testing.T) {
 		true,
 		0,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
-		evmdcmd.NoOpEvmAppOptions,
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
 	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")

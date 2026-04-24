@@ -28,7 +28,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/Asphere-xyz/tacchain/app"
+	"github.com/TacBuild/tacchain/app"
 
 	evmclient "github.com/cosmos/evm/client"
 	evmserver "github.com/cosmos/evm/server"
@@ -40,13 +40,13 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		evmclient.ValidateChainID(genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome)),
+		genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome),
 		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, app.DefaultNodeHome),
-		snapshot.Cmd(newApp),
+		pruning.Cmd(newAppForSDK, app.DefaultNodeHome),
+		snapshot.Cmd(newAppForSDK),
 	)
 
 	// add Cosmos EVM' flavored TM commands to start server, etc.
@@ -129,13 +129,18 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// newAppForSDK is a wrapper for newApp that satisfies the servertypes.AppCreator interface.
+func newAppForSDK(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	return newApp(logger, db, traceStore, appOpts)
+}
+
 // newApp creates the application
 func newApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) evmserver.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	return app.NewTacChainApp(
@@ -145,7 +150,6 @@ func newApp(
 		true,
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		appOpts,
-		app.SetupEvmConfig,
 		baseappOptions...,
 	)
 }
@@ -185,7 +189,6 @@ func appExport(
 		height == -1,
 		uint(1),
 		appOpts,
-		app.SetupEvmConfig,
 		baseapp.SetChainID(cast.ToString(appOpts.Get(flags.FlagChainID))),
 	)
 

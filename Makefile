@@ -129,19 +129,19 @@ test-solidity:
 ###                                Networks                                 ###
 ###############################################################################
 
-TACCHAIND := $(shell which tacchaind)
+TACCHAIND ?= $(shell which tacchaind 2>/dev/null || echo ./build/tacchaind)
 
 localnet: install localnet-init localnet-start
 testnet: install testnet-init
 
 localnet-init:
-	./contrib/localnet/init.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/init.sh
 
 localnet-init-multi-node:
-	./contrib/localnet/init-multi-node.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/init-multi-node.sh
 
 localnet-start:
-	./contrib/localnet/start.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/start.sh
 
 .PHONY: localnet-start localnet-init localnet-init-multi-node
 

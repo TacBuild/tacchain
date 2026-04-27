@@ -4,7 +4,7 @@
 TACCHAIND=${TACCHAIND:-$(which tacchaind)}
 HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
-CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
+CHAIN_ID=${CHAIN_ID:-tacchain_2391337-1}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-4DD1A5E1D03FA12D}
 VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
@@ -149,6 +149,7 @@ sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMED
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"aatom\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"extended_denom\": \"aatom\"/\"extended_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855
 sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/config/genesis.json
@@ -175,8 +176,9 @@ jq '
   ]
 ' "$HOMEDIR/config/genesis.json" > "$HOMEDIR/config/genesis_patched.json" && mv "$HOMEDIR/config/genesis_patched.json" "$HOMEDIR/config/genesis.json"
 
-# set x/feemarket min gas price
+# set x/feemarket min gas price and initial base fee (base_fee must be >= min_gas_price at genesis)
 sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"base_fee\": \"1000000000.000000000000000000\"/\"base_fee\": \"${MIN_GAS_PRICE}.000000000000000000\"/g" $HOMEDIR/config/genesis.json
 
 # set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
@@ -220,6 +222,9 @@ jq --arg GOV_MIN_EXPEDITED_DEPOSIT "$GOV_MIN_EXPEDITED_DEPOSIT" '
 
 # enable apis
 sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
+
+# enable debug namespace in json-rpc
+sed -i.bak 's/api = "eth,net,web3"/api = "eth,net,web3,debug"/' $HOMEDIR/config/app.toml
 
 # enable rpc cors
 sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml

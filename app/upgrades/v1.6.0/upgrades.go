@@ -1,6 +1,6 @@
-package v105
+package v160
 
-// Upgrade v1.0.5 performs two independent migrations:
+// Upgrade v1.6.0 performs two independent migrations:
 //
 //  1. Vesting account rescue — a PeriodicVestingAccount's private key was
 //     compromised. The handler moves the full vesting state (schedule,
@@ -28,7 +28,7 @@ import (
 	evmvmtypes "github.com/cosmos/evm/x/vm/types"
 )
 
-const UpgradeName = "v1.0.5"
+const UpgradeName = "v1.6.0"
 
 // Old compromised account address.
 const OldAddress = "tac1a0ef7a2ptywdq4s4034p3p88mnye29kpu4vx53"
@@ -54,7 +54,7 @@ func CreateUpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		logger := sdkCtx.Logger()
 
-		logger.Info("Starting v1.0.5 upgrade")
+		logger.Info("Starting v1.6.0 upgrade")
 
 		// ── Step 1: vesting account rescue ──────────────────────────────────
 		logger.Info("Migrating compromised vesting account", "old", OldAddress, "new", NewAddress)
@@ -140,7 +140,7 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("RunMigrations failed: %w", err)
 		}
 
-		logger.Info("v1.0.5 upgrade complete")
+		logger.Info("v1.6.0 upgrade complete")
 		return vm, nil
 	}
 }

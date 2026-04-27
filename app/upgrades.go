@@ -12,7 +12,7 @@ import (
 	v101 "github.com/TacBuild/tacchain/app/upgrades/v1.0.1"
 	v102 "github.com/TacBuild/tacchain/app/upgrades/v1.0.2"
 	v104 "github.com/TacBuild/tacchain/app/upgrades/v1.0.4"
-	v105 "github.com/TacBuild/tacchain/app/upgrades/v1.0.5"
+	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
 )
 
 // Upgrades list of chain upgrades
@@ -23,7 +23,7 @@ var Upgrades = []upgrades.Upgrade{
 	v101.Upgrade,
 	v102.Upgrade, // liquid stake
 	v104.Upgrade, // ed25519 precompile
-	v105.Upgrade, // vesting account migration (compromised key)
+	v160.Upgrade, // upgrade to cosmos/evm v0.6.0
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

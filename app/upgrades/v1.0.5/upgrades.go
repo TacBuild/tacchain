@@ -25,15 +25,16 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	erc20types "github.com/cosmos/evm/x/erc20/types"
+	evmvmtypes "github.com/cosmos/evm/x/vm/types"
 )
 
 const UpgradeName = "v1.0.5"
 
 // Old compromised account address.
-const OldAddress = "tac1v4zecswzlny2rtaenmk5q9k2h37g2wzwzrrya0"
+const OldAddress = "tac1a0ef7a2ptywdq4s4034p3p88mnye29kpu4vx53"
 
 // New safe address that receives the migrated vesting state.
-const NewAddress = "tac1ueu0wa0xhvcrwhct5g5phs5r024ezr7kedkwef"
+const NewAddress = "tac1pnxs860d4zwpynamesfzejttms0w844xuxjd3n"
 
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
@@ -76,6 +77,18 @@ func CreateUpgradeHandler(
 		logger.Info("Migrating x/vm Params proto schema")
 		if err := migrateEVMParamsStore(sdkCtx, ak); err != nil {
 			return nil, fmt.Errorf("x/vm params migration failed: %w", err)
+		}
+
+		// 2a2. Set history_serve_window to the default value (8192 / EIP-2935).
+		// This is a new field in v0.6.0 that did not exist in v0.1.4, so it
+		// stays 0 after the raw re-encoding above. Read → patch → write back.
+		evmParams := ak.EVMKeeper.GetParams(sdkCtx)
+		if evmParams.HistoryServeWindow == 0 {
+			evmParams.HistoryServeWindow = evmvmtypes.DefaultHistoryServeWindow
+			if err := ak.EVMKeeper.SetParams(sdkCtx, evmParams); err != nil {
+				return nil, fmt.Errorf("x/vm SetParams (history_serve_window) failed: %w", err)
+			}
+			logger.Info("Set x/vm Params history_serve_window", "value", evmvmtypes.DefaultHistoryServeWindow)
 		}
 
 		// 2b. Initialise x/vm EvmCoinInfo.

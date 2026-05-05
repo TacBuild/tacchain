@@ -12,33 +12,26 @@ type RescueEntry struct {
 	New string `json:"new"`
 }
 
-type VestingMigration struct {
-	Rescues []RescueEntry `json:"rescues"`
-}
-
 type planInfo struct {
-	VestingMigration *VestingMigration `json:"vesting_migration,omitempty"`
+	VestingMigration []RescueEntry `json:"vesting_migration,omitempty"`
 }
 
 func parseRescueEntries(info string) ([]RescueEntry, error) {
 	if info == "" {
-		return nil, fmt.Errorf("plan.info is empty: vesting_migration.rescues is required for v1.6.0")
+		return nil, fmt.Errorf("plan.info is empty: vesting_migration is required for v1.6.0")
 	}
 
 	var p planInfo
 	if err := json.Unmarshal([]byte(info), &p); err != nil {
 		return nil, fmt.Errorf("plan.info is not valid JSON: %w", err)
 	}
-	if p.VestingMigration == nil {
-		return nil, fmt.Errorf("plan.info missing 'vesting_migration' object")
-	}
-	if len(p.VestingMigration.Rescues) == 0 {
-		return nil, fmt.Errorf("plan.info 'vesting_migration.rescues' is empty")
+	if len(p.VestingMigration) == 0 {
+		return nil, fmt.Errorf("plan.info missing or empty 'vesting_migration' array")
 	}
 
-	seenOld := make(map[string]struct{}, len(p.VestingMigration.Rescues))
-	seenNew := make(map[string]struct{}, len(p.VestingMigration.Rescues))
-	for i, e := range p.VestingMigration.Rescues {
+	seenOld := make(map[string]struct{}, len(p.VestingMigration))
+	seenNew := make(map[string]struct{}, len(p.VestingMigration))
+	for i, e := range p.VestingMigration {
 		if _, err := sdk.AccAddressFromBech32(e.Old); err != nil {
 			return nil, fmt.Errorf("rescues[%d].old (%q) is not a valid bech32 address: %w", i, e.Old, err)
 		}
@@ -58,5 +51,5 @@ func parseRescueEntries(info string) ([]RescueEntry, error) {
 		seenNew[e.New] = struct{}{}
 	}
 
-	return p.VestingMigration.Rescues, nil
+	return p.VestingMigration, nil
 }

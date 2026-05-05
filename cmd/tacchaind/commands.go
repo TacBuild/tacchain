@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -31,6 +30,7 @@ import (
 	"github.com/TacBuild/tacchain/app"
 
 	evmclient "github.com/cosmos/evm/client"
+	evmdebug "github.com/cosmos/evm/client/debug"
 	evmserver "github.com/cosmos/evm/server"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
 )
@@ -43,7 +43,7 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 		genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome),
 		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
-		debug.Cmd(),
+		evmdebug.Cmd(),
 		confixcmd.ConfigCommand(),
 		pruning.Cmd(newAppForSDK, app.DefaultNodeHome),
 		snapshot.Cmd(newAppForSDK),

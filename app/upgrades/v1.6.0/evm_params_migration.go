@@ -22,9 +22,12 @@ package v160
 //     Decoding the old bytes with the new schema without re-encoding would
 //     silently corrupt evm_channels, access_control and active_static_precompiles.
 //
-//  2. x/erc20 native precompile address migration (migrateERC20NativePrecompiles)
-//     Old storage: store.Get([]byte("NativePrecompiles")) → concatenated 42-byte hex strings.
-//     New storage: one KV entry per address at prefix {0x06}+hexAddr.
+//  2. x/erc20 precompile address migration (migrateERC20Precompiles)
+//     Two legacy keys held the lists as concatenated 42-byte hex strings:
+//       []byte("NativePrecompiles")  → new per-address KV at KeyPrefixNativePrecompiles  ({0x06})
+//       []byte("DynamicPrecompiles") → new per-address KV at KeyPrefixDynamicPrecompiles ({0x07})
+//     Both must be migrated; missing the dynamic list breaks all single-token-representation
+//     ERC20 wrappers registered via x/erc20 RegisterERC20 (e.g. IBC tokens, token-factory tokens).
 
 import (
 	"encoding/binary"
@@ -177,42 +180,69 @@ func appendField(buf []byte, fieldNum uint32, wireType uint64, data []byte) []by
 	return buf
 }
 
-// migrateERC20NativePrecompiles migrates x/erc20 native precompile addresses
-// from the v0.1.4 storage format to the v0.6.0 format.
+// migrateERC20Precompiles migrates x/erc20 precompile addresses (both native
+// and dynamic lists) from the v0.1.4 storage format to the v0.6.0 format.
 //
-// v0.1.4: store.Get([]byte("NativePrecompiles")) → concatenated 42-byte hex strings.
-// v0.6.0: one entry per address at prefix {0x06}+hexAddr.
+// v0.1.4 layout (single key per list, concatenated 42-byte hex strings):
 //
-// After migration the old key is deleted.
-func migrateERC20NativePrecompiles(ctx sdk.Context, ak *upgrades.AppKeepers) error {
+//	store.Get([]byte("NativePrecompiles"))  → "0xAaaa...0xBbbb..."
+//	store.Get([]byte("DynamicPrecompiles")) → "0xCccc...0xDddd..."
+//
+// v0.6.0 layout (per-address keys with a prefix byte):
+//
+//	{0x06}+hexAddr → 0x01 (native)
+//	{0x07}+hexAddr → 0x01 (dynamic)
+//
+// After migration both old keys are deleted.  Missing the dynamic list would
+// cause every dynamically-registered ERC20 wrapper (IBC tokens, token-factory
+// tokens, etc.) to appear unregistered in the EVM, making them unusable from
+// EVM tooling.
+func migrateERC20Precompiles(ctx sdk.Context, ak *upgrades.AppKeepers) error {
 	storeKey := ak.GetStoreKey(erc20types.StoreKey)
 	if storeKey == nil {
 		return fmt.Errorf("erc20 store key not found")
 	}
 	store := ctx.KVStore(storeKey)
 
-	oldKey := []byte("NativePrecompiles")
-	bz := store.Get(oldKey)
-	if len(bz) == 0 {
-		// Nothing stored — either empty list or already migrated.
-		return nil
+	type entry struct {
+		oldKey []byte
+		enable func(sdk.Context, common.Address) error
+		label  string
+	}
+	migrations := []entry{
+		{
+			oldKey: []byte("NativePrecompiles"),
+			enable: ak.Erc20Keeper.EnableNativePrecompile,
+			label:  "native",
+		},
+		{
+			oldKey: []byte("DynamicPrecompiles"),
+			enable: ak.Erc20Keeper.EnableDynamicPrecompile,
+			label:  "dynamic",
+		},
 	}
 
-	const addrLen = 42 // len("0xAbCd...") — 42 characters
-	if len(bz)%addrLen != 0 {
-		return fmt.Errorf("native precompiles bytes length %d is not a multiple of %d", len(bz), addrLen)
-	}
+	const addrLen = 42 // len("0xAbCd...") — 42 ASCII characters
 
-	for i := 0; i < len(bz); i += addrLen {
-		hexAddr := string(bz[i : i+addrLen])
-		addr := common.HexToAddress(hexAddr)
-		if err := ak.Erc20Keeper.EnableNativePrecompile(ctx, addr); err != nil {
-			return fmt.Errorf("failed to enable native precompile %s: %w", hexAddr, err)
+	for _, m := range migrations {
+		bz := store.Get(m.oldKey)
+		if len(bz) == 0 {
+			continue // empty list or already migrated
 		}
+		if len(bz)%addrLen != 0 {
+			return fmt.Errorf("%s precompiles bytes length %d is not a multiple of %d",
+				m.label, len(bz), addrLen)
+		}
+		for i := 0; i < len(bz); i += addrLen {
+			hexAddr := string(bz[i : i+addrLen])
+			addr := common.HexToAddress(hexAddr)
+			if err := m.enable(ctx, addr); err != nil {
+				return fmt.Errorf("failed to enable %s precompile %s: %w", m.label, hexAddr, err)
+			}
+		}
+		store.Delete(m.oldKey)
 	}
 
-	// Delete the old key — it is no longer read by the new code.
-	store.Delete(oldKey)
 	return nil
 }
 

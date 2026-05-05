@@ -113,13 +113,20 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("x/erc20 params migration failed: %w", err)
 		}
 
-		// 2d. Migrate x/erc20 native precompile addresses.
-		// Old storage: one key "NativePrecompiles" → concat of 42-byte hex strings.
-		// New storage: per-address keys {0x06}+hexAddr.
-		// Without this step all native precompiles appear disabled after upgrade.
-		logger.Info("Migrating x/erc20 native precompiles")
-		if err := migrateERC20NativePrecompiles(sdkCtx, ak); err != nil {
-			return nil, fmt.Errorf("x/erc20 native precompile migration failed: %w", err)
+		// 2d. Migrate x/erc20 precompile addresses (native + dynamic).
+		// Old storage: keys "NativePrecompiles" / "DynamicPrecompiles" → concat
+		// of 42-byte hex strings.
+		// New storage: per-address keys {0x06}+hexAddr (native) and
+		// {0x07}+hexAddr (dynamic).
+		// Without this step:
+		//   * native precompiles (e.g. WTAC, staking, distribution, bank)
+		//     appear disabled;
+		//   * dynamic precompiles (every IBC / token-factory ERC20 wrapper
+		//     registered via x/erc20 RegisterERC20) become invisible to EVM
+		//     tooling, breaking all token transfers from the EVM side.
+		logger.Info("Migrating x/erc20 precompiles (native + dynamic)")
+		if err := migrateERC20Precompiles(sdkCtx, ak); err != nil {
+			return nil, fmt.Errorf("x/erc20 precompile migration failed: %w", err)
 		}
 
 		// ── Step 3: built-in SDK module migrations ───────────────────────────

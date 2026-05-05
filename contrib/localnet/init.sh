@@ -154,9 +154,8 @@ sed -i.bak "s/\"extended_denom\": \"aatom\"/\"extended_denom\": \"utac\"/g" $HOM
 # enable evm eip-3855
 sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/config/genesis.json
 
-# disable EIP-155
-sed -i.bak "s/\"allow_unprotected_txs\": false/\"allow_unprotected_txs\": true/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/allow-unprotected-txs = false/allow-unprotected-txs = true/g" $HOMEDIR/config/app.toml
+# set [evm] evm-chain-id in app.toml (REQUIRED in v1.6.0+, default template ships 262144)
+sed -i.bak "s/^evm-chain-id = 262144/evm-chain-id = $EVM_CHAIN_ID/g" $HOMEDIR/config/app.toml
 
 # set evm precompiles
 jq '

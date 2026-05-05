@@ -30,12 +30,6 @@ import (
 
 const UpgradeName = "v1.6.0"
 
-// Old compromised account address.
-const OldAddress = "tac1a0ef7a2ptywdq4s4034p3p88mnye29kpu4vx53"
-
-// New safe address that receives the migrated vesting state.
-const NewAddress = "tac1pnxs860d4zwpynamesfzejttms0w844xuxjd3n"
-
 var Upgrade = upgrades.Upgrade{
 	UpgradeName:          UpgradeName,
 	CreateUpgradeHandler: CreateUpgradeHandler,
@@ -57,9 +51,20 @@ func CreateUpgradeHandler(
 		logger.Info("Starting v1.6.0 upgrade")
 
 		// ── Step 1: vesting account rescue ──────────────────────────────────
-		logger.Info("Migrating compromised vesting account", "old", OldAddress, "new", NewAddress)
-		if err := migrateVestingAccount(sdkCtx, ak, OldAddress, NewAddress); err != nil {
-			return nil, fmt.Errorf("vesting account migration failed: %w", err)
+		//
+		// The rescue list (old → new pairs) is taken from the proposal's Plan.Info JSON.
+		rescues, err := parseRescueEntries(plan.Info)
+		if err != nil {
+			return nil, fmt.Errorf("rescue config: %w", err)
+		}
+		logger.Info("Rescue plan parsed", "count", len(rescues))
+		for i, r := range rescues {
+			logger.Info("Migrating compromised vesting account",
+				"index", i, "old", r.Old, "new", r.New)
+			if err := migrateVestingAccount(sdkCtx, ak, r.Old, r.New); err != nil {
+				return nil, fmt.Errorf("vesting account migration failed for %s → %s: %w",
+					r.Old, r.New, err)
+			}
 		}
 
 		// ── Step 2: EVM KV state repair (must happen before RunMigrations) ──

@@ -264,13 +264,7 @@ func NewTacChainApp(
 	appOpts servertypes.AppOptions,
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *TacChainApp {
-	cosmosChainID := resolveChainID(appOpts)
-	evmChainID, err := ParseEVMChainID(cosmosChainID)
-	if err != nil {
-		// cosmosChainID is empty when tempApp is created during encoding config init (no genesis yet).
-		// Use DefaultEVMChainID (262144) so that SetChainConfig allows the real app to override it later.
-		evmChainID = evmvmtypes.DefaultEVMChainID
-	}
+	evmChainID := cast.ToUint64(appOpts.Get(evmsrvflags.EVMChainID))
 	encodingConfig := evmencoding.MakeConfig(evmChainID)
 
 	// Below we could construct and set an application specific mempool and

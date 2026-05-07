@@ -276,7 +276,6 @@ require (
 
 replace (
 	// need this replace to pick up the store changes (Copy + SetIAVLSyncPruning) in our cosmos-sdk fork
-	cosmossdk.io/store => ../cosmos-sdk/store
 
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
@@ -285,14 +284,16 @@ replace (
 	github.com/cockroachdb/pebble => github.com/cockroachdb/pebble v0.0.0-20230928194634-aa077af62593
 
 	// replace to cosmos-sdk fork for liquid stake support. See: https://github.com/TacBuild/cosmos-sdk/pull/2
-	github.com/cosmos/cosmos-sdk => ../cosmos-sdk/
+	// bump to v0.53.6 with all fork specific changes.
+	github.com/cosmos/cosmos-sdk => github.com/TacBuild/cosmos-sdk v0.53.6-tac.1
 
 	// replace to cosmos/evm fork
 	// added liquid stake support. See: https://github.com/TacBuild/evm/pull/9
 	// added ed25519 precompile support. See: https://github.com/TacBuild/evm/pull/8
 	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
-	github.com/cosmos/evm => ../evm/
+	// bump to v0.6.0
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.2
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

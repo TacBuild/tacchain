@@ -657,8 +657,8 @@ func NewTacChainApp(
 			app.IBCKeeper.ChannelKeeper,
 			app.GovKeeper,
 			app.SlashingKeeper,
-			encodingConfig.Codec,
 			app.LiquidStakeKeeper,
+			encodingConfig.Codec,
 		),
 	)
 

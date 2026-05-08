@@ -30,6 +30,13 @@ No manual state migration is needed. All KV store migrations run inside the upgr
 |-----|--------|
 | `[json-rpc] fix-revert-gas-refund-height` | Removed upstream — no longer needed |
 
+Remove this line if present in your existing `app.toml`:
+
+```toml
+# REMOVE THIS LINE — no longer supported in v1.6.0:
+fix-revert-gas-refund-height = 0
+```
+
 #### Required fields
 
 > ⚠️ **`evm-chain-id` must be set correctly.** Starting from v1.6.0 the node reads
@@ -53,57 +60,106 @@ evm-chain-id = 239
 The following fields are **new in v1.6.0**. They will be missing from your existing
 `app.toml` and must be added manually (or regenerate the file with `tacchaind init`).
 
+##### `[grpc]`
+
+```toml
+[grpc]
+# ... existing fields unchanged ...
+
+# Historical gRPC addresses with block ranges for historical query routing.
+# Maps gRPC addresses to block ranges so queries for old heights can be
+# transparently forwarded to a node running an older binary.
+# Format: '{"address1": [start_block, end_block], "address2": [start_block, end_block]}'
+# Leave as "{}" to disable.
+historical-grpc-address-block-range = "{}"
+```
+
+##### `[evm]`
+
+```toml
+[evm]
+# ... existing fields unchanged ...
+
+# Minimum priority fee (tip) for EVM transactions (in wei).
+min-tip = 0
+
+# Address for the geth-compatible metrics HTTP server.
+geth-metrics-address = "127.0.0.1:8100"
+
+# Number of blocks in the block hash history window (EIP-2935).
+history-serve-window = 8192
+```
+
+##### `[evm.mempool]` — new section
+
+This section is new and was not present in v1.0.4. It configures the app-side
+EVM transaction mempool (geth-compatible).
+
+```toml
+[evm.mempool]
+# Minimum gas price to enforce for acceptance into the pool (in wei).
+price-limit = 1
+
+# Minimum price bump percentage to replace an already existing transaction (same nonce).
+price-bump = 10
+
+# Number of executable transaction slots guaranteed per account.
+account-slots = 16
+
+# Maximum number of executable transaction slots for all accounts combined.
+global-slots = 5120
+
+# Maximum number of non-executable (queued) transaction slots per account.
+account-queue = 64
+
+# Maximum number of non-executable (queued) transaction slots for all accounts combined.
+global-queue = 1024
+
+# Maximum time a non-executable transaction stays in the queue before eviction.
+lifetime = "3h0m0s"
+```
+
 ##### `[json-rpc]`
 
 ```toml
-# WebSocket origin whitelist.
-# "*" allows all origins (default for permissive nodes).
-# Restrict to specific domains for production validators.
-ws-origins = "*"
+[json-rpc]
+# ... existing fields unchanged ...
+
+# Maximum number of requests allowed in a single JSON-RPC batch call.
+batch-request-limit = 1000
+
+# Maximum response size (in bytes) for a batched JSON-RPC call.
+batch-response-max-size = 25000000
+
+# Allowed origins for WebSocket connections.
+# ⚠️  If you serve WebSocket connections from external clients, add their
+# origins here. The default restricts WS to localhost only.
+ws-origins = ["127.0.0.1", "localhost"]
 
 # Allow unsigned / legacy unprotected transactions via JSON-RPC.
 # This is now a LOCAL node policy only (removed from on-chain params).
 allow-unprotected-txs = false
 
-# Enable the debug namespace profiling endpoints.
+# Enable profiling endpoints in the `debug` namespace.
+# WARNING: do NOT enable on public-facing nodes.
 enable-profiling = false
-
-# Maximum number of requests in a single batch RPC call.
-max-batch-request-len = 1000
-
-# Maximum number of responses returned by a batch RPC call.
-max-batch-response-len = 1000
-```
-
-##### `[geth-metrics]`
-
-```toml
-[geth-metrics]
-# Enable Geth-compatible metrics endpoint.
-enable = false
-# Address for the Geth metrics HTTP server.
-address = "127.0.0.1:8100"
-```
-
-##### `[evm]` (formerly `[json-rpc]` overlap)
-
-```toml
-[evm]
-# Number of blocks in the block hash history window (EIP-2935).
-history-serve-window = 8192
 ```
 
 ---
 
 ### WebSocket Warning
 
-If you expose WebSocket endpoints publicly, set `ws-origins` to a restrictive list.
-Leaving it as `"*"` allows cross-origin WebSocket connections from any domain.
+The new `ws-origins` field defaults to `["127.0.0.1", "localhost"]`, which means
+WebSocket connections from external hosts will be **rejected by default**.
+
+If your node exposes WebSocket RPC to external clients (e.g., dApps, indexers,
+wallets), you must explicitly add their origins:
 
 ```toml
-[json-rpc]
-ws-origins = "https://yourdomain.com"
+ws-origins = ["127.0.0.1", "localhost", "myapp.example.com", "*"]
 ```
+
+Use `"*"` to allow all origins (equivalent to the old behavior).
 
 ---
 

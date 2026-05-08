@@ -238,7 +238,7 @@ type TacChainApp struct {
 
 	// EVM server support
 	clientCtx          client.Context
-	pendingTxListeners []func(ethcmn.Hash)
+	pendingTxListeners []evmante.PendingTxListener
 	EVMMempool         *evmmempool.ExperimentalEVMMempool
 }
 
@@ -946,12 +946,13 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 			SigGasConsumer:         evmante.SigVerificationGasConsumer,
 			ExtensionOptionChecker: evmantetypes.HasDynamicFeeExtensionOption,
 		},
-		AccountKeeper:   app.AccountKeeper,
-		IBCKeeper:       app.IBCKeeper,
-		CircuitKeeper:   &app.CircuitKeeper,
-		EvmKeeper:       app.EVMKeeper,
-		FeeMarketKeeper: app.FeeMarketKeeper,
-		MaxTxGasWanted:  maxGasWanted,
+		AccountKeeper:     app.AccountKeeper,
+		IBCKeeper:         app.IBCKeeper,
+		CircuitKeeper:     &app.CircuitKeeper,
+		EvmKeeper:         app.EVMKeeper,
+		FeeMarketKeeper:   app.FeeMarketKeeper,
+		MaxTxGasWanted:    maxGasWanted,
+		PendingTxListener: app.onPendingTx,
 	},
 	)
 	if err != nil {
@@ -960,6 +961,13 @@ func (app *TacChainApp) setAnteHandler(txConfig client.TxConfig, maxGasWanted ui
 
 	// Set the AnteHandler for the app
 	app.SetAnteHandler(anteHandler)
+}
+
+// onPendingTx notifies all registered listeners of a pending EVM transaction.
+func (app *TacChainApp) onPendingTx(hash ethcmn.Hash) {
+	for _, listener := range app.pendingTxListeners {
+		listener(hash)
+	}
 }
 
 // configureEVMMempool sets up the ExperimentalEVMMempool required by the EVM JSON-RPC server.

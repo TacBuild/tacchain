@@ -7,7 +7,6 @@ import (
 	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
 	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
-	corestoretypes "cosmossdk.io/core/store"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 
@@ -15,6 +14,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
+	evmtxlistener "github.com/cosmos/evm/ante"
 	evmcosmosante "github.com/cosmos/evm/ante/cosmos"
 	evmante "github.com/cosmos/evm/ante/evm"
 	evmanteinterfaces "github.com/cosmos/evm/ante/interfaces"
@@ -30,8 +30,10 @@ type HandlerOptions struct {
 
 	IBCKeeper *ibckeeper.Keeper
 
-	TXCounterStoreService corestoretypes.KVStoreService
-	CircuitKeeper         *circuitkeeper.Keeper
+	CircuitKeeper *circuitkeeper.Keeper
+
+	// PendingTxListener is called during CheckTx for each pending EVM tx hash (used by JSON-RPC).
+	PendingTxListener evmtxlistener.PendingTxListener
 
 	// Cosmos EVM
 	FeeMarketKeeper evmanteinterfaces.FeeMarketKeeper
@@ -86,12 +88,13 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 							&evmParams,
 							&feemarketParams,
 						),
+						evmtxlistener.NewTxListenerDecorator(options.PendingTxListener),
 					)
-				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
+				case "/cosmos.evm.ante.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
 					anteHandler, err = newCosmosAnteHandler(ctx, options)
 				default:
-					return ctx, errors.New(fmt.Sprintf("rejecting tx with unsupported extension option: %s", typeURL))
+					return ctx, fmt.Errorf("rejecting tx with unsupported extension option: %s", typeURL)
 				}
 
 				if err != nil {

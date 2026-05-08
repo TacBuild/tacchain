@@ -1,19 +1,5 @@
 package v160
 
-// Upgrade v1.6.0 performs two independent migrations:
-//
-//  1. Vesting account rescue — a PeriodicVestingAccount's private key was
-//     compromised. The handler moves the full vesting state (schedule,
-//     delegations, unbondings, redelegations, rewards, balances) to a new
-//     safe address and tombstones the old one.
-//
-//  2. EVM stack upgrade — tacchain migrates from cosmos/evm @ b1c973f
-//     (evmos-based v0.2.0) to cosmos/evm v0.6.0.  The proto schema for
-//     x/vm Params changed (field numbers shifted), x/erc20 native precompiles
-//     moved to per-address KV keys, and a new EvmCoinInfo key was introduced.
-//     All KV state is repaired before RunMigrations runs so that module
-//     InitGenesis / BeginBlock code never sees stale bytes.
-
 import (
 	"context"
 	"fmt"

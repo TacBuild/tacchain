@@ -30,7 +30,7 @@ type SetupOptions struct {
 }
 
 // NewTacChainAppWithCustomOptions initializes a new TacChainApp with custom options.
-func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPeriod uint, options SetupOptions) *TacChainApp {
+func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *TacChainApp {
 	t.Helper()
 
 	privVal := mock.NewPV()
@@ -53,7 +53,6 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, invCheckPerio
 		options.DB,
 		nil,
 		true,
-		invCheckPeriod,
 		options.AppOpts,
 		bam.SetChainID(DefaultChainID),
 	)

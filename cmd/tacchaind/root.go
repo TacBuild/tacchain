@@ -40,7 +40,6 @@ func NewRootCmd() *cobra.Command {
 		dbm.NewMemDB(),
 		nil,
 		true,
-		0,
 		simtestutil.NewAppOptionsWithFlagHome(temp),
 	)
 

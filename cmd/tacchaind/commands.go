@@ -148,7 +148,6 @@ func newApp(
 		db,
 		traceStore,
 		true,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		appOpts,
 		baseappOptions...,
 	)
@@ -187,7 +186,6 @@ func appExport(
 		db,
 		traceStore,
 		height == -1,
-		uint(1),
 		appOpts,
 		baseapp.SetChainID(cast.ToString(appOpts.Get(flags.FlagChainID))),
 	)

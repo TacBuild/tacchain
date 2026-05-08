@@ -20,7 +20,7 @@ import (
 func TestExportAndBlockedAddrs(t *testing.T) {
 	db := dbm.NewMemDB()
 	logger := log.NewTestLogger(t)
-	app := NewTacChainAppWithCustomOptions(t, false, 0, SetupOptions{
+	app := NewTacChainAppWithCustomOptions(t, false, SetupOptions{
 		Logger:  logger.With("instance", "first"),
 		DB:      db,
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
@@ -57,7 +57,6 @@ func TestExportAndBlockedAddrs(t *testing.T) {
 		db,
 		nil,
 		true,
-		0,
 		simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
 	)
 	_, err = app2.ExportAppStateAndValidators(false, []string{}, []string{})
@@ -71,7 +70,7 @@ func TestGetMaccPerms(t *testing.T) {
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	db := dbm.NewMemDB()
-	app := NewTacChainAppWithCustomOptions(t, false, 0, SetupOptions{
+	app := NewTacChainAppWithCustomOptions(t, false, SetupOptions{
 		Logger:  log.NewTestLogger(t),
 		DB:      db,
 		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),

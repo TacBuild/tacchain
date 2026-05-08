@@ -8,7 +8,7 @@ package v160
 //     safe address and tombstones the old one.
 //
 //  2. EVM stack upgrade — tacchain migrates from cosmos/evm @ b1c973f
-//     (evmos-based v0.1.4) to cosmos/evm v0.6.0.  The proto schema for
+//     (evmos-based v0.2.0) to cosmos/evm v0.6.0.  The proto schema for
 //     x/vm Params changed (field numbers shifted), x/erc20 native precompiles
 //     moved to per-address KV keys, and a new EvmCoinInfo key was introduced.
 //     All KV state is repaired before RunMigrations runs so that module
@@ -85,7 +85,7 @@ func CreateUpgradeHandler(
 		}
 
 		// 2a2. Set history_serve_window to the default value (8192 / EIP-2935).
-		// This is a new field in v0.6.0 that did not exist in v0.1.4, so it
+		// This is a new field in v0.6.0 that did not exist in v0.2.0, so it
 		// stays 0 after the raw re-encoding above. Read → patch → write back.
 		evmParams := ak.EVMKeeper.GetParams(sdkCtx)
 		if evmParams.HistoryServeWindow == 0 {
@@ -97,7 +97,7 @@ func CreateUpgradeHandler(
 		}
 
 		// 2b. Initialise x/vm EvmCoinInfo.
-		// This KV key ({0x05}) did not exist in v0.1.4.  The EVM module's
+		// This KV key ({0x05}) did not exist in v0.2.0.  The EVM module's
 		// PreBlock calls SetGlobalConfigVariables which panics if the key is
 		// absent.  InitEvmCoinInfo loads the data from x/bank denom metadata.
 		logger.Info("Initialising x/vm EvmCoinInfo")
@@ -108,7 +108,7 @@ func CreateUpgradeHandler(
 		// 2c. Set x/erc20 Params flag-keys.
 		// In v0.6.0 params are stored as presence-flag keys, not protobuf.
 		// EnableErc20 uses the same flag-key in both versions so it carries
-		// over, but PermissionlessRegistration is a new key absent in v0.1.4.
+		// over, but PermissionlessRegistration is a new key absent in v0.2.0.
 		// Calling SetParams guarantees both keys are in the correct state.
 		logger.Info("Setting x/erc20 Params")
 		if err := ak.Erc20Keeper.SetParams(sdkCtx, erc20types.Params{

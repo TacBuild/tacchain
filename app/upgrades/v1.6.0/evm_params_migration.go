@@ -181,9 +181,9 @@ func appendField(buf []byte, fieldNum uint32, wireType uint64, data []byte) []by
 }
 
 // migrateERC20Precompiles migrates x/erc20 precompile addresses (both native
-// and dynamic lists) from the v0.1.4 storage format to the v0.6.0 format.
+// and dynamic lists) from the v0.2.0 storage format to the v0.6.0 format.
 //
-// v0.1.4 layout (single key per list, concatenated 42-byte hex strings):
+// v0.2.0 layout (single key per list, concatenated 42-byte hex strings):
 //
 //	store.Get([]byte("NativePrecompiles"))  → "0xAaaa...0xBbbb..."
 //	store.Get([]byte("DynamicPrecompiles")) → "0xCccc...0xDddd..."

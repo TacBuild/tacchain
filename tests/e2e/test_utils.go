@@ -14,33 +14,37 @@ import (
 )
 
 const (
-	DefaultChainID        = "tacchain_2391-1"
+	DefaultChainID        = "tacchain_2391337-1"
 	DefaultDenom          = "utac"
 	DefaultKeyringBackend = "test"
 )
 
 type TacchainTestSuite struct {
 	suite.Suite
-	homeDir string
-	cmd     *exec.Cmd
+	homeDir   string
+	tacchaind string
+	cmd       *exec.Cmd
 }
 
 type CommandParams struct {
 	ChainID        string
 	HomeDir        string
 	KeyringBackend string
+	TacchaindPath  string
 }
 
 func (s *TacchainTestSuite) CommandParamsHomeDir() CommandParams {
 	return CommandParams{
-		HomeDir: s.homeDir,
+		HomeDir:       s.homeDir,
+		TacchaindPath: s.tacchaind,
 	}
 }
 
 func (s *TacchainTestSuite) CommandParamsChainIDHomeDir() CommandParams {
 	return CommandParams{
-		ChainID: DefaultChainID,
-		HomeDir: s.homeDir,
+		ChainID:       DefaultChainID,
+		HomeDir:       s.homeDir,
+		TacchaindPath: s.tacchaind,
 	}
 }
 
@@ -49,11 +53,16 @@ func (s *TacchainTestSuite) DefaultCommandParams() CommandParams {
 		ChainID:        DefaultChainID,
 		HomeDir:        s.homeDir,
 		KeyringBackend: DefaultKeyringBackend,
+		TacchaindPath:  s.tacchaind,
 	}
 }
 
 func ExecuteCommand(ctx context.Context, params CommandParams, args ...string) (string, error) {
-	cmd := exec.CommandContext(ctx, "tacchaind", args...)
+	binary := params.TacchaindPath
+	if binary == "" {
+		binary = "tacchaind"
+	}
+	cmd := exec.CommandContext(ctx, binary, args...)
 	cmd.Args = append(cmd.Args, "--home", params.HomeDir)
 
 	if params.ChainID != "" {
@@ -229,6 +238,45 @@ func waitForNewBlock(s *TacchainTestSuite, stderr io.ReadCloser) {
 		time.Sleep(2 * time.Second)
 		s.T().Logf("Waiting for new block (attempt %d/%d)", attempt, maxAttempts)
 	}
+}
+
+// parseRewardsFloat parses the float amount from `q distribution rewards` output.
+// The output JSON has shape: {"total":["720289602662.630000000000000000utac"]}
+func parseRewardsFloat(output, denom string) (float64, error) {
+	var result struct {
+		Total []string `json:"total"`
+	}
+	sonicWarning := "WARNING:(ast) sonic only supports go1.17~1.23, but your environment is not suitable\n"
+	output = strings.Replace(output, sonicWarning, "", 1)
+	output = strings.TrimSpace(output)
+
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal rewards output: %w (raw: %s)", err, output)
+	}
+	for _, coin := range result.Total {
+		if strings.HasSuffix(coin, denom) {
+			amountStr := strings.TrimSuffix(coin, denom)
+			return strconv.ParseFloat(amountStr, 64)
+		}
+	}
+	return 0, fmt.Errorf("denom %s not found in rewards output: %s", denom, output)
+}
+
+// parseTotalSupply parses the float amount from `q bank total-supply-of` output.
+// Output format: {"amount":{"denom":"utac","amount":"1234..."}}
+func parseTotalSupply(output string) (float64, error) {
+	var result struct {
+		Amount struct {
+			Amount string `json:"amount"`
+		} `json:"amount"`
+	}
+	sonicWarning := "WARNING:(ast) sonic only supports go1.17~1.23, but your environment is not suitable\n"
+	output = strings.Replace(output, sonicWarning, "", 1)
+	output = strings.TrimSpace(output)
+	if err := json.Unmarshal([]byte(output), &result); err != nil {
+		return 0, fmt.Errorf("failed to unmarshal total supply output: %w (raw: %s)", err, output)
+	}
+	return strconv.ParseFloat(result.Amount.Amount, 64)
 }
 
 func UTacAmount(amount string) string {

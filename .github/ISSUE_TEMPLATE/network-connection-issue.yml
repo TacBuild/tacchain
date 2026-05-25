@@ -3,7 +3,7 @@ description: Report issues related to joining the network.
 title: "[Network Connection Issue]: "
 labels: ["network"]
 assignees:
-  - tgntr
+  - AkKoks
 body:
   - type: markdown
     attributes:

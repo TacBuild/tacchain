@@ -393,6 +393,7 @@ func NewTacChainApp(
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
 		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
 	)
+	app.StakingKeeper.SetTokenizeSharesAllowedDelegators(liquidstaketypes.LiquidStakeProxyAcc)
 
 	app.MintKeeper = mintkeeper.NewKeeper(
 		encodingConfig.Codec,

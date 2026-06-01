@@ -7,7 +7,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/TacBuild/tacchain/app/denoms"
+	appconfig "github.com/TacBuild/tacchain/app/config"
 	"github.com/TacBuild/tacchain/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -167,7 +167,7 @@ func ensureEVMDenomMetadata(ctx sdk.Context, ak *upgrades.AppKeepers, evmDenom s
 		return nil
 	}
 
-	metadata, found := denoms.DefaultBankDenomMetadataFor(evmDenom)
+	metadata, found := appconfig.DefaultBankDenomMetadataFor(evmDenom)
 	if !found {
 		return fmt.Errorf("no default bank denom metadata for EVM denom %s", evmDenom)
 	}

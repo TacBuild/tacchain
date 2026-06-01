@@ -23,6 +23,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/TacBuild/tacchain/app"
+	appconfig "github.com/TacBuild/tacchain/app/config"
 
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
 	evmserverconfig "github.com/cosmos/evm/server/config"
@@ -31,6 +32,8 @@ import (
 // NewRootCmd creates a new root command for tacchaind. It is called once in the
 // main function.
 func NewRootCmd() *cobra.Command {
+	appconfig.SetupSDKConfig()
+
 	temp := tempDir()
 	// cleanup temp dir after we are done with the tempApp, so we don't leave behind a new temporary directory for every invocation
 	defer os.RemoveAll(temp)
@@ -58,8 +61,8 @@ func NewRootCmd() *cobra.Command {
 		WithInput(os.Stdin).
 		WithAccountRetriever(authtypes.AccountRetriever{}).
 		WithBroadcastMode(flags.FlagBroadcastMode).
-		WithHomeDir(app.DefaultNodeHome).
-		WithViper(app.AppName).
+		WithHomeDir(appconfig.DefaultNodeHome).
+		WithViper(appconfig.AppName).
 		// Cosmos EVM specific setup
 		WithKeyringOptions(evmkeyring.Option()).
 		WithLedgerHasProtobuf(true)
@@ -114,7 +117,7 @@ func NewRootCmd() *cobra.Command {
 			customCMTConfig := initCometBFTConfig()
 
 			// This overrides the consensus timeout commit config value read from config.toml with our custom one
-			err = os.Setenv("TACCHAIND_CONSENSUS_TIMEOUT_COMMIT", cast.ToString(app.TimeoutCommit))
+			err = os.Setenv("TACCHAIND_CONSENSUS_TIMEOUT_COMMIT", cast.ToString(appconfig.TimeoutCommit))
 			if err != nil {
 				return err
 			}
@@ -143,7 +146,7 @@ func initCometBFTConfig() *cmtcfg.Config {
 	cfg := cmtcfg.DefaultConfig()
 
 	// Set our custom default timeout commit
-	cfg.Consensus.TimeoutCommit = app.TimeoutCommit
+	cfg.Consensus.TimeoutCommit = appconfig.TimeoutCommit
 
 	// these values put a higher strain on node memory
 	// cfg.P2P.MaxNumInboundPeers = 100

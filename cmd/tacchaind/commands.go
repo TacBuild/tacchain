@@ -28,6 +28,7 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
 	"github.com/TacBuild/tacchain/app"
+	appconfig "github.com/TacBuild/tacchain/app/config"
 
 	evmclient "github.com/cosmos/evm/client"
 	evmdebug "github.com/cosmos/evm/client/debug"
@@ -40,26 +41,26 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome),
-		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
+		genutilcli.InitCmd(appInstance.BasicModuleManager, appconfig.DefaultNodeHome),
+		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, appconfig.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
 		evmdebug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newAppForSDK, app.DefaultNodeHome),
+		pruning.Cmd(newAppForSDK, appconfig.DefaultNodeHome),
 		snapshot.Cmd(newAppForSDK),
 	)
 
 	// add Cosmos EVM' flavored TM commands to start server, etc.
 	evmserver.AddCommands(
 		rootCmd,
-		evmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
+		evmserver.NewDefaultStartOptions(newApp, appconfig.DefaultNodeHome),
 		appExport,
 		addModuleInitFlags,
 	)
 
 	// add Cosmos EVM key commands
 	rootCmd.AddCommand(
-		evmclient.KeyCommands(app.DefaultNodeHome, true),
+		evmclient.KeyCommands(appconfig.DefaultNodeHome, true),
 	)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands

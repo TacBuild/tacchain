@@ -38,6 +38,8 @@ import (
 	ibctm "github.com/cosmos/ibc-go/v10/modules/light-clients/07-tendermint"
 	"github.com/spf13/cast"
 
+	appconfig "github.com/TacBuild/tacchain/app/config"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	"cosmossdk.io/client/v2/autocli"
@@ -282,7 +284,7 @@ func NewTacChainApp(
 
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 
-	bApp := baseapp.NewBaseApp(AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appconfig.AppName, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(encodingConfig.InterfaceRegistry)
@@ -575,9 +577,9 @@ func NewTacChainApp(
 		evmChainID,
 		tracer,
 	).WithDefaultEvmCoinInfo(evmvmtypes.EvmCoinInfo{
-		Denom:         BaseDenom,
-		ExtendedDenom: BaseDenom,
-		DisplayDenom:  DisplayDenom,
+		Denom:         appconfig.BaseDenom,
+		ExtendedDenom: appconfig.BaseDenom,
+		DisplayDenom:  appconfig.DisplayDenom,
 		Decimals:      evmvmtypes.EighteenDecimals.Uint32(),
 	})
 
@@ -1123,19 +1125,19 @@ func (app *TacChainApp) DefaultGenesis() map[string]json.RawMessage {
 
 	// Mint denom configuration
 	mintGenState := minttypes.DefaultGenesisState()
-	mintGenState.Params.MintDenom = BaseDenom
+	mintGenState.Params.MintDenom = appconfig.BaseDenom
 	genesis[minttypes.ModuleName] = app.appCodec.MustMarshalJSON(mintGenState)
 
 	// EVM genesis configuration
 	evmGenState := evmvmtypes.DefaultGenesisState()
 	evmGenState.Preinstalls = evmvmtypes.DefaultPreinstalls
-	evmGenState.Params.EvmDenom = BaseDenom
+	evmGenState.Params.EvmDenom = appconfig.BaseDenom
 	evmGenState.Params.ActiveStaticPrecompiles = evmvmtypes.AvailableStaticPrecompiles
 	genesis[evmvmtypes.ModuleName] = app.appCodec.MustMarshalJSON(evmGenState)
 
 	// Bank denom metadata for EVM coin (required by vm genesis InitEvmCoinInfo)
 	bankGenState := banktypes.DefaultGenesisState()
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, DefaultBankDenomMetadata()...)
+	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, appconfig.DefaultBankDenomMetadata()...)
 	genesis[banktypes.ModuleName] = app.appCodec.MustMarshalJSON(bankGenState)
 
 	// ERC20 genesis configuration

@@ -12,6 +12,7 @@ import (
 	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 
+	appconfig "github.com/TacBuild/tacchain/app/config"
 	bam "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
@@ -32,6 +33,7 @@ type SetupOptions struct {
 // NewTacChainAppWithCustomOptions initializes a new TacChainApp with custom options.
 func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *TacChainApp {
 	t.Helper()
+	appconfig.SetupSDKConfig()
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
@@ -54,7 +56,7 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options Setup
 		nil,
 		true,
 		options.AppOpts,
-		bam.SetChainID(DefaultChainID),
+		bam.SetChainID(appconfig.DefaultChainID),
 	)
 	genesisState := app.DefaultGenesis()
 	genesisState, err = simtestutil.GenesisStateWithValSet(app.AppCodec(), genesisState, valSet, []authtypes.GenesisAccount{acc}, balance)
@@ -64,7 +66,7 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options Setup
 	// Restore it so that InitEvmCoinInfo can find the EVM denom metadata.
 	var bankGenState banktypes.GenesisState
 	app.AppCodec().MustUnmarshalJSON(genesisState[banktypes.ModuleName], &bankGenState)
-	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, DefaultBankDenomMetadata()...)
+	bankGenState.DenomMetadata = append(bankGenState.DenomMetadata, appconfig.DefaultBankDenomMetadata()...)
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenState)
 
 	if !isCheckTx {
@@ -74,7 +76,7 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options Setup
 
 		// Initialize the chain
 		_, err = app.InitChain(&abci.RequestInitChain{
-			ChainId:         DefaultChainID,
+			ChainId:         appconfig.DefaultChainID,
 			Validators:      []abci.ValidatorUpdate{},
 			ConsensusParams: simtestutil.DefaultConsensusParams,
 			AppStateBytes:   stateBytes,

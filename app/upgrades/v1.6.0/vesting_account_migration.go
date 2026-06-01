@@ -13,16 +13,14 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
-// maxRetrieve is the maximum number of delegations/unbondings/redelegations to retrieve.
-const maxRetrieve = 100
-
 // migrateVestingAccount performs the full migration:
 //  1. Load and validate old PeriodicVestingAccount
 //  2. Withdraw delegation rewards from old account
 //     2a. Migrate unbonding delegations (store-level rewrite to new address)
 //     2b. Migrate redelegations (store-level rewrite to new address)
+//     2c. Migrate tokenize share record ownership related to the old account
 //  3. Move delegations from old to new address (store-level rewrite)
-//  4. Tombstone old account (replace with BaseAccount to make all coins spendable)
+//  4. Clean up old account (replace with BaseAccount to make all coins spendable)
 //  5. Move all remaining balances from old to new address
 //  6. Create identical PeriodicVestingAccount at new address
 func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress string, newAddress string) error {
@@ -61,7 +59,13 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	// ──────────────────────────────────────────────────────────────
 	// 2. Withdraw all staking rewards from old account
 	// ──────────────────────────────────────────────────────────────
-	delegations, err := ak.StakingKeeper.GetDelegatorDelegations(ctx, oldAddr, maxRetrieve)
+	// A leaked old key can set a custom withdraw address before the upgrade.
+	// Force rewards directly to the new account before withdrawing them.
+	if err := ak.DistrKeeper.SetDelegatorWithdrawAddr(ctx, oldAddr, newAddr); err != nil {
+		return fmt.Errorf("failed to redirect withdraw address to new account: %w", err)
+	}
+
+	delegations, err := snapshotDelegatorDelegations(ctx, ak, oldAddr)
 	if err != nil {
 		return fmt.Errorf("failed to get delegations: %w", err)
 	}
@@ -83,6 +87,9 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 			)
 		}
 	}
+	if err := ak.DistrKeeper.DeleteDelegatorWithdrawAddr(ctx, oldAddr, newAddr); err != nil {
+		return fmt.Errorf("failed to clear old account withdraw address: %w", err)
+	}
 
 	// ──────────────────────────────────────────────────────────────
 	// 2a. Migrate unbonding delegations (store-level rewrite)
@@ -102,6 +109,17 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	// ──────────────────────────────────────────────────────────────
 	if err := migrateRedelegations(ctx, ak, oldAddr, oldAddress, newAddress); err != nil {
 		return fmt.Errorf("failed to migrate redelegations: %w", err)
+	}
+
+	// ──────────────────────────────────────────────────────────────
+	// 2c. Migrate tokenize share record ownership (store-level rewrite)
+	//     Tokenized shares keep their reward/transfer owner in staking state.
+	//     If the old vesting address owns a record, or still holds that record's
+	//     share-token balance, rewrite ownership to the rescued address so a
+	//     custom pre-upgrade TokenizedShareOwner cannot keep control.
+	// ──────────────────────────────────────────────────────────────
+	if err := migrateTokenizeShareRecordOwners(ctx, ak, oldAddr, newAddr); err != nil {
+		return fmt.Errorf("failed to migrate tokenize share record owners: %w", err)
 	}
 
 	// ──────────────────────────────────────────────────────────────
@@ -148,8 +166,10 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 			return fmt.Errorf("BeforeDelegationCreated hook failed: %w", err)
 		}
 
-		// 3d. Create new delegation record with same shares
-		newDelegation := stakingtypes.NewDelegation(newAddress, del.ValidatorAddress, del.Shares)
+		// 3d. Create new delegation record with the same data, preserving
+		//     ValidatorBond and any future delegation fields.
+		newDelegation := del
+		newDelegation.DelegatorAddress = newAddress
 		if err := ak.StakingKeeper.SetDelegation(ctx, newDelegation); err != nil {
 			return fmt.Errorf("failed to set new delegation: %w", err)
 		}
@@ -167,7 +187,7 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	}
 
 	// ──────────────────────────────────────────────────────────────
-	// 4. Tombstone old account: replace PeriodicVestingAccount with
+	// 4. Clean up old account: replace PeriodicVestingAccount with
 	//    a plain BaseAccount. This makes ALL coins spendable because
 	//    BaseAccount has no vesting lock.
 	// ──────────────────────────────────────────────────────────────
@@ -176,7 +196,7 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	tombstoneAcc.Sequence = oldVestingAcc.GetSequence() + 1 // bump sequence to invalidate pending txs
 	ak.AccountKeeper.SetAccount(ctx, tombstoneAcc)
 
-	logger.Info("Old account tombstoned (converted to BaseAccount)",
+	logger.Info("Old account cleaned up (converted to BaseAccount)",
 		"address", oldAddress,
 		"new_sequence", tombstoneAcc.Sequence,
 	)
@@ -202,18 +222,20 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	// ──────────────────────────────────────────────────────────────
 	existingNewAcc := ak.AccountKeeper.GetAccount(ctx, newAddr)
 
-	// The new address may now have a BaseAccount (auto-created by SendCoins/Delegate).
-	// We need to retrieve it and convert to vesting.
-	var newBaseAcc *authtypes.BaseAccount
 	if existingNewAcc != nil {
-		var ok bool
-		newBaseAcc, ok = existingNewAcc.(*authtypes.BaseAccount)
-		if !ok {
-			return fmt.Errorf("new address %s has unexpected account type %T", newAddress, existingNewAcc)
-		}
-	} else {
-		newBaseAcc = authtypes.NewBaseAccountWithAddress(newAddr)
-		newBaseAcc = ak.AccountKeeper.NewAccount(ctx, newBaseAcc).(*authtypes.BaseAccount)
+		logger.Info("Rescue destination account exists",
+			"address", newAddress,
+			"type", fmt.Sprintf("%T", existingNewAcc),
+			"sequence", existingNewAcc.GetSequence(),
+		)
+	}
+
+	// The new address may now have a BaseAccount, or a front-run vesting
+	// account created without the destination key. Convert cleanup-safe
+	// destination state into the BaseAccount used by the rescued vesting account.
+	newBaseAcc, err := rescueDestinationBaseAccount(ctx, ak, newAddr)
+	if err != nil {
+		return fmt.Errorf("new address %s cannot be used as rescue destination: %w", newAddress, err)
 	}
 
 	newVestingAcc, err := vestingtypes.NewPeriodicVestingAccount(
@@ -242,6 +264,88 @@ func migrateVestingAccount(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddress 
 	return nil
 }
 
+func snapshotDelegatorDelegations(ctx sdk.Context, ak *upgrades.AppKeepers, delegator sdk.AccAddress) ([]stakingtypes.Delegation, error) {
+	var delegations []stakingtypes.Delegation
+	err := ak.StakingKeeper.IterateDelegatorDelegations(ctx, delegator, func(delegation stakingtypes.Delegation) bool {
+		delegations = append(delegations, delegation)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return delegations, nil
+}
+
+func snapshotDelegatorUnbondingDelegations(ctx sdk.Context, ak *upgrades.AppKeepers, delegator sdk.AccAddress) ([]stakingtypes.UnbondingDelegation, error) {
+	var ubds []stakingtypes.UnbondingDelegation
+	err := ak.StakingKeeper.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd stakingtypes.UnbondingDelegation) bool {
+		ubds = append(ubds, ubd)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ubds, nil
+}
+
+func snapshotDelegatorRedelegations(ctx sdk.Context, ak *upgrades.AppKeepers, delegator sdk.AccAddress) ([]stakingtypes.Redelegation, error) {
+	var reds []stakingtypes.Redelegation
+	err := ak.StakingKeeper.IterateDelegatorRedelegations(ctx, delegator, func(red stakingtypes.Redelegation) bool {
+		reds = append(reds, red)
+		return false
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return reds, nil
+}
+
+// migrateTokenizeShareRecordOwners rewrites TokenizeShareRecord.Owner to newAddr
+// for records controlled by, or economically tied to, oldAddr. The share-token
+// balance check covers a malicious pre-upgrade tokenization where the old key
+// sets TokenizedShareOwner to a third-party address while leaving minted share
+// tokens on the rescued account.
+func migrateTokenizeShareRecordOwners(ctx sdk.Context, ak *upgrades.AppKeepers, oldAddr, newAddr sdk.AccAddress) error {
+	records := ak.StakingKeeper.GetAllTokenizeShareRecords(ctx)
+	if len(records) == 0 {
+		return nil
+	}
+
+	for _, record := range records {
+		shareTokenBalance := ak.BankKeeper.GetBalance(ctx, oldAddr, record.GetShareTokenDenom())
+		if record.Owner != oldAddr.String() && !shareTokenBalance.IsPositive() {
+			continue
+		}
+		if record.Owner == newAddr.String() {
+			continue
+		}
+
+		oldOwner := record.Owner
+		if err := ak.StakingKeeper.DeleteTokenizeShareRecord(ctx, record.Id); err != nil {
+			return fmt.Errorf("delete tokenize share record %d: %w", record.Id, err)
+		}
+
+		record.Owner = newAddr.String()
+		if err := ak.StakingKeeper.AddTokenizeShareRecord(ctx, record); err != nil {
+			return fmt.Errorf("add tokenize share record %d with new owner: %w", record.Id, err)
+		}
+
+		ctx.Logger().Info(
+			"Migrated tokenize share record owner",
+			"record_id", record.Id,
+			"old_owner", oldOwner,
+			"new_owner", newAddr.String(),
+			"validator", record.Validator,
+			"old_share_token_balance", shareTokenBalance.String(),
+		)
+	}
+
+	return nil
+}
+
 // migrateUnbondingDelegations rewrites all unbonding delegation records from
 // oldAddr to newAddr at the store level. When the unbonding period completes,
 // the tokens will be sent to newAddr instead of oldAddr.
@@ -258,7 +362,7 @@ func migrateUnbondingDelegations(
 ) error {
 	logger := ctx.Logger()
 
-	ubds, err := ak.StakingKeeper.GetUnbondingDelegations(ctx, oldAddr, maxRetrieve)
+	ubds, err := snapshotDelegatorUnbondingDelegations(ctx, ak, oldAddr)
 	if err != nil {
 		return fmt.Errorf("failed to get unbonding delegations: %w", err)
 	}
@@ -348,15 +452,21 @@ func replaceUBDQueueEntry(
 	}
 
 	found := false
+	alreadyRewritten := false
 	for i, dvPair := range timeSlice {
 		if dvPair.DelegatorAddress == oldAddress && dvPair.ValidatorAddress == validatorAddress {
 			timeSlice[i].DelegatorAddress = newAddress
 			found = true
 			// Don't break — there could be multiple entries for the same pair
+		} else if dvPair.DelegatorAddress == newAddress && dvPair.ValidatorAddress == validatorAddress {
+			alreadyRewritten = true
 		}
 	}
 
 	if !found {
+		if alreadyRewritten {
+			return nil
+		}
 		// Queue entry may already have been processed or not exist;
 		// log a warning but don't fail the upgrade.
 		ctx.Logger().Warn("UBD queue entry not found",
@@ -388,7 +498,7 @@ func migrateRedelegations(
 ) error {
 	logger := ctx.Logger()
 
-	reds, err := ak.StakingKeeper.GetRedelegations(ctx, oldAddr, maxRetrieve)
+	reds, err := snapshotDelegatorRedelegations(ctx, ak, oldAddr)
 	if err != nil {
 		return fmt.Errorf("failed to get redelegations: %w", err)
 	}
@@ -471,16 +581,24 @@ func replaceREDQueueEntry(
 	}
 
 	found := false
+	alreadyRewritten := false
 	for i, triplet := range timeSlice {
 		if triplet.DelegatorAddress == oldAddress &&
 			triplet.ValidatorSrcAddress == valSrcAddress &&
 			triplet.ValidatorDstAddress == valDstAddress {
 			timeSlice[i].DelegatorAddress = newAddress
 			found = true
+		} else if triplet.DelegatorAddress == newAddress &&
+			triplet.ValidatorSrcAddress == valSrcAddress &&
+			triplet.ValidatorDstAddress == valDstAddress {
+			alreadyRewritten = true
 		}
 	}
 
 	if !found {
+		if alreadyRewritten {
+			return nil
+		}
 		ctx.Logger().Warn("RED queue entry not found",
 			"completion_time", completionTime,
 			"src_validator", valSrcAddress,

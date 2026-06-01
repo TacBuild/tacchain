@@ -9,6 +9,7 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/TacBuild/tacchain/app/denoms"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -19,16 +20,16 @@ import (
 )
 
 const (
-	DisplayDenom  = "tac"
-	BaseDenom     = "utac"
-	BaseDenomUnit = 18
+	DisplayDenom  = denoms.DisplayDenom
+	BaseDenom     = denoms.BaseDenom
+	BaseDenomUnit = denoms.BaseDenomUnit
 
 	// EVMCoinName is the full name of the native EVM coin.
-	EVMCoinName = "TAC"
+	EVMCoinName = denoms.EVMCoinName
 	// EVMCoinSymbol is the ticker symbol of the native EVM coin.
-	EVMCoinSymbol = "TAC"
+	EVMCoinSymbol = denoms.EVMCoinSymbol
 	// EVMCoinDescription is the description stored in bank denom metadata.
-	EVMCoinDescription = "Native 18-decimal denom metadata for TacChain EVM"
+	EVMCoinDescription = denoms.EVMCoinDescription
 
 	// Bech32PrefixAccAddr defines the Bech32 prefix of an account's address.
 	Bech32PrefixAccAddr = "tac"
@@ -92,17 +93,7 @@ func setAddressPrefixes() {
 // DefaultBankDenomMetadata returns the bank denom metadata for the native EVM coin.
 // This metadata is required by the EVM module's InitEvmCoinInfo to locate the coin denom.
 func DefaultBankDenomMetadata() []banktypes.Metadata {
-	return []banktypes.Metadata{{
-		Description: EVMCoinDescription,
-		Base:        BaseDenom,
-		DenomUnits: []*banktypes.DenomUnit{
-			{Denom: BaseDenom, Exponent: 0},
-			{Denom: DisplayDenom, Exponent: uint32(BaseDenomUnit)},
-		},
-		Name:    EVMCoinName,
-		Symbol:  EVMCoinSymbol,
-		Display: DisplayDenom,
-	}}
+	return denoms.DefaultBankDenomMetadata()
 }
 
 // ParseEVMChainID extracts the EVM chain ID (uint64) from a cosmos chain ID string.

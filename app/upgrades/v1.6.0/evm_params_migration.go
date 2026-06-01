@@ -140,26 +140,78 @@ func migrateERC20Precompiles(ctx sdk.Context, ak *upgrades.AppKeepers) error {
 		},
 	}
 
-	const addrLen = 42 // len("0xAbCd...") — 42 ASCII characters
+	type parsedEntry struct {
+		entry
+		addrs []common.Address
+	}
 
+	seen := make(map[common.Address]string)
+	parsed := make([]parsedEntry, 0, len(migrations))
 	for _, m := range migrations {
 		bz := store.Get(m.oldKey)
 		if len(bz) == 0 {
 			continue // empty list or already migrated
 		}
-		if len(bz)%addrLen != 0 {
-			return fmt.Errorf("%s precompiles bytes length %d is not a multiple of %d",
-				m.label, len(bz), addrLen)
+
+		addrs, err := parseLegacyERC20PrecompileBlob(m.label, bz, seen)
+		if err != nil {
+			return err
 		}
-		for i := 0; i < len(bz); i += addrLen {
-			hexAddr := string(bz[i : i+addrLen])
-			addr := common.HexToAddress(hexAddr)
+		parsed = append(parsed, parsedEntry{entry: m, addrs: addrs})
+	}
+
+	for _, m := range parsed {
+		for _, addr := range m.addrs {
 			if err := m.enable(ctx, addr); err != nil {
-				return fmt.Errorf("failed to enable %s precompile %s: %w", m.label, hexAddr, err)
+				return fmt.Errorf("failed to enable %s precompile %s: %w", m.label, addr.Hex(), err)
 			}
 		}
 		store.Delete(m.oldKey)
 	}
 
 	return nil
+}
+
+const legacyERC20PrecompileAddrLen = 42 // len("0xAbCd...") — 42 ASCII characters
+
+func parseLegacyERC20PrecompileBlob(
+	label string,
+	bz []byte,
+	seen map[common.Address]string,
+) ([]common.Address, error) {
+	if len(bz)%legacyERC20PrecompileAddrLen != 0 {
+		return nil, fmt.Errorf("%s precompiles bytes length %d is not a multiple of %d",
+			label, len(bz), legacyERC20PrecompileAddrLen)
+	}
+
+	addrs := make([]common.Address, 0, len(bz)/legacyERC20PrecompileAddrLen)
+	for i := 0; i < len(bz); i += legacyERC20PrecompileAddrLen {
+		hexAddr := string(bz[i : i+legacyERC20PrecompileAddrLen])
+		addr, err := parseLegacyERC20PrecompileAddress(label, hexAddr, i)
+		if err != nil {
+			return nil, err
+		}
+
+		if previous, ok := seen[addr]; ok {
+			return nil, fmt.Errorf("duplicate %s precompile address %s at offset %d; already seen in %s",
+				label, addr.Hex(), i, previous)
+		}
+		seen[addr] = fmt.Sprintf("%s offset %d", label, i)
+		addrs = append(addrs, addr)
+	}
+
+	return addrs, nil
+}
+
+func parseLegacyERC20PrecompileAddress(label, hexAddr string, offset int) (common.Address, error) {
+	if !common.IsHexAddress(hexAddr) {
+		return common.Address{}, fmt.Errorf("invalid %s precompile address %q at offset %d", label, hexAddr, offset)
+	}
+
+	addr := common.HexToAddress(hexAddr)
+	if addr == (common.Address{}) {
+		return common.Address{}, fmt.Errorf("invalid %s precompile zero address %q at offset %d", label, hexAddr, offset)
+	}
+
+	return addr, nil
 }

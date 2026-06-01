@@ -7,6 +7,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
+	"github.com/TacBuild/tacchain/app/denoms"
 	"github.com/TacBuild/tacchain/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -44,6 +45,10 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("rescue config: %w", err)
 		}
 		logger.Info("Rescue plan parsed", "count", len(rescues))
+		if err := preflightRescueEntries(sdkCtx, ak, rescues); err != nil {
+			return nil, fmt.Errorf("rescue preflight: %w", err)
+		}
+		logger.Info("Rescue plan preflight passed", "count", len(rescues))
 		for i, r := range rescues {
 			logger.Info("Migrating compromised vesting account",
 				"index", i, "old", r.Old, "new", r.New)
@@ -86,6 +91,9 @@ func CreateUpgradeHandler(
 		// This KV key ({0x05}) did not exist in v0.2.0.  The EVM module's
 		// PreBlock calls SetGlobalConfigVariables which panics if the key is
 		// absent.  InitEvmCoinInfo loads the data from x/bank denom metadata.
+		if err := ensureEVMDenomMetadata(sdkCtx, ak, evmParams.EvmDenom); err != nil {
+			return nil, fmt.Errorf("x/bank EVM denom metadata init failed: %w", err)
+		}
 		logger.Info("Initialising x/vm EvmCoinInfo")
 		if err := ak.EVMKeeper.InitEvmCoinInfo(sdkCtx); err != nil {
 			return nil, fmt.Errorf("x/vm EvmCoinInfo init failed: %w", err)
@@ -138,7 +146,40 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("RunMigrations failed: %w", err)
 		}
 
+		// ── Step 4: staking LSM accounting rebuild ─────────────────────────
+		//
+		// Rebuild derived staking LSM counters from delegation state rather
+		// than asserting a narrow pre-upgrade shape. This keeps the upgrade
+		// resilient to valid pre-upgrade LSM/validator-bond transactions.
+		logger.Info("Rebuilding staking LSM accounting")
+		if err := rebuildStakingLSMAccounting(sdkCtx, ak); err != nil {
+			return nil, fmt.Errorf("staking LSM accounting rebuild failed: %w", err)
+		}
+
 		logger.Info("v1.6.0 upgrade complete")
 		return vm, nil
 	}
+}
+
+func ensureEVMDenomMetadata(ctx sdk.Context, ak *upgrades.AppKeepers, evmDenom string) error {
+	if _, found := ak.BankKeeper.GetDenomMetaData(ctx, evmDenom); found {
+		ctx.Logger().Info("x/bank EVM denom metadata already exists", "denom", evmDenom)
+		return nil
+	}
+
+	metadata, found := denoms.DefaultBankDenomMetadataFor(evmDenom)
+	if !found {
+		return fmt.Errorf("no default bank denom metadata for EVM denom %s", evmDenom)
+	}
+	if err := metadata.Validate(); err != nil {
+		return fmt.Errorf("invalid EVM denom metadata for %s: %w", evmDenom, err)
+	}
+
+	ak.BankKeeper.SetDenomMetaData(ctx, metadata)
+	ctx.Logger().Info("Set missing x/bank EVM denom metadata",
+		"denom", evmDenom,
+		"display", metadata.Display,
+	)
+
+	return nil
 }

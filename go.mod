@@ -28,6 +28,7 @@ require (
 	github.com/spf13/cobra v1.10.1
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
+	go.uber.org/mock v0.6.0
 )
 
 require (
@@ -64,7 +65,6 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.36.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.37.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.37.0 // indirect
-	go.uber.org/mock v0.6.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
@@ -285,7 +285,7 @@ replace (
 
 	// replace to cosmos-sdk fork for liquid stake support. See: https://github.com/TacBuild/cosmos-sdk/pull/2
 	// bump to v0.53.6 with all fork specific changes.
-	github.com/cosmos/cosmos-sdk => ../cosmos-sdk
+	github.com/cosmos/cosmos-sdk => github.com/TacBuild/cosmos-sdk v0.53.6-tac.2
 
 	// replace to cosmos/evm fork
 	// added liquid stake support. See: https://github.com/TacBuild/evm/pull/9
@@ -293,8 +293,7 @@ replace (
 	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
 	// bump to v0.6.0
-	// github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.6
-	github.com/cosmos/evm => ../evm/
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.7
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

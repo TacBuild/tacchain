@@ -21,6 +21,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	evmsrvflags "github.com/cosmos/evm/server/flags"
+	"github.com/spf13/cast"
 )
 
 // SetupOptions defines arguments that are passed into `TacChainApp` constructor.
@@ -34,6 +36,11 @@ type SetupOptions struct {
 func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *TacChainApp {
 	t.Helper()
 	appconfig.SetupSDKConfig()
+	evmChainID := cast.ToUint64(options.AppOpts.Get(evmsrvflags.EVMChainID))
+	resetEVMTestConfig(t, evmChainID)
+	t.Cleanup(func() {
+		resetEVMTestConfig(t, evmChainID)
+	})
 
 	privVal := mock.NewPV()
 	pubKey, err := privVal.GetPubKey()
@@ -70,6 +77,8 @@ func NewTacChainAppWithCustomOptions(t *testing.T, isCheckTx bool, options Setup
 	genesisState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(&bankGenState)
 
 	if !isCheckTx {
+		resetEVMTestConfig(t, evmChainID)
+
 		// init chain must be called to stop deliverState from being nil
 		stateBytes, err := cmtjson.MarshalIndent(genesisState, "", " ")
 		require.NoError(t, err)

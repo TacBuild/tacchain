@@ -82,10 +82,10 @@ build-windows-client: go.sum
 	GOOS=windows GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind.exe ./cmd/tacchaind
 
 build-linux-amd64: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-amd64 ./cmd/tacchaind
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-amd64 ./cmd/tacchaind
 
 build-linux-arm64: go.sum
-	LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-arm64 ./cmd/tacchaind
+	GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-arm64 ./cmd/tacchaind
 
 build-linux: build-linux-amd64 build-linux-arm64
 

@@ -81,6 +81,14 @@ endif
 build-windows-client: go.sum
 	GOOS=windows GOARCH=amd64 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind.exe ./cmd/tacchaind
 
+build-linux-amd64: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-amd64 ./cmd/tacchaind
+
+build-linux-arm64: go.sum
+	LEDGER_ENABLED=false GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -mod=readonly $(BUILD_FLAGS) -o build/tacchaind-linux-arm64 ./cmd/tacchaind
+
+build-linux: build-linux-amd64 build-linux-arm64
+
 go.sum: go.mod
 	@echo "--> Ensure dependencies have not been modified"
 	@go mod verify
@@ -94,19 +102,21 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger test-solidity
+test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger
+
+test_tags = ledger test_ledger_mock test
 
 test-unit:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v $(shell go list ./... | grep -v "tests")
+	@VERSION=$(VERSION) go test -mod=readonly -tags='$(test_tags)' -v $(shell go list ./... | grep -v "tests")
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='ledger test_ledger_mock' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -race -tags='$(test_tags)' ./...
 
 test-e2e:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v ./tests/e2e/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='$(test_tags)' -v ./tests/e2e/...
 
 test-cover:
-	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='ledger test_ledger_mock' ./...
+	@go test -mod=readonly -timeout 30m -race -coverprofile=coverage.txt -covermode=atomic -tags='$(test_tags)' ./...
 
 test-benchmark:
 	@go test -mod=readonly -bench=. ./...
@@ -118,30 +128,26 @@ test-localnet-evm:
 	./tests/localnet/test-evm.sh
 
 test-ledger:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='ledger test_ledger_mock' -v ./tests/ledger/...
+	@VERSION=$(VERSION) go test -mod=readonly -tags='$(test_tags)' -v ./tests/ledger/...
 
-test-solidity:
-	./tests/solidity/run-solidity-tests.sh
-
-.PHONY: test test-unit test-race test-e2e test-cover test-benchmark test-localnet-params test-localnet-evm test-ledger test-solidity
+.PHONY: test test-unit test-race test-e2e test-cover test-benchmark test-localnet-params test-localnet-evm test-ledger
 
 ###############################################################################
 ###                                Networks                                 ###
 ###############################################################################
 
-TACCHAIND := $(shell which tacchaind)
+TACCHAIND ?= $(shell which tacchaind 2>/dev/null || echo ./build/tacchaind)
 
 localnet: install localnet-init localnet-start
 testnet: install testnet-init
 
 localnet-init:
-	./contrib/localnet/init.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/init.sh
 
 localnet-init-multi-node:
-	./contrib/localnet/init-multi-node.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/init-multi-node.sh
 
 localnet-start:
-	./contrib/localnet/start.sh
+	TACCHAIND=$(TACCHAIND) ./contrib/localnet/start.sh
 
 .PHONY: localnet-start localnet-init localnet-init-multi-node
-

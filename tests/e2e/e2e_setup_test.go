@@ -37,10 +37,26 @@ func (s *TacchainTestSuite) initChain() error {
 	nodeDir := s.homeDir
 	pwd, _ := os.Getwd()
 	initScript := filepath.Join(pwd, "../../contrib/localnet/init.sh")
-	cmd := exec.Command("bash", "-c", fmt.Sprintf("echo y | HOMEDIR=%s %s", nodeDir, initScript))
+
+	tacchaind, err := exec.LookPath("tacchaind")
+	if err != nil {
+		fallback := filepath.Join(pwd, "../../build/tacchaind")
+		if _, statErr := os.Stat(fallback); statErr == nil {
+			tacchaind = fallback
+		} else {
+			return fmt.Errorf("tacchaind not found in PATH or ./build/tacchaind: %v", err)
+		}
+	}
+	s.tacchaind = tacchaind
+
+	envVars := fmt.Sprintf(
+		"HOMEDIR=%s TACCHAIND=%s CHAIN_ID=%s KEYRING_BACKEND=test",
+		nodeDir, tacchaind, DefaultChainID,
+	)
+	cmd := exec.Command("bash", "-c", fmt.Sprintf("echo y | %s %s", envVars, initScript))
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
+	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("failed to initialize chain: %v", err)
 	}
@@ -55,7 +71,7 @@ func (s *TacchainTestSuite) initChain() error {
 func (s *TacchainTestSuite) startChain() error {
 	s.T().Log("Starting chain process...")
 
-	s.cmd = exec.Command("tacchaind", "start", "--chain-id", DefaultChainID, "--home", s.homeDir)
+	s.cmd = exec.Command(s.tacchaind, "start", "--chain-id", DefaultChainID, "--home", s.homeDir)
 
 	stderr, err := s.cmd.StderrPipe()
 	if err != nil {

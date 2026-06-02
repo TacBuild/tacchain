@@ -12,7 +12,7 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	"github.com/Asphere-xyz/tacchain/app/upgrades"
+	"github.com/TacBuild/tacchain/app/upgrades"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -58,8 +58,10 @@ func CreateUpgradeHandler(
 		ak.BankKeeper.SetDenomMetaData(ctx, GTACMetadata)
 
 		erc20Params := ak.Erc20Keeper.GetParams(sdkCtx)
-		erc20Params.NativePrecompiles = append(erc20Params.NativePrecompiles, lsmBondCommonAddress.String())
 		if err := ak.Erc20Keeper.SetParams(sdkCtx, erc20Params); err != nil {
+			return newVM, err
+		}
+		if err := ak.Erc20Keeper.EnableNativePrecompile(sdkCtx, lsmBondCommonAddress); err != nil {
 			return newVM, err
 		}
 

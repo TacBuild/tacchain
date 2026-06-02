@@ -230,32 +230,6 @@ expected_evm_params='{
   "extra_eips": [
     "3855"
   ],
-  "chain_config": {
-    "homestead_block": "0",
-    "dao_fork_block": "0",
-    "dao_fork_support": true,
-    "eip150_block": "0",
-    "eip155_block": "0",
-    "eip158_block": "0",
-    "byzantium_block": "0",
-    "constantinople_block": "0",
-    "petersburg_block": "0",
-    "istanbul_block": "0",
-    "muir_glacier_block": "0",
-    "berlin_block": "0",
-    "london_block": "0",
-    "arrow_glacier_block": "0",
-    "gray_glacier_block": "0",
-    "merge_netsplit_block": "0",
-    "chain_id": "239",
-    "denom": "utac",
-    "decimals": "18",
-    "shanghai_time": "0",
-    "cancun_time": "0",
-    "prague_time": null,
-    "verkle_time": null
-  },
-  "allow_unprotected_txs": true,
   "evm_channels": [],
   "access_control": {
     "create": {
@@ -280,7 +254,11 @@ expected_evm_params='{
     "0x0000000000000000000000000000000000000807",
     "0x00000000000000000000000000000000000008f3",
     "0x0000000000000000000000000000000000001600"
-  ]
+  ],
+  "history_serve_window": "8192",
+  "extended_denom_options": {
+    "extended_denom": "utac"
+  }
 }'
 evm_params=$(tacchaind q evm params --node http://localhost:45111 --output json | jq -r '.params')
 if [[ "$evm_params" != "$expected_evm_params" ]]; then

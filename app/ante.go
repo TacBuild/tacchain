@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 
-	ibcante "github.com/cosmos/ibc-go/v8/modules/core/ante"
-	"github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibcante "github.com/cosmos/ibc-go/v10/modules/core/ante"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
-	corestoretypes "cosmossdk.io/core/store"
 	circuitante "cosmossdk.io/x/circuit/ante"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
 
@@ -15,6 +14,7 @@ import (
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	sdkvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 
+	evmtxlistener "github.com/cosmos/evm/ante"
 	evmcosmosante "github.com/cosmos/evm/ante/cosmos"
 	evmante "github.com/cosmos/evm/ante/evm"
 	evmanteinterfaces "github.com/cosmos/evm/ante/interfaces"
@@ -28,10 +28,12 @@ type HandlerOptions struct {
 
 	AccountKeeper evmanteinterfaces.AccountKeeper
 
-	IBCKeeper *keeper.Keeper
+	IBCKeeper *ibckeeper.Keeper
 
-	TXCounterStoreService corestoretypes.KVStoreService
-	CircuitKeeper         *circuitkeeper.Keeper
+	CircuitKeeper *circuitkeeper.Keeper
+
+	// PendingTxListener is called during CheckTx for each pending EVM tx hash (used by JSON-RPC).
+	PendingTxListener evmtxlistener.PendingTxListener
 
 	// Cosmos EVM
 	FeeMarketKeeper evmanteinterfaces.FeeMarketKeeper
@@ -75,19 +77,24 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 				switch typeURL := opts[0].GetTypeUrl(); typeURL {
 				case "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx":
 					// handle as *evmtypes.MsgEthereumTx
+					evmParams := options.EvmKeeper.GetParams(ctx)
+					feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
 					anteHandler = sdk.ChainAnteDecorators(
 						evmante.NewEVMMonoDecorator(
 							options.AccountKeeper,
 							options.FeeMarketKeeper,
 							options.EvmKeeper,
 							options.MaxTxGasWanted,
+							&evmParams,
+							&feemarketParams,
 						),
+						evmtxlistener.NewTxListenerDecorator(options.PendingTxListener),
 					)
-				case "/cosmos.evm.types.v1.ExtensionOptionDynamicFeeTx":
+				case "/cosmos.evm.ante.v1.ExtensionOptionDynamicFeeTx":
 					// cosmos-sdk tx with dynamic fee extension
-					anteHandler, err = newCosmosAnteHandler(options)
+					anteHandler, err = newCosmosAnteHandler(ctx, options)
 				default:
-					return ctx, errors.New(fmt.Sprintf("rejecting tx with unsupported extension option: %s", typeURL))
+					return ctx, fmt.Errorf("rejecting tx with unsupported extension option: %s", typeURL)
 				}
 
 				if err != nil {
@@ -101,7 +108,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		// handle as totally normal Cosmos SDK tx
 		switch tx.(type) {
 		case sdk.Tx:
-			anteHandler, err = newCosmosAnteHandler(options)
+			anteHandler, err = newCosmosAnteHandler(ctx, options)
 		default:
 			return ctx, errors.New("invalid transaction type")
 		}
@@ -114,7 +121,9 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}, nil
 }
 
-func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
+func newCosmosAnteHandler(ctx sdk.Context, options HandlerOptions) (sdk.AnteHandler, error) {
+	feemarketParams := options.FeeMarketKeeper.GetParams(ctx)
+	txFeeChecker := evmante.NewDynamicFeeChecker(&feemarketParams)
 	return sdk.ChainAnteDecorators(
 		evmcosmosante.NewRejectMessagesDecorator(), // reject MsgEthereumTxs
 		evmcosmosante.NewAuthzLimiterDecorator( // disable the Msg types that cannot be included on an authz.MsgExec msgs field
@@ -127,9 +136,9 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		authante.NewValidateBasicDecorator(),
 		authante.NewTxTimeoutHeightDecorator(),
 		authante.NewValidateMemoDecorator(options.AccountKeeper),
-		evmcosmosante.NewMinGasPriceDecorator(options.FeeMarketKeeper, options.EvmKeeper),
+		evmcosmosante.NewMinGasPriceDecorator(&feemarketParams),
 		authante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
-		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, options.TxFeeChecker),
+		authante.NewDeductFeeDecorator(options.AccountKeeper, options.BankKeeper, options.FeegrantKeeper, txFeeChecker),
 		// SetPubKeyDecorator must be called before all signature verification decorators
 		authante.NewSetPubKeyDecorator(options.AccountKeeper),
 		authante.NewValidateSigCountDecorator(options.AccountKeeper),
@@ -137,6 +146,6 @@ func newCosmosAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		authante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		authante.NewIncrementSequenceDecorator(options.AccountKeeper),
 		ibcante.NewRedundantRelayDecorator(options.IBCKeeper),
-		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper),
+		evmante.NewGasWantedDecorator(options.EvmKeeper, options.FeeMarketKeeper, &feemarketParams),
 	), nil
 }

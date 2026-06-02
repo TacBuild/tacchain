@@ -4,7 +4,7 @@ import (
 	"context"
 
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
-	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibckeeper "github.com/cosmos/ibc-go/v10/modules/core/keeper"
 
 	storetypes "cosmossdk.io/store/types"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
@@ -13,10 +13,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
-	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	evmerc20keeper "github.com/cosmos/evm/x/erc20/keeper"
 	liquidstakekeeper "github.com/cosmos/evm/x/liquidstake/keeper"
 
@@ -25,7 +25,6 @@ import (
 
 type AppKeepers struct {
 	AccountKeeper         *authkeeper.AccountKeeper
-	ParamsKeeper          *paramskeeper.Keeper
 	ConsensusParamsKeeper *consensusparamkeeper.Keeper
 	Codec                 codec.Codec
 	GetStoreKey           func(storeKey string) *storetypes.KVStoreKey
@@ -36,6 +35,7 @@ type AppKeepers struct {
 	Erc20Keeper           *evmerc20keeper.Keeper
 	StakingKeeper         *stakingkeeper.Keeper
 	EVMKeeper             *evmvmkeeper.Keeper
+	DistrKeeper           *distrkeeper.Keeper
 }
 
 type ModuleManager interface {

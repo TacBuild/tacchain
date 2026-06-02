@@ -1,0 +1,40 @@
+# Build from workspace root (one level above tacchain/):
+#
+# The build context must be the workspace root so that sibling directories
+# cosmos-sdk/ and evm/ are available (referenced via go.mod replace directives).
+
+FROM golang:1.23.8-alpine3.21 AS go-builder
+
+RUN apk add --no-cache \
+    ca-certificates \
+    build-base \
+    libusb-dev \
+    linux-headers
+
+WORKDIR /workspace
+# Copy all three repos that go.mod replace directives depend on
+COPY tacchain/   /workspace/tacchain/
+COPY cosmos-sdk/ /workspace/cosmos-sdk/
+COPY evm/        /workspace/evm/
+
+WORKDIR /workspace/tacchain
+RUN LEDGER_ENABLED=true make build
+
+
+FROM alpine:3.21
+RUN apk upgrade --no-cache && \
+    apk add --no-cache ca-certificates libusb
+COPY --from=go-builder /workspace/tacchain/build/tacchaind /usr/bin/tacchaind
+
+# rest server
+EXPOSE 1317
+# tendermint p2p
+EXPOSE 26656
+# tendermint rpc
+EXPOSE 26657
+# evm rpc http
+EXPOSE 8545
+# evm rpc ws
+EXPOSE 8546
+
+CMD ["/usr/bin/tacchaind", "version"]

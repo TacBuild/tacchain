@@ -16,7 +16,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/pruning"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
@@ -28,9 +27,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 
-	"github.com/Asphere-xyz/tacchain/app"
+	"github.com/TacBuild/tacchain/app"
+	appconfig "github.com/TacBuild/tacchain/app/config"
 
 	evmclient "github.com/cosmos/evm/client"
+	evmdebug "github.com/cosmos/evm/client/debug"
 	evmserver "github.com/cosmos/evm/server"
 	evmsrvflags "github.com/cosmos/evm/server/flags"
 )
@@ -40,26 +41,26 @@ func initRootCmd(appInstance *app.TacChainApp, rootCmd *cobra.Command) {
 	cfg.Seal()
 
 	rootCmd.AddCommand(
-		evmclient.ValidateChainID(genutilcli.InitCmd(appInstance.BasicModuleManager, app.DefaultNodeHome)),
-		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, app.DefaultNodeHome),
+		genutilcli.InitCmd(appInstance.BasicModuleManager, appconfig.DefaultNodeHome),
+		genutilcli.Commands(appInstance.TxConfig(), appInstance.BasicModuleManager, appconfig.DefaultNodeHome),
 		cmtcli.NewCompletionCmd(rootCmd, true),
-		debug.Cmd(),
+		evmdebug.Cmd(),
 		confixcmd.ConfigCommand(),
-		pruning.Cmd(newApp, app.DefaultNodeHome),
-		snapshot.Cmd(newApp),
+		pruning.Cmd(newAppForSDK, appconfig.DefaultNodeHome),
+		snapshot.Cmd(newAppForSDK),
 	)
 
 	// add Cosmos EVM' flavored TM commands to start server, etc.
 	evmserver.AddCommands(
 		rootCmd,
-		evmserver.NewDefaultStartOptions(newApp, app.DefaultNodeHome),
+		evmserver.NewDefaultStartOptions(newApp, appconfig.DefaultNodeHome),
 		appExport,
 		addModuleInitFlags,
 	)
 
 	// add Cosmos EVM key commands
 	rootCmd.AddCommand(
-		evmclient.KeyCommands(app.DefaultNodeHome, true),
+		evmclient.KeyCommands(appconfig.DefaultNodeHome, true),
 	)
 
 	// add keybase, auxiliary RPC, query, genesis, and tx child commands
@@ -129,13 +130,18 @@ func txCommand() *cobra.Command {
 	return cmd
 }
 
+// newAppForSDK is a wrapper for newApp that satisfies the servertypes.AppCreator interface.
+func newAppForSDK(logger log.Logger, db dbm.DB, traceStore io.Writer, appOpts servertypes.AppOptions) servertypes.Application {
+	return newApp(logger, db, traceStore, appOpts)
+}
+
 // newApp creates the application
 func newApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) evmserver.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 
 	return app.NewTacChainApp(
@@ -143,9 +149,7 @@ func newApp(
 		db,
 		traceStore,
 		true,
-		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		appOpts,
-		app.SetupEvmConfig,
 		baseappOptions...,
 	)
 }
@@ -183,9 +187,7 @@ func appExport(
 		db,
 		traceStore,
 		height == -1,
-		uint(1),
 		appOpts,
-		app.SetupEvmConfig,
 		baseapp.SetChainID(cast.ToString(appOpts.Get(flags.FlagChainID))),
 	)
 

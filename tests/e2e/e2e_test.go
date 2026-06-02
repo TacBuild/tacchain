@@ -161,11 +161,13 @@ func (s *TacchainTestSuite) TestDelegation() {
 }
 
 func (s *TacchainTestSuite) TestStakingAPR() {
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 	defer cancel()
 
 	params := s.DefaultCommandParams()
+	mintParams := s.CommandParamsHomeDir()
 
+	// Setup delegator and delegation
 	_, err := ExecuteCommand(ctx, params, "keys", "add", "apr_delegator")
 	require.NoError(s.T(), err, "Failed to add delegator account")
 
@@ -185,6 +187,7 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 	require.NoError(s.T(), err, "Failed to query delegator balance")
 	require.Contains(s.T(), balance, initialAmount, "Delegator should have received the tokens")
 
+	delegationAmountNum := float64(10000000000000000) // 1e16 utac
 	delegationAmount := UTacAmount("10000000000000000")
 	output, err := ExecuteCommand(ctx, params, "tx", "staking", "delegate", validatorAddr,
 		delegationAmount, "--from", "apr_delegator", "--gas", "200000", "--gas-prices", "400000000000utac", "-y")
@@ -193,34 +196,119 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 	waitForNewBlock(s, nil)
 
 	output, err = ExecuteCommand(ctx, params, "q", "staking", "delegation", delegatorAddr, validatorAddr)
-	delegatedAmount := parseBalanceAmount(output)
 	require.NoError(s.T(), err, "Failed to query delegation")
+	delegatedAmount := parseBalanceAmount(output)
 	require.Contains(s.T(), delegatedAmount, delegationAmount, "Delegation amount should match")
 
-	// Wait for a few blocks to accumulate rewards
-	blocksWaited := int(3)
-	for i := 0; i < blocksWaited; i++ {
+	// Verify delegation via dedicated query and dump rewards raw
+	delegRewardsOut, _ := ExecuteCommand(ctx, params, "q", "distribution", "rewards", delegatorAddr, validatorAddr)
+	fmt.Printf("Rewards for specific validator: %s\n", delegRewardsOut)
+
+	// Wait for a few blocks to accumulate rewards before measurement
+	for i := 0; i < 5; i++ {
 		waitForNewBlock(s, nil)
 	}
 
-	output, err = ExecuteCommand(ctx, params, "q", "distribution", "rewards", delegatorAddr)
-	require.NoError(s.T(), err, "Failed to query rewards")
+	// Measure reward rate over 100 blocks for statistical accuracy.
+	// Query rewards at t1, wait 100 blocks, query again at t2.
+	rewardsBefore, err := func() (float64, error) {
+		out, e := ExecuteCommand(ctx, params, "q", "distribution", "rewards", delegatorAddr)
+		if e != nil {
+			return 0, e
+		}
+		return parseRewardsFloat(out, DefaultDenom)
+	}()
+	require.NoError(s.T(), err, "Failed to query rewards (before)")
+	heightBefore := getCurrentBlockHeight(s)
+	t1 := time.Now()
+	fmt.Printf("Measurement start — height: %d, rewards: %.2f utac\n", heightBefore, rewardsBefore)
 
-	rewardsAmount := parseBalanceAmount(output)
-	rewardsAmount = rewardsAmount[:len(rewardsAmount)-len(DefaultDenom)]
+	for i := 0; i < 100; i++ {
+		waitForNewBlock(s, nil)
+	}
 
-	rewards, err := strconv.ParseInt(rewardsAmount, 10, 64)
-	require.NoError(s.T(), err, "Failed to parse rewards amount")
-	fmt.Print("Rewards: ", rewards, "\n")
+	rewardsAfter, err := func() (float64, error) {
+		out, e := ExecuteCommand(ctx, params, "q", "distribution", "rewards", delegatorAddr)
+		if e != nil {
+			return 0, e
+		}
+		return parseRewardsFloat(out, DefaultDenom)
+	}()
+	require.NoError(s.T(), err, "Failed to query rewards (after)")
+	heightAfter := getCurrentBlockHeight(s)
+	t2 := time.Now()
+	fmt.Printf("Measurement end   — height: %d, rewards: %.2f utac\n", heightAfter, rewardsAfter)
 
-	// blocksPerYear := int(10512000)
-	// rewardsPerBlock := rewards / int64(blocksWaited)
-	// rewardsForAYear := rewardsPerBlock * int64(blocksPerYear)
-	//TODO: check if this formula is correct
-	// apr := float64(rewardsForAYear) / float64(initialAmount) * 100
-	// fmt.Print("APR: ", apr, "%\n")
+	// Delta rewards over 100-block interval
+	rewards := rewardsAfter - rewardsBefore
+	blockDuration := t2.Sub(t1).Seconds()
+	blocksElapsed := heightAfter - heightBefore
+	require.Greater(s.T(), rewards, 0.0, "Rewards delta should be greater than 0")
+	fmt.Printf("Rewards delta: %.2f utac over %d blocks in %.2fs\n", rewards, blocksElapsed, blockDuration)
+	fmt.Printf("Per-block reward (measured): %.2f utac\n", rewards/float64(blocksElapsed))
 
-	// TODO: uncomment this and tweak the values of expected APR
-	// require.Greater(s.T(), apr, 5.0, "APR should be greater than 5%")
-	// require.Less(s.T(), apr, 20.0, "APR should be less than 20%")
+	// Annualize using real block time
+	secondsPerYear := float64(365.25 * 24 * 3600)
+	rewardsAnnualized := rewards / blockDuration * secondsPerYear
+	measuredAPR := rewardsAnnualized / delegationAmountNum * 100
+	fmt.Printf("Measured APR: %.4f%%\n", measuredAPR)
+
+	// Query current inflation rate
+	inflationOutput, err := ExecuteCommand(ctx, mintParams, "q", "mint", "inflation")
+	require.NoError(s.T(), err, "Failed to query inflation")
+	inflationStr := parseField(inflationOutput, "inflation")
+	currentInflation, err := strconv.ParseFloat(inflationStr, 64)
+	require.NoError(s.T(), err, "Failed to parse inflation: %s", inflationStr)
+	fmt.Printf("Current inflation: %.4f%%\n", currentInflation*100)
+
+	// Query bonded tokens and total supply to compute bonded ratio
+	poolOutput, err := ExecuteCommand(ctx, mintParams, "q", "staking", "pool")
+	require.NoError(s.T(), err, "Failed to query staking pool")
+	bondedStr := parseField(poolOutput, "bonded_tokens")
+	bonded, err := strconv.ParseFloat(bondedStr, 64)
+	require.NoError(s.T(), err, "Failed to parse bonded tokens")
+
+	supplyOutput, err := ExecuteCommand(ctx, mintParams, "q", "bank", "total-supply-of", DefaultDenom)
+	require.NoError(s.T(), err, "Failed to query total supply")
+	totalSupply, err := parseTotalSupply(supplyOutput)
+	require.NoError(s.T(), err, "Failed to parse total supply: %s", supplyOutput)
+
+	bondedRatio := bonded / totalSupply
+	fmt.Printf("Bonded: %.0f, Total supply: %.0f, Bonded ratio: %.4f%%\n", bonded, totalSupply, bondedRatio*100)
+
+	// Theoretical APR using on-chain annual_provisions directly
+	annualProvisionsOut, err := ExecuteCommand(ctx, mintParams, "q", "mint", "annual-provisions")
+	require.NoError(s.T(), err, "Failed to query annual provisions")
+	annualProvisionsStr := parseField(annualProvisionsOut, "annual_provisions")
+	annualProvisions, err := strconv.ParseFloat(annualProvisionsStr, 64)
+	require.NoError(s.T(), err, "Failed to parse annual provisions")
+	fmt.Printf("Annual provisions (chain): %.2f\n", annualProvisions)
+
+	// commission from validator query
+	validatorOut2, err := ExecuteCommand(ctx, params, "q", "staking", "validator", validatorAddr)
+	require.NoError(s.T(), err, "Failed to query validator for commission")
+	commissionRateStr := parseField(validatorOut2, "rate")
+	commissionRateF, parseErr := strconv.ParseFloat(commissionRateStr, 64)
+	if parseErr != nil {
+		commissionRateF = 0
+	}
+	fmt.Printf("Validator commission rate: %.4f\n", commissionRateF)
+
+	// The chain mints annualProvisions/blocksPerYear per block.
+	// annualProvisions assumes a specific expected block time (secondsPerYear/blocksPerYear).
+	// If actual block time differs, we must scale accordingly.
+	blocksPerYear := float64(15768000) // from genesis
+	expectedBlockTime := secondsPerYear / blocksPerYear
+	actualBlockTime := blockDuration / float64(blocksElapsed)
+	// theoreticalAPR = (annualProvisions / blocksPerYear) * (1/actualBlockTime) * secondsPerYear
+	//                  / bonded * (1 - commission) * 100
+	//                = annualProvisions * (expectedBlockTime/actualBlockTime) / bonded * (1-commission) * 100
+	theoreticalAPR := annualProvisions / bonded * (1 - commissionRateF) * (expectedBlockTime / actualBlockTime) * 100
+	fmt.Printf("Expected block time: %.4fs, Actual block time: %.4fs, Scale: %.4f\n",
+		expectedBlockTime, actualBlockTime, expectedBlockTime/actualBlockTime)
+	fmt.Printf("Theoretical APR (adjusted for actual block time): %.4f%%\n", theoreticalAPR)
+
+	// Tolerance of 10% (relative) — should be tight since we measured over 100+ blocks.
+	require.InDelta(s.T(), theoreticalAPR, measuredAPR, theoreticalAPR*0.10,
+		"Measured APR %.4f%% should be within 10%% of theoretical APR %.4f%%", measuredAPR, theoreticalAPR)
 }

@@ -1,7 +1,6 @@
 {
     "liquid_bond_denom": "stk/utac",
     "unstake_fee_rate": "0.000000000000000000",
-    "lsm_disabled": true,
     "min_liquid_stake_amount": "1000",
     "cw_locked_pool_address": "",
     "fee_account_address": "tac15lvhklny0khnwy7hgrxsxut6t6ku2cgknw79fr",

@@ -91,7 +91,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
   export VALIDATOR_MNEMONIC="${!mnemonic_var}"
 
   # call generalized init.sh script to initialize the node
-  echo y | HOMEDIR=$NODEDIR $(dirname "$0")/./init.sh
+  echo y | HOMEDIR=$NODEDIR ADD_DUMMY_VALIDATORS=false $(dirname "$0")/./init.sh
 
   # explicitly add balances to first node(node0) which will be used to collect gentxs later
   ADDRESS=$($TACCHAIND keys show validator --keyring-backend $KEYRING_BACKEND --home $NODEDIR -a)
@@ -137,7 +137,7 @@ for ((i = 0 ; i < VALIDATORS_COUNT ; i++)); do
     # add all nodes except the current one
     if [ "$i" != "$j" ]; then
       CURRENT_PEER=$((CURRENT_PEER + 1))
-      NODE_ID=$($TACCHAIND tendermint show-node-id --home $HOMEDIR/node$j)
+      NODE_ID=$($TACCHAIND comet show-node-id --home $HOMEDIR/node$j)
       P2P_PORT=451$((j+1))0
       PERSISTENT_PEERS+=$NODE_ID@127.0.0.1:$P2P_PORT
       # add comma if not last node

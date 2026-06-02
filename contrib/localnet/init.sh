@@ -4,17 +4,21 @@
 TACCHAIND=${TACCHAIND:-$(which tacchaind)}
 HOMEDIR=${HOMEDIR:-$HOME/.tacchaind}
 NODE_MONIKER=${NODE_MONIKER:-$(hostname)}
-CHAIN_ID=${CHAIN_ID:-tacchain_2391-1}
+CHAIN_ID=${CHAIN_ID:-tacchain_2391337-1}
 KEYRING_BACKEND=${KEYRING_BACKEND:-test}
 VALIDATOR_IDENTITY=${VALIDATOR_IDENTITY:-4DD1A5E1D03FA12D}
 VALIDATOR_WEBSITE=${VALIDATOR_WEBSITE:-https://tac.build/}
 VALIDATOR_MNEMONIC=${VALIDATOR_MNEMONIC:-"island mail dice alien project surround orchard ball twist worth innocent arrange assume dragon rotate enough flee rapid rookie swim addict ice destroy run"} # tac15lvhklny0khnwy7hgrxsxut6t6ku2cgknw79fr
-INITIAL_BALANCE=${INITIAL_BALANCE:-2000000000000000000000}
-INITIAL_STAKE=${INITIAL_STAKE:-1000000000000000000000}
+INITIAL_BALANCE=${INITIAL_BALANCE:-100000000000000000000000000}
+INITIAL_STAKE=${INITIAL_STAKE:-10000000000000000000000000}
+# Dummy validators for staking tests (BONDED but not producing blocks)
+ADD_DUMMY_VALIDATORS=${ADD_DUMMY_VALIDATORS:-true}
+DUMMY_VALIDATOR_STAKE=${DUMMY_VALIDATOR_STAKE:-10000000000000000000}
+DUMMY_VALIDATOR_BALANCE=${DUMMY_VALIDATOR_BALANCE:-11000000000000000000}
 BLOCK_TIME_SECONDS=${BLOCK_TIME_SECONDS:-2}
 MAX_GAS=${MAX_GAS:-90000000}
 MIN_GAS_PRICE=${MIN_GAS_PRICE:-400000000000}
-GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-604800}
+GOV_TIME_SECONDS=${GOV_TIME_SECONDS:-120}
 GOV_MIN_DEPOSIT=${GOV_MIN_DEPOSIT:-10000000000000000}
 GOV_MIN_EXPEDITED_DEPOSIT=${GOV_MIN_EXPEDITED_DEPOSIT:-50000000000000000}
 GOV_MIN_INITIAL_DEPOSIT_RATIO=${GOV_MIN_INITIAL_DEPOSIT_RATIO:-1}
@@ -24,7 +28,7 @@ GOAL_BONDED=${GOAL_BONDED:-0.6}
 SLASH_DOWNTIME_PENALTY=${SLASH_DOWNTIME_PENALTY:-0.001}
 SLASH_SIGNED_BLOCKS_WINDOW=${SLASH_SIGNED_BLOCKS_WINDOW:-21600}
 MAX_VALIDATORS=${MAX_VALIDATORS:-20}
-UNBONDING_TIME=${UNBONDING_TIME:-1814400s}
+UNBONDING_TIME=${UNBONDING_TIME:-60s}
 COMMUNITY_TAX=${COMMUNITY_TAX:-0.00}
 TOTAL_WEIGHT=${TOTAL_WEIGHT:-10000}
 
@@ -148,13 +152,14 @@ fi
 sed -i.bak "s/\"chain_id\": \"262144\"/\"chain_id\": \"$EVM_CHAIN_ID\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"denom\": \"atest\"/\"denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 sed -i.bak "s/\"evm_denom\": \"atest\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"evm_denom\": \"aatom\"/\"evm_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"extended_denom\": \"aatom\"/\"extended_denom\": \"utac\"/g" $HOMEDIR/config/genesis.json
 
 # enable evm eip-3855
 sed -i.bak "s/\"extra_eips\": \[\]/\"extra_eips\": \[\"3855\"\]/g" $HOMEDIR/config/genesis.json
 
-# disable EIP-155
-sed -i.bak "s/\"allow_unprotected_txs\": false/\"allow_unprotected_txs\": true/g" $HOMEDIR/config/genesis.json
-sed -i.bak "s/allow-unprotected-txs = false/allow-unprotected-txs = true/g" $HOMEDIR/config/app.toml
+# set [evm] evm-chain-id in app.toml (REQUIRED in v1.6.0+, default template ships 262144)
+sed -i.bak "s/^evm-chain-id = 262144/evm-chain-id = $EVM_CHAIN_ID/g" $HOMEDIR/config/app.toml
 
 # set evm precompiles
 jq '
@@ -174,8 +179,9 @@ jq '
   ]
 ' "$HOMEDIR/config/genesis.json" > "$HOMEDIR/config/genesis_patched.json" && mv "$HOMEDIR/config/genesis_patched.json" "$HOMEDIR/config/genesis.json"
 
-# set x/feemarket min gas price
+# set x/feemarket min gas price and initial base fee (base_fee must be >= min_gas_price at genesis)
 sed -i.bak "s/\"min_gas_price\": \"0.000000000000000000\"/\"min_gas_price\": \"$MIN_GAS_PRICE\"/g" $HOMEDIR/config/genesis.json
+sed -i.bak "s/\"base_fee\": \"1000000000.000000000000000000\"/\"base_fee\": \"${MIN_GAS_PRICE}.000000000000000000\"/g" $HOMEDIR/config/genesis.json
 
 # set max gas
 sed -i.bak "s/\"max_gas\": \"-1\"/\"max_gas\": \"$MAX_GAS\"/g" $HOMEDIR/config/genesis.json
@@ -219,6 +225,9 @@ jq --arg GOV_MIN_EXPEDITED_DEPOSIT "$GOV_MIN_EXPEDITED_DEPOSIT" '
 
 # enable apis
 sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
+
+# enable debug namespace in json-rpc
+sed -i.bak 's/api = "eth,net,web3"/api = "eth,net,web3,debug"/' $HOMEDIR/config/app.toml
 
 # enable rpc cors
 sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml
@@ -279,12 +288,12 @@ jq '
 jq '
 .app_state.erc20 = {
     "params": {
-        "enable_erc20": true,
-        "native_precompiles": [
-          "0xa29260a07Ec319176A49f2710433F647E49B604f"
-        ],
-        "dynamic_precompiles": []
+        "enable_erc20": true
       },
+      "native_precompiles": [
+        "0xa29260a07Ec319176A49f2710433F647E49B604f"
+      ],
+      "dynamic_precompiles": [],
       "token_pairs": [
         {
             "erc20_address": "0xa29260a07Ec319176A49f2710433F647E49B604f",
@@ -327,7 +336,6 @@ jq --argjson whitelisted_validators "$WHITELISTED_VALIDATORS" --argjson liquid_v
         "liquid_bond_denom": "stk/utac",
         "whitelisted_validators": $whitelisted_validators,
         "unstake_fee_rate": "0.000000000000000000",
-        "lsm_disabled": false,
         "min_liquid_stake_amount": "1000",
         "cw_locked_pool_address": "",
         "fee_account_address": "tac1w2q3mashs2k4wcpqzs5q5xewnhnnr7wslr34safzvwqzvuqh3gjqn6xzrj",
@@ -364,4 +372,50 @@ sed -i.bak "s/26658/$PROXY_PORT/g" $HOMEDIR/config/config.toml
 echo $VALIDATOR_MNEMONIC | $TACCHAIND keys add validator --recover --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis add-genesis-account validator ${INITIAL_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
 $TACCHAIND genesis gentx validator ${INITIAL_STAKE}utac --identity $VALIDATOR_IDENTITY --website $VALIDATOR_WEBSITE --chain-id $CHAIN_ID --keyring-backend $KEYRING_BACKEND --gas-prices ${MIN_GAS_PRICE}utac --gas 200000 --home $HOMEDIR
+
+# Add dummy validators for staking tests (BONDED but not producing blocks)
+# They are registered in genesis with a small self-delegation so they enter the
+# active validator set (BONDED). Since they don't actually run a node their
+# signing_info will show missed blocks, but with signed_blocks_window=21600
+# at 2s/block it takes ~12 hours before they get jailed — plenty of time for tests.
+if [ "$ADD_DUMMY_VALIDATORS" = "true" ]; then
+    # Each gentx uses the node's priv_validator_key.json as consensus pubkey.
+    # We need a unique ed25519 key per dummy validator, so we temporarily
+    # swap priv_validator_key.json with one from a fresh temp homedir.
+    cp $HOMEDIR/config/priv_validator_key.json $HOMEDIR/config/priv_validator_key.json.orig
+
+    $TACCHAIND keys add dummy_validator_1 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR --no-backup
+    $TACCHAIND genesis add-genesis-account dummy_validator_1 ${DUMMY_VALIDATOR_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+    TMPDIR1=$(mktemp -d)
+    $TACCHAIND init dummy1_node --chain-id $CHAIN_ID --home $TMPDIR1 > /dev/null 2>&1
+    cp $TMPDIR1/config/priv_validator_key.json $HOMEDIR/config/priv_validator_key.json
+    $TACCHAIND genesis gentx dummy_validator_1 ${DUMMY_VALIDATOR_STAKE}utac \
+        --moniker "dummy-validator-1" \
+        --chain-id $CHAIN_ID \
+        --keyring-backend $KEYRING_BACKEND \
+        --gas-prices ${MIN_GAS_PRICE}utac \
+        --gas 200000 \
+        --home $HOMEDIR \
+        --output-document $HOMEDIR/config/gentx/gentx-dummy-validator-1.json
+    rm -rf $TMPDIR1
+
+    $TACCHAIND keys add dummy_validator_2 --keyring-backend $KEYRING_BACKEND --home $HOMEDIR --no-backup
+    $TACCHAIND genesis add-genesis-account dummy_validator_2 ${DUMMY_VALIDATOR_BALANCE}utac --keyring-backend $KEYRING_BACKEND --home $HOMEDIR
+    TMPDIR2=$(mktemp -d)
+    $TACCHAIND init dummy2_node --chain-id $CHAIN_ID --home $TMPDIR2 > /dev/null 2>&1
+    cp $TMPDIR2/config/priv_validator_key.json $HOMEDIR/config/priv_validator_key.json
+    $TACCHAIND genesis gentx dummy_validator_2 ${DUMMY_VALIDATOR_STAKE}utac \
+        --moniker "dummy-validator-2" \
+        --chain-id $CHAIN_ID \
+        --keyring-backend $KEYRING_BACKEND \
+        --gas-prices ${MIN_GAS_PRICE}utac \
+        --gas 200000 \
+        --home $HOMEDIR \
+        --output-document $HOMEDIR/config/gentx/gentx-dummy-validator-2.json
+    rm -rf $TMPDIR2
+
+    # Restore the original consensus key so the real validator node works
+    mv $HOMEDIR/config/priv_validator_key.json.orig $HOMEDIR/config/priv_validator_key.json
+fi
+
 $TACCHAIND genesis collect-gentxs --keyring-backend $KEYRING_BACKEND --home $HOMEDIR

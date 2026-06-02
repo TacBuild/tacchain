@@ -3,12 +3,12 @@
 
 FROM golang:1.23.8-alpine3.21 AS go-builder
 
+
 RUN apk add --no-cache \
     ca-certificates \
     build-base \
     libusb-dev \
-    linux-headers \
-    eudev-dev
+    linux-headers
 
 WORKDIR /code
 COPY . /code/
@@ -34,5 +34,10 @@ EXPOSE 1317
 EXPOSE 26656
 # tendermint rpc
 EXPOSE 26657
+# evm rpc http
+EXPOSE 8545
+# evm rpc ws
+EXPOSE 8546
+
 
 CMD ["/usr/bin/tacchaind", "version"]

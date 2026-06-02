@@ -7,6 +7,7 @@ RUN apk add --no-cache \
     ca-certificates \
     build-base \
     libusb-dev \
+    linux-headers \
     eudev-dev
 
 WORKDIR /code

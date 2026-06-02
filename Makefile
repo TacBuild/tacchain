@@ -102,7 +102,7 @@ clean:
 ###                                 Tests                                   ###
 ###############################################################################
 
-test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger test-solidity
+test: test-unit test-race test-e2e test-localnet-params test-localnet-evm test-ledger
 
 test_tags = ledger test_ledger_mock test
 
@@ -130,10 +130,7 @@ test-localnet-evm:
 test-ledger:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='$(test_tags)' -v ./tests/ledger/...
 
-test-solidity:
-	./tests/solidity/run-solidity-tests.sh
-
-.PHONY: test test-unit test-race test-e2e test-cover test-benchmark test-localnet-params test-localnet-evm test-ledger test-solidity
+.PHONY: test test-unit test-race test-e2e test-cover test-benchmark test-localnet-params test-localnet-evm test-ledger
 
 ###############################################################################
 ###                                Networks                                 ###

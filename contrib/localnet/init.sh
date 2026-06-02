@@ -336,7 +336,6 @@ jq --argjson whitelisted_validators "$WHITELISTED_VALIDATORS" --argjson liquid_v
         "liquid_bond_denom": "stk/utac",
         "whitelisted_validators": $whitelisted_validators,
         "unstake_fee_rate": "0.000000000000000000",
-        "lsm_disabled": false,
         "min_liquid_stake_amount": "1000",
         "cw_locked_pool_address": "",
         "fee_account_address": "tac1w2q3mashs2k4wcpqzs5q5xewnhnnr7wslr34safzvwqzvuqh3gjqn6xzrj",

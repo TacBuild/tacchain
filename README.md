@@ -34,10 +34,32 @@ docker run --rm -it tacchaind:latest tacchaind --help # example binary usage
 
 ### TAC Address Converter
 
-Check our [tool](./contrib/tac-address-converter/) for converting between EVM <> TAC addresses deterministically.
+Use the built-in `tacchaind debug addr` command to convert between EVM hex
+addresses and TAC bech32 account addresses deterministically.
+
+EVM -> TAC:
+
+```sh
+tacchaind debug addr 0x123456789abcdef0123456789abcdef012345678 --prefix tac
+# Bech32 tac1zg69v7y6hn00qy352euf40x77qfrg4nchk34lw
+```
+
+TAC -> EVM:
+
+```sh
+tacchaind debug addr tac1zg69v7y6hn00qy352euf40x77qfrg4nchk34lw
+# Address hex: 0x123456789aBCdef0123456789AbCDEF012345678
+```
+
+`debug addr` works offline and does not require a running node. The EVM output is
+EIP-55 checksummed; the lower-case form is the same address. To inspect the
+configured TAC bech32 prefixes, run:
+
+```sh
+tacchaind debug prefixes
+```
 
 ### Learn more
 
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [CosmosEVM docs](https://evm.cosmos.network/)
-

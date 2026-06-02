@@ -35,7 +35,7 @@ jobs:
       - name: Build binary
         env:
           GONOSUMDB: "github.com/TacBuild/*"
-          GOPROXY: "direct,https://proxy.golang.org"
+          GOPROXY: "https://proxy.golang.org,direct"
         run: |
           mkdir -p dist
           make build-${{ matrix.goos }}-${{ matrix.goarch }}

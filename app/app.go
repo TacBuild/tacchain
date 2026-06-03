@@ -138,6 +138,7 @@ import (
 	evmfeemarkettypes "github.com/cosmos/evm/x/feemarket/types"
 	"github.com/cosmos/evm/x/vm"
 	ethcmn "github.com/ethereum/go-ethereum/common"
+	ethtypes "github.com/ethereum/go-ethereum/core/types"
 	evmcorevm "github.com/ethereum/go-ethereum/core/vm"
 
 	sdkmempool "github.com/cosmos/cosmos-sdk/types/mempool"
@@ -987,6 +988,16 @@ func (app *TacChainApp) configureEVMMempool(appOpts servertypes.AppOptions, logg
 		LegacyPoolConfig: evmconfig.GetLegacyPoolConfig(appOpts, logger),
 		BlockGasLimit:    evmconfig.GetBlockGasLimit(appOpts, logger),
 		MinTip:           evmconfig.GetMinTip(appOpts, logger),
+		BroadCastTxFn: func(txs []*ethtypes.Transaction) error {
+			logger.Debug("broadcasting EVM transactions", "tx_count", len(txs))
+			txs = append([]*ethtypes.Transaction(nil), txs...)
+			go func() {
+				if err := app.broadcastEVMTransactions(txs); err != nil {
+					logger.Error("failed to broadcast EVM transactions", "err", err, "tx_count", len(txs))
+				}
+			}()
+			return nil
+		},
 	}
 
 	evmMp := evmmempool.NewExperimentalEVMMempool(
@@ -1012,6 +1023,32 @@ func (app *TacChainApp) configureEVMMempool(appOpts servertypes.AppOptions, logg
 		),
 	)
 	app.SetPrepareProposal(abciProposalHandler.PrepareProposalHandler())
+	return nil
+}
+
+func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction) error {
+	for _, ethTx := range ethTxs {
+		msg := &evmvmtypes.MsgEthereumTx{}
+		msg.FromEthereumTx(ethTx)
+
+		txBuilder := app.txConfig.NewTxBuilder()
+		if err := txBuilder.SetMsgs(msg); err != nil {
+			return fmt.Errorf("failed to set msg in tx builder: %w", err)
+		}
+
+		txBytes, err := app.txConfig.TxEncoder()(txBuilder.GetTx())
+		if err != nil {
+			return fmt.Errorf("failed to encode transaction: %w", err)
+		}
+
+		res, err := app.clientCtx.BroadcastTxSync(txBytes)
+		if err != nil {
+			return fmt.Errorf("failed to broadcast transaction %s: %w", ethTx.Hash().Hex(), err)
+		}
+		if res.Code != 0 {
+			return fmt.Errorf("transaction %s rejected by mempool: code=%d, log=%s", ethTx.Hash().Hex(), res.Code, res.RawLog)
+		}
+	}
 	return nil
 }
 
@@ -1215,6 +1252,7 @@ func (app *TacChainApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.A
 
 // RegisterTxService implements the Application.RegisterTxService method.
 func (app *TacChainApp) RegisterTxService(clientCtx client.Context) {
+	app.SetClientCtx(clientCtx)
 	authtx.RegisterTxService(app.BaseApp.GRPCQueryRouter(), clientCtx, app.BaseApp.Simulate, app.interfaceRegistry)
 }
 

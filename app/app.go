@@ -990,7 +990,13 @@ func (app *TacChainApp) configureEVMMempool(appOpts servertypes.AppOptions, logg
 		MinTip:           evmconfig.GetMinTip(appOpts, logger),
 		BroadCastTxFn: func(txs []*ethtypes.Transaction) error {
 			logger.Debug("broadcasting EVM transactions", "tx_count", len(txs))
-			return app.broadcastEVMTransactions(txs)
+			txs = append([]*ethtypes.Transaction(nil), txs...)
+			go func() {
+				if err := app.broadcastEVMTransactions(txs); err != nil {
+					logger.Error("failed to broadcast EVM transactions", "err", err, "tx_count", len(txs))
+				}
+			}()
+			return nil
 		},
 	}
 

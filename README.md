@@ -59,6 +59,11 @@ configured TAC bech32 prefixes, run:
 tacchaind debug prefixes
 ```
 
+The repository also includes a small JavaScript/TypeScript address conversion
+utility in [`contrib/tac-address-converter`](contrib/tac-address-converter).
+It can be used directly from JS projects or as a reference implementation for
+the same deterministic EVM hex <-> TAC bech32 conversion.
+
 ### Learn more
 
 - [Cosmos SDK docs](https://docs.cosmos.network)

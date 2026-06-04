@@ -75,6 +75,15 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("x/vm params migration failed: %w", err)
 		}
 
+		// 2a1. Re-encode historical x/gov proposals that embed old x/vm
+		// MsgUpdateParams payloads. Runtime x/vm state is fixed above, but gov
+		// queries unpack proposal Any messages and would otherwise fail on the
+		// old Params field 10 wire type.
+		logger.Info("Migrating historical x/gov EVM MsgUpdateParams proposals")
+		if err := MigrateHistoricalGovEVMParamProposals(sdkCtx, ak); err != nil {
+			return nil, fmt.Errorf("historical gov EVM params proposal migration failed: %w", err)
+		}
+
 		// 2a2. Set history_serve_window to the default value (8192 / EIP-2935).
 		// This is a new field in v0.6.0 that did not exist in v0.2.0, so it
 		// stays 0 after the raw re-encoding above. Read → patch → write back.

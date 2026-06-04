@@ -36,3 +36,15 @@ type oldEVMParams struct {
 func (m *oldEVMParams) Reset()         { *m = oldEVMParams{} }
 func (m *oldEVMParams) String() string { return proto.CompactTextString(m) }
 func (m *oldEVMParams) ProtoMessage()  {}
+
+// oldEVMMsgUpdateParams mirrors the old MsgUpdateParams payload embedded in
+// historical x/gov proposals. The top-level message did not change, but its
+// Params field did.
+type oldEVMMsgUpdateParams struct {
+	Authority string       `protobuf:"bytes,1,opt,name=authority,proto3"`
+	Params    oldEVMParams `protobuf:"bytes,2,opt,name=params,proto3"`
+}
+
+func (m *oldEVMMsgUpdateParams) Reset()         { *m = oldEVMMsgUpdateParams{} }
+func (m *oldEVMMsgUpdateParams) String() string { return proto.CompactTextString(m) }
+func (m *oldEVMMsgUpdateParams) ProtoMessage()  {}

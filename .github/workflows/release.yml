@@ -64,10 +64,25 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Package cosmovisor archives
+        run: |
+          cd dist
+          mkdir -p package-linux-amd64/bin package-linux-arm64/bin
+          cp tacchaind-linux-amd64 package-linux-amd64/bin/tacchaind
+          cp tacchaind-linux-arm64 package-linux-arm64/bin/tacchaind
+          chmod 755 package-linux-amd64/bin/tacchaind package-linux-arm64/bin/tacchaind
+          tar -C package-linux-amd64 -czf tacchaind-linux-amd64.tar.gz bin/tacchaind
+          tar -C package-linux-arm64 -czf tacchaind-linux-arm64.tar.gz bin/tacchaind
+
       - name: Compute checksums
         run: |
           cd dist
-          sha256sum tacchaind-linux-amd64 tacchaind-linux-arm64 > checksums.txt
+          sha256sum \
+            tacchaind-linux-amd64 \
+            tacchaind-linux-arm64 \
+            tacchaind-linux-amd64.tar.gz \
+            tacchaind-linux-arm64.tar.gz \
+            > checksums.txt
           cat checksums.txt
 
       - name: Determine pre-release
@@ -91,4 +106,6 @@ jobs:
           files: |
             dist/tacchaind-linux-amd64
             dist/tacchaind-linux-arm64
+            dist/tacchaind-linux-amd64.tar.gz
+            dist/tacchaind-linux-arm64.tar.gz
             dist/checksums.txt

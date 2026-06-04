@@ -13,6 +13,11 @@ trap cleanup EXIT
 export HOMEDIR=.test-localnet-evm
 export CHAIN_ID=tacchain_2391-1
 export MIN_GAS_PRICE=25000000000
+export TACCHAIND=${TACCHAIND:-$(command -v tacchaind 2>/dev/null || echo ./build/tacchaind)}
+
+tacchaind() {
+  "$TACCHAIND" "$@"
+}
 
 EVM_CHAIN_ID=$(echo "$CHAIN_ID" | sed -E 's/.*_([0-9]+)-.*/\1/')
 if [[ -z "$EVM_CHAIN_ID" ]]; then

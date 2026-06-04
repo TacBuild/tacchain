@@ -13,6 +13,7 @@ import (
 	v102 "github.com/TacBuild/tacchain/app/upgrades/v1.0.2"
 	v104 "github.com/TacBuild/tacchain/app/upgrades/v1.0.4"
 	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
+	v160spbhotfix "github.com/TacBuild/tacchain/app/upgrades/v1.6.0-spb-hotfix"
 )
 
 // Upgrades list of chain upgrades
@@ -24,6 +25,7 @@ var Upgrades = []upgrades.Upgrade{
 	v102.Upgrade, // liquid stake
 	v104.Upgrade, // ed25519 precompile
 	v160.Upgrade, // upgrade to cosmos/evm v0.6.0
+	v160spbhotfix.Upgrade,
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

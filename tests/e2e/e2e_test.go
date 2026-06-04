@@ -200,8 +200,9 @@ func (s *TacchainTestSuite) TestStakingAPR() {
 	delegatedAmount := parseBalanceAmount(output)
 	require.Contains(s.T(), delegatedAmount, delegationAmount, "Delegation amount should match")
 
-	// Verify delegation via dedicated query and dump rewards raw
-	delegRewardsOut, _ := ExecuteCommand(ctx, params, "q", "distribution", "rewards", delegatorAddr, validatorAddr)
+	// Verify delegation rewards via dedicated query and dump rewards raw.
+	delegRewardsOut, err := ExecuteCommand(ctx, params, "q", "distribution", "rewards-by-validator", delegatorAddr, validatorAddr)
+	require.NoError(s.T(), err, "Failed to query rewards for specific validator: %s", delegRewardsOut)
 	fmt.Printf("Rewards for specific validator: %s\n", delegRewardsOut)
 
 	// Wait for a few blocks to accumulate rewards before measurement

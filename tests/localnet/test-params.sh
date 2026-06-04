@@ -4,10 +4,15 @@ export GENESIS_ACC_1_ADDRESS=tac1zg69v7ys40x77y352eufp27daufrg4nckcjrx2
 export GENESIS_ACC_2_ADDRESS=tac167a5p268zlj2tgmlrmhkcqyex07stu5k6s23lq
 export HOMEDIR=./.test-localnet-params
 export CHAIN_ID=tacchain_239-1
+export TACCHAIND=${TACCHAIND:-$(command -v tacchaind 2>/dev/null || echo ./build/tacchaind)}
 export VALIDATOR_1_MNEMONIC="spray retire festival globe nuclear festival install lunch deal bench unlock car solution vague witness weasel ankle rebel slush allow wing seek tobacco carbon" # tac1tg73cpsxxca3m2t6w09gezvcg37zrqqxglwsgv
 export VALIDATOR_2_MNEMONIC="coach deposit public fiction utility dentist course bread maple lawn dress bridge melody snake taxi suggest student vote actress shop man service bubble build" # tac137kh82tna99k9cdnvpga9jcme0tqn9up40f96g
 export VALIDATOR_3_MNEMONIC="brave name midnight glass story soda calm panel menu rescue check puzzle layer mango pull snake short spread virtual use already alone observe cream" # tac13gv56l9leqvdjj6y4cr0g8rtzudk5c65md003y
 export VALIDATOR_4_MNEMONIC="canal marble glimpse nurse afford medal film whale hockey defense mango visa romance plastic little cage balance special sibling clump machine wrestle energy acid" # tac1zh9dxqc28gx99gyeq6rfwmd623m77h00zykpvz
+
+tacchaind() {
+  "$TACCHAIND" "$@"
+}
 
 # start new multi-validator network
 echo "Starting new multi-validator network with 4 nodes"

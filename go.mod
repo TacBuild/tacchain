@@ -41,6 +41,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.50.0 // indirect
 	github.com/bytedance/gopkg v0.1.3 // indirect
 	github.com/cncf/xds/go v0.0.0-20250501225837-2ac532fd4443 // indirect
+	github.com/cockroachdb/fifo v0.0.0-20240616162244-4768e80dfb9a // indirect
 	github.com/crate-crypto/go-eth-kzg v1.3.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.32.4 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.2.1 // indirect
@@ -279,9 +280,6 @@ replace (
 
 	// use cosmos fork of keyring
 	github.com/99designs/keyring => github.com/cosmos/keyring v1.2.0
-
-	// Pin this pebble version to avoid breaking compilation of geth
-	github.com/cockroachdb/pebble => github.com/cockroachdb/pebble v0.0.0-20230928194634-aa077af62593
 
 	// replace to cosmos-sdk fork for liquid stake support. See: https://github.com/TacBuild/cosmos-sdk/pull/2
 	// bump to v0.53.6 with all fork specific changes.

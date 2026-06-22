@@ -20,13 +20,17 @@ export INITIAL_BALANCE=10000000000000000000000000000000000000 &&
 export CHAIN_ID=tacchain_2391337-1 &&
 export UNBONDING_TIME=60s &&
 export GOV_TIME_SECONDS=300 &&
+export HOMEDIR=./tacchain-local/.tacchaind/
 ./contrib/localnet/init.sh
 
 # ./build/tacchaind keys unsafe-export-eth-key validator
-# export TACCHAIND=/$PWD/build/tacchaind && ./contrib/localnet/start.sh
 
-COPYFILE_DISABLE=1 tar --no-xattrs --format=ustar -C "$HOME" -czf .tacchaind.tar .tacchaind
+COPYFILE_DISABLE=1 tar --no-xattrs --format=ustar \
+  -C ./tacchain-local \
+  -czf .tacchaind.tar \
+  .tacchaind
 
+exit
 docker buildx build \
   --platform linux/amd64 \
   --load \

@@ -7,3 +7,4 @@ coverage.txt
 .test-localnet-evm
 .mainnet
 .vscode/tacchain+evm-module.code-workspace
+tacchain-local/

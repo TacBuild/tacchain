@@ -165,6 +165,17 @@ func CreateUpgradeHandler(
 			return nil, fmt.Errorf("staking LSM accounting rebuild failed: %w", err)
 		}
 
+		// ── Step 5: x/mint blocks_per_year correction ──────────────────────
+		//
+		// blocks_per_year was set assuming a 2.0s block time, but mainnet runs
+		// at ~1.553s, so the chain over-mints relative to the nominal inflation
+		// rate. Re-align per-block emission with the inflation rate. Runs after
+		// RunMigrations so the mint module migration cannot overwrite it.
+		logger.Info("Correcting x/mint blocks_per_year")
+		if err := migrateMintBlocksPerYear(sdkCtx, ak); err != nil {
+			return nil, fmt.Errorf("mint blocks_per_year correction failed: %w", err)
+		}
+
 		logger.Info("v1.6.0 upgrade complete")
 		return vm, nil
 	}

@@ -43,6 +43,7 @@ func (app *TacChainApp) RegisterUpgradeHandlers() {
 		StakingKeeper:         app.StakingKeeper,
 		EVMKeeper:             app.EVMKeeper,
 		DistrKeeper:           &app.DistrKeeper,
+		MintKeeper:            &app.MintKeeper,
 	}
 	app.GetStoreKeys()
 	// register all upgrade handlers

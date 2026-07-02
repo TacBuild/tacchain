@@ -39,6 +39,7 @@ import (
 	"github.com/spf13/cast"
 
 	appconfig "github.com/TacBuild/tacchain/app/config"
+	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -584,6 +585,23 @@ func NewTacChainApp(
 		Decimals:      evmvmtypes.EighteenDecimals.Uint32(),
 	})
 
+	// Enable historical decoding of pre-v1.6.0 EVM state so that eth_call and
+	// other read-only queries below the migration height keep working:
+	//   - x/vm Params changed proto field numbers (decode would panic);
+	//   - x/erc20 precompile lists moved store layout (precompiles would appear
+	//     unregistered, so calls execute the decoy ERC20 bytecode instead).
+	// The migration height is governance-decided (and differs across networks),
+	// so it is resolved lazily from the applied x/upgrade done-height; before the
+	// upgrade it resolves to 0 (no-op).
+	resolveV160Height := func(ctx sdk.Context) int64 {
+		height, err := app.UpgradeKeeper.GetDoneHeight(ctx, v160.UpgradeName)
+		if err != nil {
+			return 0
+		}
+		return height
+	}
+	app.EVMKeeper.SetLegacyParamsHeightResolver(resolveV160Height)
+
 	app.Erc20Keeper = evmerc20keeper.NewKeeper(
 		keys[evmerc20types.StoreKey],
 		encodingConfig.Codec,
@@ -594,6 +612,7 @@ func NewTacChainApp(
 		app.StakingKeeper,
 		&app.TransferKeeper,
 	)
+	app.Erc20Keeper.SetLegacyPrecompilesHeightResolver(resolveV160Height)
 
 	// instantiate IBC transfer keeper AFTER the ERC-20 keeper to use it in the instantiation
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(

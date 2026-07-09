@@ -291,7 +291,7 @@ replace (
 	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
 	// bump to v0.6.0
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.8
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.9
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

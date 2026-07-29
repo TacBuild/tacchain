@@ -14,6 +14,7 @@ import (
 	v104 "github.com/TacBuild/tacchain/app/upgrades/v1.0.4"
 	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
 	v160spbhotfix "github.com/TacBuild/tacchain/app/upgrades/v1.6.0-spb-hotfix"
+	v161 "github.com/TacBuild/tacchain/app/upgrades/v1.6.1"
 )
 
 // Upgrades list of chain upgrades
@@ -26,6 +27,7 @@ var Upgrades = []upgrades.Upgrade{
 	v104.Upgrade, // ed25519 precompile
 	v160.Upgrade, // upgrade to cosmos/evm v0.6.0
 	v160spbhotfix.Upgrade,
+	v161.Upgrade, // vesting schedule shift (+6mo) & vesting account migration
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

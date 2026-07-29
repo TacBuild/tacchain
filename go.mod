@@ -283,7 +283,8 @@ replace (
 
 	// replace to cosmos-sdk fork for liquid stake support. See: https://github.com/TacBuild/cosmos-sdk/pull/2
 	// bump to v0.53.6 with all fork specific changes.
-	github.com/cosmos/cosmos-sdk => github.com/TacBuild/cosmos-sdk v0.53.6-tac.2
+	// tac.3: emit locked_amount on coin_spent for vesting-locked delegations (paired evm tac.10).
+	github.com/cosmos/cosmos-sdk => github.com/TacBuild/cosmos-sdk v0.53.6-tac.3
 
 	// replace to cosmos/evm fork
 	// added liquid stake support. See: https://github.com/TacBuild/evm/pull/9
@@ -291,7 +292,8 @@ replace (
 	// fix liquid stake espilon. See: https://github.com/TacBuild/evm/pull/10
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
 	// bump to v0.6.0
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.9
+	// tac.10: allow delegating vesting-locked tokens via staking precompile (amount-locked; needs cosmos-sdk tac.3).
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.10
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

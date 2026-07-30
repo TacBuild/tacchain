@@ -106,6 +106,69 @@ readlink -f "$DAEMON_HOME/cosmovisor/current"
 "$DAEMON_HOME/cosmovisor/current/bin/tacchaind" version
 ```
 
+`cosmovisor init` also writes `$DAEMON_HOME/cosmovisor/config.toml` with default
+values, for example `unsafe_skip_backup = false`. Keep that file consistent with
+the `Environment=` values in the systemd unit so that node behaviour does not
+depend on which source wins.
+
+## Migrating an Already Running Node to Cosmovisor
+
+`cosmovisor init` creates only the `genesis` slot. That is enough only for a
+node that has never applied an upgrade. If the chain has already executed at
+least one upgrade on this node, Cosmovisor will refuse to start:
+
+```text
+Error: binary not present, downloading disabled: stat \
+  $DAEMON_HOME/cosmovisor/upgrades/<last-upgrade>/bin/tacchaind: no such file or directory
+```
+
+The reason is that on start Cosmovisor reads
+`$DAEMON_HOME/data/upgrade-info.json`. That file records the **last upgrade this
+node already applied**, not the next planned one, and Cosmovisor expects a
+binary in the matching upgrade directory before it will run.
+
+### 1. Read the last applied upgrade name
+
+```bash
+export DAEMON_NAME=tacchaind
+export DAEMON_HOME=/root/tacchain/.testnet
+
+cat "$DAEMON_HOME/data/upgrade-info.json"
+LAST_UPGRADE=$(jq -r .name "$DAEMON_HOME/data/upgrade-info.json")
+echo "$LAST_UPGRADE"
+```
+
+If `upgrade-info.json` does not exist, this node has never applied an upgrade.
+The `genesis` slot alone is sufficient — skip to the systemd section.
+
+### 2. Register the currently running binary under that name
+
+The binary the node is running right now is by definition the binary for that
+upgrade, so register the very same file:
+
+```bash
+cosmovisor add-upgrade "$LAST_UPGRADE" /path/to/running/tacchaind --force
+```
+
+`/path/to/running/tacchaind` is the binary from the node's current `ExecStart`
+(before the switch to Cosmovisor), for example `/root/tacchain/tacchaind`.
+
+Cosmovisor normalizes upgrade names to lowercase unless
+`cosmovisor_disable_recase = true`. Pass the name exactly as it appears in
+`upgrade-info.json`; `add-upgrade` applies the same normalization to the
+directory it creates.
+
+### 3. Verify before starting the service
+
+```bash
+find "$DAEMON_HOME/cosmovisor/upgrades" -maxdepth 3 -type f -name tacchaind -print
+"$DAEMON_HOME/cosmovisor/upgrades/$LAST_UPGRADE/bin/tacchaind" version
+```
+
+Expected: the binary exists and reports the version the node is currently
+running on the network. On the first start Cosmovisor moves the `current`
+symlink from `genesis` to `upgrades/$LAST_UPGRADE` by itself.
+
 ## Systemd Service
 
 Create or update the service file:
@@ -196,7 +259,19 @@ For automatic downloads, the accepted upgrade proposal must include a
 they only need to verify that the published proposal contains an entry for their
 OS and CPU architecture.
 
-Example:
+Read the pending plan from the node itself instead of copying values from an
+announcement:
+
+```bash
+tacchaind query upgrade plan --node tcp://127.0.0.1:26657 --output json | jq .
+tacchaind query upgrade plan --node tcp://127.0.0.1:26657 --output json | jq -r .plan.name
+tacchaind query upgrade plan --node tcp://127.0.0.1:26657 --output json | jq -r .plan.info
+```
+
+Check the platform of the node with `uname -m` (`x86_64` maps to `linux/amd64`,
+`aarch64` to `linux/arm64`).
+
+Example `plan.info`:
 
 ```json
 {
@@ -260,13 +335,19 @@ sudo systemctl restart tac_node.service
 
 ### Prepare the Next Binary
 
-Set the upgrade name exactly as it appears in the on-chain upgrade plan:
+Set the upgrade name exactly as it appears in the on-chain upgrade plan. Read it
+from the node so the value is correct for any network and any upgrade:
 
 ```bash
 export DAEMON_NAME=tacchaind
 export DAEMON_HOME=/root/tacchain/.testnet
-export UPGRADE_NAME=v1.6.0-spb-hotfix
+export UPGRADE_NAME=$(tacchaind query upgrade plan \
+  --node tcp://127.0.0.1:26657 --output json | jq -r .plan.name)
+echo "$UPGRADE_NAME"
 ```
+
+Do not confuse this with the name in `$DAEMON_HOME/data/upgrade-info.json` —
+that one is the upgrade already applied in the past.
 
 Create the target directory:
 
@@ -336,7 +417,7 @@ After the upgrade height, check:
 
 ```bash
 export DAEMON_HOME=/root/tacchain/.testnet
-export UPGRADE_NAME=v1.6.0-spb-hotfix
+export UPGRADE_NAME=$(jq -r .name "$DAEMON_HOME/data/upgrade-info.json")
 
 sudo systemctl status tac_node.service --no-pager -l
 readlink -f "$DAEMON_HOME/cosmovisor/current"
@@ -372,6 +453,31 @@ Fix:
 2. Restore the active slot binary to the current network version.
 3. Keep the future binary only under `upgrades/<upgrade-name>/bin/tacchaind`.
 4. Start the service again.
+
+### Node exits with `binary not present, downloading disabled`
+
+Full error:
+
+```text
+Error: binary not present, downloading disabled: stat \
+  $DAEMON_HOME/cosmovisor/upgrades/<name>/bin/tacchaind: no such file or directory
+```
+
+Most likely cause: a running node was just migrated to Cosmovisor and only the
+`genesis` slot was initialized, while `$DAEMON_HOME/data/upgrade-info.json`
+still points at the last upgrade the node applied.
+
+Fix:
+
+```bash
+LAST_UPGRADE=$(jq -r .name "$DAEMON_HOME/data/upgrade-info.json")
+cosmovisor add-upgrade "$LAST_UPGRADE" /path/to/running/tacchaind --force
+```
+
+See [Migrating an Already Running Node to Cosmovisor](#migrating-an-already-running-node-to-cosmovisor).
+
+Note that `<name>` in this error is the **past** upgrade, not the upcoming one.
+Preparing only the next upgrade directory does not fix it.
 
 ### Cosmovisor cannot find the upgrade binary
 
@@ -425,6 +531,11 @@ Before upgrade:
 - Confirm the announced target version and build tag.
 - Confirm `DAEMON_HOME` equals the node `--home`.
 - Confirm `DAEMON_NAME=tacchaind`.
+- On a node just migrated to Cosmovisor, confirm the upgrade named in
+  `$DAEMON_HOME/data/upgrade-info.json` has a binary under
+  `upgrades/<that-name>/bin/tacchaind`.
+- Confirm `$DAEMON_HOME/cosmovisor/config.toml` does not contradict the systemd
+  `Environment=` values.
 - Confirm `current/bin/tacchaind` is still the current version.
 - Confirm the next binary is either downloadable from `plan.info` or already
   placed under `upgrades/<upgrade-name>/bin/tacchaind`.

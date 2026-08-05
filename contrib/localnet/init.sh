@@ -226,8 +226,8 @@ jq --arg GOV_MIN_EXPEDITED_DEPOSIT "$GOV_MIN_EXPEDITED_DEPOSIT" '
 # enable apis
 sed -i.bak "s/enable = false/enable = true/g" $HOMEDIR/config/app.toml
 
-# enable debug namespace in json-rpc
-sed -i.bak 's/api = "eth,net,web3"/api = "eth,net,web3,debug"/' $HOMEDIR/config/app.toml
+# enable debug and tac namespaces in json-rpc
+sed -i.bak 's/api = "eth,net,web3"/api = "eth,net,web3,debug,tac"/' $HOMEDIR/config/app.toml
 
 # enable rpc cors
 sed -i.bak "s/cors_allowed_origins = \[\]/cors_allowed_origins = \[\"*\"\]/g" $HOMEDIR/config/config.toml

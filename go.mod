@@ -293,7 +293,8 @@ replace (
 	// fix ed25519 precompile gas cost. See: https://github.com/TacBuild/evm/pull/11
 	// bump to v0.6.0
 	// tac.10: allow delegating vesting-locked tokens via staking precompile (amount-locked; needs cosmos-sdk tac.3).
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.10
+	// tac.12: add the tac_simulate rpc (state overrides, event logs and gas estimate in one call).
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.12
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

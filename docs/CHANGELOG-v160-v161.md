@@ -18,6 +18,7 @@ Everything in this release comes from the `cosmos/evm` and `cosmos-sdk` forks:
 - Delegating vesting-locked tokens through the EVM staking precompile no longer
   burns coins or panics
 - Historical EVM queries below the v1.6.0 store-migration height work again
+- A state override on `eth_call` no longer drops the static precompiles
 - New `tac_simulate` JSON-RPC method
 
 ---
@@ -107,6 +108,31 @@ done-height and cached; the caches are warmed in the `x/vm` `BeginBlock`.
 > **Query path only.** At current heights the code path is byte-for-byte
 > unchanged, so this is not consensus-affecting.
 
+### State overrides dropped the static precompiles
+
+Backport of upstream [cosmos/evm #1096](https://github.com/cosmos/evm/pull/1096).
+
+An `eth_call` carrying state overrides replaced the whole precompile set with
+go-ethereum's stock one, so the chain's static precompiles were not installed.
+A call to a precompile address then landed on an account with no code and came
+back with **empty output, intrinsic-only gas and no error** — a silent wrong
+answer rather than a failure.
+
+An empty `{}` was enough to trigger it, which is what most tooling sends when it
+passes the override argument at all.
+
+Upstream fixed this in 0.7.x in April and never backported it to 0.6.x, so
+**v1.6.0 is affected** and any `eth_call` with overrides against `0x800`
+(staking), `0x801` (distribution), `0x804` (bank) and friends has been returning
+`0x` there.
+
+> Query path only — a transaction never carries overrides, so nothing about
+> execution or consensus changes.
+
+`tac_simulate` inherited the same problem, which made its gas estimate ~4.6x too
+low on precompile calls (measured on a `delegate`: 25 390 against the 115 613
+`eth_estimateGas` reports). Both agree after the backport.
+
 ### Gas estimation with a balance override
 
 The upper bound of the gas estimation binary search is capped by what the sender
@@ -154,7 +180,7 @@ the handler.
 
 | Dependency | v1.6.0 | v1.6.1 |
 |------------|--------|--------|
-| `cosmos/evm` | fork @ `v0.6.0-tac.8` | fork @ `v0.6.0-tac.12` |
+| `cosmos/evm` | fork @ `v0.6.0-tac.8` | fork @ `v0.6.0-tac.13` |
 | `cosmos/cosmos-sdk` | fork @ `v0.53.6-tac.2` | fork @ `v0.53.6-tac.3` |
 | `ethereum/go-ethereum` | `v1.16.2-cosmos-1` | unchanged |
 | `cometbft/cometbft` | `v0.38.21` | unchanged |
@@ -163,7 +189,7 @@ the handler.
 
 ### Fork changes in detail
 
-**`cosmos/evm` `v0.6.0-tac.8` → `v0.6.0-tac.12`**
+**`cosmos/evm` `v0.6.0-tac.8` → `v0.6.0-tac.13`**
 
 | Commit | Change |
 |--------|--------|
@@ -175,6 +201,7 @@ the handler.
 | `5796b415` | Guard nil `erc20Keeper` in `BeginBlock` cache warming |
 | `9a602662` | Add the `tac_simulate` JSON-RPC method |
 | `5f530858` | Let a balance override reach the gas estimation |
+| `96d5164b` | Backport upstream #1096: keep the static precompiles under a state override |
 
 **`cosmos/cosmos-sdk` `v0.53.6-tac.2` → `v0.53.6-tac.3`**
 

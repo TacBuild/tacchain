@@ -21,7 +21,30 @@ import (
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcmn "github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+	ethcrypto "github.com/ethereum/go-ethereum/crypto"
 )
+
+// signedEthTx builds a transaction the broadcast path can recover a sender from.
+// An unsigned one is not usable here: MsgEthereumTx.ValidateBasic rejects a
+// message without a sender, so the broadcast has to derive it from the signature.
+func signedEthTx(t *testing.T) (*ethtypes.Transaction, ethcmn.Address) {
+	t.Helper()
+
+	key, err := ethcrypto.GenerateKey()
+	require.NoError(t, err)
+
+	to := ethcmn.Address{}
+	tx, err := ethtypes.SignNewTx(key, ethtypes.LatestSigner(evmtypes.GetEthChainConfig()), &ethtypes.LegacyTx{
+		Nonce:    1,
+		To:       &to,
+		Value:    big.NewInt(0),
+		Gas:      21_000,
+		GasPrice: big.NewInt(1),
+	})
+	require.NoError(t, err)
+
+	return tx, ethcrypto.PubkeyToAddress(key.PublicKey)
+}
 
 type broadcastRecorder struct {
 	rpcmock.Client
@@ -87,14 +110,7 @@ func TestEVMMempoolBroadcastTxFnUsesUpdatedClientCtx(t *testing.T) {
 		WithClient(rpcClient),
 	)
 
-	to := ethcmn.Address{}
-	ethTx := ethtypes.NewTx(&ethtypes.LegacyTx{
-		Nonce:    1,
-		To:       &to,
-		Value:    big.NewInt(0),
-		Gas:      21_000,
-		GasPrice: big.NewInt(1),
-	})
+	ethTx, sender := signedEthTx(t)
 
 	// Before the explicit BroadCastTxFn override, this callback captured the
 	// empty client.Context from app construction and returned "no RPC client is
@@ -117,6 +133,12 @@ func TestEVMMempoolBroadcastTxFnUsesUpdatedClientCtx(t *testing.T) {
 	msg, ok := msgs[0].(*evmtypes.MsgEthereumTx)
 	require.True(t, ok)
 	require.Equal(t, ethTx.Hash(), msg.Hash())
+
+	// Without the sender the receiving mempool refuses the message with
+	// "sender address is missing", so the transaction never reaches its peers.
+	require.Equal(t, sender.Bytes(), []byte(msg.From),
+		"broadcast message must carry the recovered sender")
+	require.NoError(t, msg.ValidateBasic())
 }
 
 func TestEVMMempoolBroadcastTxFnDoesNotBlockOnBroadcast(t *testing.T) {
@@ -144,14 +166,7 @@ func TestEVMMempoolBroadcastTxFnDoesNotBlockOnBroadcast(t *testing.T) {
 		WithClient(rpcClient),
 	)
 
-	to := ethcmn.Address{}
-	ethTx := ethtypes.NewTx(&ethtypes.LegacyTx{
-		Nonce:    1,
-		To:       &to,
-		Value:    big.NewInt(0),
-		Gas:      21_000,
-		GasPrice: big.NewInt(1),
-	})
+	ethTx, _ := signedEthTx(t)
 
 	done := make(chan error, 1)
 	go func() {

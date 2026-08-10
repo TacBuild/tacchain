@@ -1046,9 +1046,18 @@ func (app *TacChainApp) configureEVMMempool(appOpts servertypes.AppOptions, logg
 }
 
 func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction) error {
+	signer := ethtypes.LatestSigner(evmvmtypes.GetEthChainConfig())
+
 	for _, ethTx := range ethTxs {
+		// The sender has to be recovered and set here: MsgEthereumTx.ValidateBasic
+		// rejects a message without it, so a broadcast built with FromEthereumTx
+		// alone is refused by the receiving mempool with "sender address is
+		// missing". Locally that goes unnoticed, since block proposal reads this
+		// node's mempool directly, but the transaction never reaches its peers.
 		msg := &evmvmtypes.MsgEthereumTx{}
-		msg.FromEthereumTx(ethTx)
+		if err := msg.FromSignedEthereumTx(ethTx, signer); err != nil {
+			return fmt.Errorf("failed to recover sender of transaction %s: %w", ethTx.Hash().Hex(), err)
+		}
 
 		txBuilder := app.txConfig.NewTxBuilder()
 		if err := txBuilder.SetMsgs(msg); err != nil {

@@ -1047,6 +1047,7 @@ func (app *TacChainApp) configureEVMMempool(appOpts servertypes.AppOptions, logg
 
 func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction) error {
 	signer := ethtypes.LatestSigner(evmvmtypes.GetEthChainConfig())
+	baseDenom := evmvmtypes.GetEVMCoinDenom()
 
 	for _, ethTx := range ethTxs {
 		// The sender has to be recovered and set here: MsgEthereumTx.ValidateBasic
@@ -1059,12 +1060,18 @@ func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction)
 			return fmt.Errorf("failed to recover sender of transaction %s: %w", ethTx.Hash().Hex(), err)
 		}
 
-		txBuilder := app.txConfig.NewTxBuilder()
-		if err := txBuilder.SetMsgs(msg); err != nil {
-			return fmt.Errorf("failed to set msg in tx builder: %w", err)
+		// Build through the message itself rather than filling a builder by hand:
+		// an EVM message only passes the ante handler inside a tx carrying the
+		// ExtensionOptionsEthereumTx option, and the fee and gas limit have to be
+		// taken off the transaction. Assembling this here by hand is what left
+		// them out and got the broadcast refused with "MsgEthereumTx needs to be
+		// contained within a tx with 'ExtensionOptionsEthereumTx' option".
+		cosmosTx, err := msg.BuildTx(app.txConfig.NewTxBuilder(), baseDenom)
+		if err != nil {
+			return fmt.Errorf("failed to build cosmos tx for %s: %w", ethTx.Hash().Hex(), err)
 		}
 
-		txBytes, err := app.txConfig.TxEncoder()(txBuilder.GetTx())
+		txBytes, err := app.txConfig.TxEncoder()(cosmosTx)
 		if err != nil {
 			return fmt.Errorf("failed to encode transaction: %w", err)
 		}

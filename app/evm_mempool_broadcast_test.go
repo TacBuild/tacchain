@@ -17,6 +17,8 @@ import (
 	cmttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/evm/mempool/txpool/legacypool"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
 	ethcmn "github.com/ethereum/go-ethereum/common"
@@ -139,6 +141,21 @@ func TestEVMMempoolBroadcastTxFnUsesUpdatedClientCtx(t *testing.T) {
 	require.Equal(t, sender.Bytes(), []byte(msg.From),
 		"broadcast message must carry the recovered sender")
 	require.NoError(t, msg.ValidateBasic())
+
+	// The ante handler routes a transaction to the EVM path by this extension
+	// option and nothing else, so a broadcast without it is refused before the
+	// message is even looked at.
+	extTx, ok := decodedTx.(authante.HasExtensionOptionsTx)
+	require.True(t, ok)
+	opts := extTx.GetExtensionOptions()
+	require.Len(t, opts, 1, "broadcast tx must carry the ethereum extension option")
+	require.Equal(t, "/cosmos.evm.vm.v1.ExtensionOptionsEthereumTx", opts[0].GetTypeUrl())
+
+	// Fee and gas live on the ethereum transaction and have to be carried over.
+	feeTx, ok := decodedTx.(sdk.FeeTx)
+	require.True(t, ok)
+	require.Equal(t, ethTx.Gas(), feeTx.GetGas())
+	require.False(t, feeTx.GetFee().IsZero(), "broadcast tx must carry a fee")
 }
 
 func TestEVMMempoolBroadcastTxFnDoesNotBlockOnBroadcast(t *testing.T) {

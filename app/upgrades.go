@@ -27,7 +27,7 @@ var Upgrades = []upgrades.Upgrade{
 	v104.Upgrade, // ed25519 precompile
 	v160.Upgrade, // upgrade to cosmos/evm v0.6.0
 	v160spbhotfix.Upgrade,
-	v161.Upgrade, // vesting schedule shift (+6mo) & vesting account migration
+	v161.Upgrade, // no-op handler; binary-level fixes only
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

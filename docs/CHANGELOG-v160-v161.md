@@ -25,9 +25,12 @@ Present in `v1.6.1` and **not** in `v1.6.1-beta.1`:
 - `tac_simulate` JSON-RPC method (`9a602662`)
 - Balance override reaching gas estimation (`5f530858`)
 - Static precompiles kept under an `eth_call` state override (`96d5164b`)
+- Sender set on EVM transactions broadcast to peers (`6759d93`, tacchain side)
 
-All three are query-path only — none of them affects execution or consensus — so
-the SPB run still validates the consensus-relevant part of the release.
+The first three are query-path only. The fourth touches how a node gossips a
+transaction to its peers, not how any node executes one. None of them affects
+execution or consensus, so the SPB run still validates the consensus-relevant
+part of the release.
 
 ---
 
@@ -37,13 +40,18 @@ TacChain v1.6.1 is a maintenance release on top of v1.6.0. It carries **no state
 migration**: the upgrade handler exists only so the network can coordinate a
 version bump to ship binary-level fixes.
 
-Everything in this release comes from the `cosmos/evm` and `cosmos-sdk` forks:
+Most of it comes from the `cosmos/evm` and `cosmos-sdk` forks:
 
 - Delegating vesting-locked tokens through the EVM staking precompile no longer
   burns coins or panics
 - Historical EVM queries below the v1.6.0 store-migration height work again
 - A state override on `eth_call` no longer drops the static precompiles
 - New `tac_simulate` JSON-RPC method
+
+One fix is on the tacchain side:
+
+- EVM transactions broadcast to peers now carry their sender, so they are no
+  longer refused by the receiving mempool
 
 ---
 
@@ -171,6 +179,29 @@ changes, so `eth_estimateGas` keeps its behaviour.
 
 > Only observable when the caller passes a gas price; otherwise the fee cap
 > defaults to `0` and the recap is skipped entirely.
+
+### EVM transactions broadcast to peers carried no sender
+
+The EVM mempool broadcasts a transaction to its peers when it promotes it out of
+the queue, and built that message with `FromEthereumTx`, which fills in only the
+raw transaction. `MsgEthereumTx.ValidateBasic` rejects a message without a
+sender, so every such broadcast came back as
+
+```
+rejected by mempool: code=18, log=sender address is missing: invalid request
+```
+
+The sender is now recovered from the signature, the way `SendRawTransaction`
+already does on the direct path.
+
+This was easy to miss because the transactions still landed: block proposal
+reads the node's own mempool, so a node that proposes a block includes what it
+holds regardless of the broadcast. Measured on a localnet — 77 of 77 failed
+broadcasts ended up in a block, all successful. What did not happen is the
+transaction reaching the other validators, which is what the broadcast is for.
+
+> Affects propagation between nodes, not execution. A single-node network sees
+> only the log noise.
 
 ---
 

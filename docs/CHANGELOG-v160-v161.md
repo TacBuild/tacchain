@@ -1,9 +1,33 @@
 # TacChain v1.6.1 — Changelog
 
-> **Status:** DRAFT
+> **Status:** Ready for release
 > **Upgrade name:** `v1.6.1`
+> **Release tag:** `v1.6.1` (to be cut from `main`)
 > **Previous version:** v1.6.0
-> **Chain:** TacChain Mainnet
+> **Chains:** SPB testnet — upgraded 2026-07-30 at height 23,205,042 with the
+> `v1.6.1-beta.1` pre-release; TacChain Mainnet — planned
+
+---
+
+## Rollout
+
+`v1.6.1` reached the SPB testnet as the `v1.6.1-beta.1` pre-release, which was cut
+before the last three EVM fork changes landed. The stable `v1.6.1` build is
+therefore **not** byte-identical to what SPB has been running:
+
+| Build | `cosmos/evm` fork | `cosmos-sdk` fork | Where |
+|-------|-------------------|-------------------|-------|
+| `v1.6.1-beta.1` | `v0.6.0-tac.10` | `v0.53.6-tac.3` | SPB testnet since 2026-07-30 |
+| `v1.6.1` | `v0.6.0-tac.13` | `v0.53.6-tac.3` | mainnet target |
+
+Present in `v1.6.1` and **not** in `v1.6.1-beta.1`:
+
+- `tac_simulate` JSON-RPC method (`9a602662`)
+- Balance override reaching gas estimation (`5f530858`)
+- Static precompiles kept under an `eth_call` state override (`96d5164b`)
+
+All three are query-path only — none of them affects execution or consensus — so
+the SPB run still validates the consensus-relevant part of the release.
 
 ---
 

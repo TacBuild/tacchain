@@ -18,6 +18,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	"github.com/cosmos/evm/mempool/txpool/legacypool"
 	evmtypes "github.com/cosmos/evm/x/vm/types"
@@ -51,6 +52,9 @@ func signedEthTx(t *testing.T) (*ethtypes.Transaction, ethcmn.Address) {
 type broadcastRecorder struct {
 	rpcmock.Client
 
+	// code the node answers the broadcast with; zero means accepted
+	code uint32
+
 	mu    sync.Mutex
 	calls int
 	tx    cmttypes.Tx
@@ -62,7 +66,14 @@ func (r *broadcastRecorder) BroadcastTxSync(_ context.Context, tx cmttypes.Tx) (
 
 	r.calls++
 	r.tx = append(r.tx[:0], tx...)
-	return &coretypes.ResultBroadcastTx{}, nil
+	return &coretypes.ResultBroadcastTx{Code: r.code}, nil
+}
+
+func (r *broadcastRecorder) setCode(code uint32) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.code = code
+	r.calls = 0
 }
 
 func (r *broadcastRecorder) callCount() int {
@@ -208,5 +219,48 @@ func TestEVMMempoolBroadcastTxFnDoesNotBlockOnBroadcast(t *testing.T) {
 	case <-rpcClient.done:
 	case <-time.After(time.Second):
 		t.Fatal("background broadcast goroutine did not exit")
+	}
+}
+
+func TestBroadcastEVMTransactionsMempoolCodes(t *testing.T) {
+	tacApp := NewTacChainAppWithCustomOptions(t, true, SetupOptions{
+		Logger:  log.NewTestLogger(t),
+		DB:      dbm.NewMemDB(),
+		AppOpts: simtestutil.NewAppOptionsWithFlagHome(t.TempDir()),
+	})
+
+	ethTx, _ := signedEthTx(t)
+
+	// RegisterTxService may only run once per app, so the same client is reused
+	// and its answer changed per case.
+	rpcClient := &broadcastRecorder{}
+	tacApp.RegisterTxService(client.Context{}.
+		WithTxConfig(tacApp.txConfig).
+		WithClient(rpcClient),
+	)
+
+	for _, tc := range []struct {
+		name    string
+		code    uint32
+		wantErr bool
+	}{
+		// The submitting path has already given this transaction to Comet, so
+		// the node's own cache answers the peer broadcast as a duplicate. That
+		// is the normal outcome, not something to report.
+		{"duplicate in mempool cache", sdkerrors.ErrTxInMempoolCache.ABCICode(), false},
+		{"accepted", 0, false},
+		{"rejected", sdkerrors.ErrInvalidRequest.ABCICode(), true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rpcClient.setCode(tc.code)
+
+			err := tacApp.broadcastEVMTransactions([]*ethtypes.Transaction{ethTx})
+			if tc.wantErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+			}
+			require.Equal(t, 1, rpcClient.callCount())
+		})
 	}
 }

@@ -25,7 +25,8 @@ Present in `v1.6.1` and **not** in `v1.6.1-beta.1`:
 - `tac_simulate` JSON-RPC method (`9a602662`)
 - Balance override reaching gas estimation (`5f530858`)
 - Static precompiles kept under an `eth_call` state override (`96d5164b`)
-- Sender set on EVM transactions broadcast to peers (`6759d93`, tacchain side)
+- EVM transactions broadcast to peers built so the receiving mempool accepts
+  them (`6759d93`, `548387b` and the duplicate handling, tacchain side)
 
 The first three are query-path only. The fourth touches how a node gossips a
 transaction to its peers, not how any node executes one. None of them affects
@@ -191,8 +192,22 @@ sender, so every such broadcast came back as
 rejected by mempool: code=18, log=sender address is missing: invalid request
 ```
 
-The sender is now recovered from the signature, the way `SendRawTransaction`
-already does on the direct path.
+The sender is now recovered from the signature, and the message is assembled
+through `MsgEthereumTx.BuildTx` instead of by hand — the way `SendRawTransaction`
+already does on the direct path. Hand-assembly had also dropped the
+`ExtensionOptionsEthereumTx` option the ante handler routes EVM transactions by,
+along with the fee and gas limit, which surfaced as a second refusal once the
+sender was in place:
+
+```
+rejected by mempool: code=29, log=MsgEthereumTx needs to be contained within a
+tx with 'ExtensionOptionsEthereumTx' option
+```
+
+A duplicate is no longer reported as a failure either. The submitting path has
+already handed the transaction to Comet, so this node's own cache answers the
+peer broadcast with "tx already in mempool" — expected here, not an error. And a
+single bad transaction no longer aborts the broadcast of the rest of its batch.
 
 This was easy to miss because the transactions still landed: block proposal
 reads the node's own mempool, so a node that proposes a block includes what it

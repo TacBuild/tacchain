@@ -30,7 +30,6 @@ COPYFILE_DISABLE=1 tar --no-xattrs --format=ustar \
   -czf .tacchaind.tar \
   .tacchaind
 
-exit
 docker buildx build \
   --platform linux/amd64 \
   --load \

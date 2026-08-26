@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -78,6 +79,7 @@ import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	testdata_pulsar "github.com/cosmos/cosmos-sdk/testutil/testdata/testpb"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 	signingtypes "github.com/cosmos/cosmos-sdk/types/tx/signing"
@@ -1049,6 +1051,10 @@ func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction)
 	signer := ethtypes.LatestSigner(evmvmtypes.GetEthChainConfig())
 	baseDenom := evmvmtypes.GetEVMCoinDenom()
 
+	// One bad transaction must not cost the rest of the batch its broadcast, so
+	// failures are collected and reported once at the end.
+	var errs []error
+
 	for _, ethTx := range ethTxs {
 		// The sender has to be recovered and set here: MsgEthereumTx.ValidateBasic
 		// rejects a message without it, so a broadcast built with FromEthereumTx
@@ -1057,7 +1063,8 @@ func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction)
 		// node's mempool directly, but the transaction never reaches its peers.
 		msg := &evmvmtypes.MsgEthereumTx{}
 		if err := msg.FromSignedEthereumTx(ethTx, signer); err != nil {
-			return fmt.Errorf("failed to recover sender of transaction %s: %w", ethTx.Hash().Hex(), err)
+			errs = append(errs, fmt.Errorf("failed to recover sender of transaction %s: %w", ethTx.Hash().Hex(), err))
+			continue
 		}
 
 		// Build through the message itself rather than filling a builder by hand:
@@ -1068,23 +1075,33 @@ func (app *TacChainApp) broadcastEVMTransactions(ethTxs []*ethtypes.Transaction)
 		// contained within a tx with 'ExtensionOptionsEthereumTx' option".
 		cosmosTx, err := msg.BuildTx(app.txConfig.NewTxBuilder(), baseDenom)
 		if err != nil {
-			return fmt.Errorf("failed to build cosmos tx for %s: %w", ethTx.Hash().Hex(), err)
+			errs = append(errs, fmt.Errorf("failed to build cosmos tx for %s: %w", ethTx.Hash().Hex(), err))
+			continue
 		}
 
 		txBytes, err := app.txConfig.TxEncoder()(cosmosTx)
 		if err != nil {
-			return fmt.Errorf("failed to encode transaction: %w", err)
+			errs = append(errs, fmt.Errorf("failed to encode transaction %s: %w", ethTx.Hash().Hex(), err))
+			continue
 		}
 
 		res, err := app.clientCtx.BroadcastTxSync(txBytes)
 		if err != nil {
-			return fmt.Errorf("failed to broadcast transaction %s: %w", ethTx.Hash().Hex(), err)
+			errs = append(errs, fmt.Errorf("failed to broadcast transaction %s: %w", ethTx.Hash().Hex(), err))
+			continue
+		}
+		// The submitting path has already handed this transaction to Comet, so
+		// this node's own cache answers the peer broadcast with "tx already in
+		// mempool". That is the expected outcome here, not a failure.
+		if res.Code == sdkerrors.ErrTxInMempoolCache.ABCICode() {
+			continue
 		}
 		if res.Code != 0 {
-			return fmt.Errorf("transaction %s rejected by mempool: code=%d, log=%s", ethTx.Hash().Hex(), res.Code, res.RawLog)
+			errs = append(errs, fmt.Errorf("transaction %s rejected by mempool: code=%d, log=%s", ethTx.Hash().Hex(), res.Code, res.RawLog))
 		}
 	}
-	return nil
+
+	return errors.Join(errs...)
 }
 
 func (app *TacChainApp) setPostHandler() {

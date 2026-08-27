@@ -40,6 +40,7 @@ import (
 	"github.com/spf13/cast"
 
 	appconfig "github.com/TacBuild/tacchain/app/config"
+	recovery "github.com/TacBuild/tacchain/app/hardforks/aug2026"
 	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
@@ -1120,7 +1121,21 @@ func (app *TacChainApp) Name() string { return app.BaseApp.Name() }
 
 // PreBlocker application updates every pre block
 func (app *TacChainApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
-	return app.ModuleManager.PreBlock(ctx)
+	res, err := app.ModuleManager.PreBlock(ctx)
+	if err != nil {
+		return res, err
+	}
+	// Aug-2026 incident recovery: runs only on a chain-id in ParamsByChainID, at its Height.
+	if p, ok := recovery.ParamsByChainID[ctx.ChainID()]; ok && ctx.BlockHeight() == p.Height {
+		if err := recovery.Migrate(ctx, recovery.Keepers{
+			Account: app.AccountKeeper,
+			Bank:    app.BankKeeper,
+			Staking: app.StakingKeeper,
+		}, p); err != nil {
+			panic(fmt.Sprintf("recovery migration failed at %d on %s: %v", ctx.BlockHeight(), ctx.ChainID(), err))
+		}
+	}
+	return res, nil
 }
 
 // BeginBlocker application updates every begin block

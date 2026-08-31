@@ -15,6 +15,7 @@ import (
 	v160 "github.com/TacBuild/tacchain/app/upgrades/v1.6.0"
 	v160spbhotfix "github.com/TacBuild/tacchain/app/upgrades/v1.6.0-spb-hotfix"
 	v161 "github.com/TacBuild/tacchain/app/upgrades/v1.6.1"
+	v162 "github.com/TacBuild/tacchain/app/upgrades/v1.6.2"
 )
 
 // Upgrades list of chain upgrades
@@ -28,6 +29,7 @@ var Upgrades = []upgrades.Upgrade{
 	v160.Upgrade, // upgrade to cosmos/evm v0.6.0
 	v160spbhotfix.Upgrade,
 	v161.Upgrade, // no-op handler; binary-level fixes only
+	v162.Upgrade, // no-op handler; binary-level fixes only
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

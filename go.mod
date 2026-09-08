@@ -296,7 +296,9 @@ replace (
 	// tac.12: add the tac_simulate rpc (state overrides, event logs and gas estimate in one call).
 	// tac.13: backport upstream #1096 so a state override stops dropping the static precompiles.
 	// tac.14: v1.6.2 GHSA hotfix (= tac.13 + upstream cosmos-evm security fix for the Aug-2026 incident).
-	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.14
+	// tac.15: v1.6.3 hardening — bech32 address-length guard, atomic StateDB.Commit,
+	//         precompile out-of-gas semantics (#1049), feemarket EndBlock clamp (#1259).
+	github.com/cosmos/evm => github.com/TacBuild/evm v0.6.0-tac.15
 
 	// replace with our fork using geth v1.16.2
 	github.com/ethereum/go-ethereum => github.com/cosmos/go-ethereum v1.16.2-cosmos-1

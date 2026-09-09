@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"cosmossdk.io/core/address"
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
 	storetypes "cosmossdk.io/store/types"
@@ -12,6 +13,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/ethereum/go-ethereum/common"
 
@@ -197,7 +199,7 @@ func taskB(ctx sdk.Context, ak *upgrades.AppKeepers, logger log.Logger) {
 			tag := fmt.Sprintf("B-rekey[%s->%s]", v.Moniker, ubd.ValidatorAddress)
 			if step(ctx, logger, tag, func(c sdk.Context) error {
 				var err error
-				amt, err = rekeyUBD(c, ak, ubd, dest)
+				amt, err = rekeyUBD(c, sk, ak.AccountKeeper.AddressCodec(), ubd, dest)
 				return err
 			}) && !amt.IsNil() {
 				moved, rekeyed = moved.Add(amt), rekeyed+1
@@ -360,19 +362,22 @@ func unbondTo(
 //  3. UnbondingQueueKey                 - the completion-time slice, NOT touched
 //     by the two calls above
 //  4. UnbondingIndexKey                 - UnbondingId -> UBD key, embeds the owner
+//
+// Dependencies are narrowed to the staking keeper and an address codec so this
+// can be exercised directly in unit tests - it is the only hand-written state
+// surgery in the migration.
 func rekeyUBD(
 	ctx sdk.Context,
-	ak *upgrades.AppKeepers,
+	sk *stakingkeeper.Keeper,
+	accCodec address.Codec,
 	ubd stakingtypes.UnbondingDelegation,
 	dest sdk.AccAddress,
 ) (math.Int, error) {
-	sk := ak.StakingKeeper
-
 	valAddr, err := sk.ValidatorAddressCodec().StringToBytes(ubd.ValidatorAddress)
 	if err != nil {
 		return math.ZeroInt(), err
 	}
-	destStr, err := ak.AccountKeeper.AddressCodec().BytesToString(dest)
+	destStr, err := accCodec.BytesToString(dest)
 	if err != nil {
 		return math.ZeroInt(), err
 	}

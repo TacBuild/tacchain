@@ -16,6 +16,7 @@ import (
 	v160spbhotfix "github.com/TacBuild/tacchain/app/upgrades/v1.6.0-spb-hotfix"
 	v161 "github.com/TacBuild/tacchain/app/upgrades/v1.6.1"
 	v162 "github.com/TacBuild/tacchain/app/upgrades/v1.6.2"
+	v163 "github.com/TacBuild/tacchain/app/upgrades/v1.6.3"
 )
 
 // Upgrades list of chain upgrades
@@ -30,6 +31,7 @@ var Upgrades = []upgrades.Upgrade{
 	v160spbhotfix.Upgrade,
 	v161.Upgrade, // no-op handler; binary-level fixes only
 	v162.Upgrade, // no-op handler; binary-level fixes only
+	v163.Upgrade, // Aug-2026 follow-up: escrow refunds + compromised-validator stake rescue
 }
 
 // RegisterUpgradeHandlers registers the chain upgrade handlers

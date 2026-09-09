@@ -685,10 +685,8 @@ github.com/Shopify/sarama v1.19.0/go.mod h1:FVkBWblsNy7DGZRfXLU0O9RCGt5g3g3yEuWX
 github.com/Shopify/toxiproxy v2.1.4+incompatible/go.mod h1:OXgGpZ6Cli1/URJOF1DMxUHB2q5Ap20/P/eIdh4G0pI=
 github.com/TacBuild/cosmos-sdk v0.53.6-tac.3 h1:tKkYpmiVGrCFy3V11fCy/AP+JOu3duawBzQVOIQgl5s=
 github.com/TacBuild/cosmos-sdk v0.53.6-tac.3/go.mod h1:N6YuprhAabInbT3YGumGDKONbvPX5dNro7RjHvkQoKE=
-github.com/TacBuild/evm v0.6.0-tac.13 h1:GPS/9N9KvbIRifU/WjT68omOX7J39mB5AqdFLUnPtTw=
-github.com/TacBuild/evm v0.6.0-tac.13/go.mod h1:9DaIfOYirXAQplL677tYEmy0crZWLI4glre84+qi5FQ=
-github.com/TacBuild/evm v0.6.0-tac.14 h1:1s1vPeCUyys5Iv1Zizz55d4ghoNl2IvcAWzRrdbUTgA=
-github.com/TacBuild/evm v0.6.0-tac.14/go.mod h1:9DaIfOYirXAQplL677tYEmy0crZWLI4glre84+qi5FQ=
+github.com/TacBuild/evm v0.6.0-tac.15 h1:tNKBcm5UHpS4McAyLYfrbuIK4LH5/FqVxaR/yewXLqg=
+github.com/TacBuild/evm v0.6.0-tac.15/go.mod h1:9DaIfOYirXAQplL677tYEmy0crZWLI4glre84+qi5FQ=
 github.com/VictoriaMetrics/fastcache v1.12.2 h1:N0y9ASrJ0F6h0QaC3o6uJb3NIZ9VKLjCM7NQbSmF7WI=
 github.com/VictoriaMetrics/fastcache v1.12.2/go.mod h1:AmC+Nzz1+3G2eCPapF6UcsnkThDcMsQicp4xDukwJYI=
 github.com/VividCortex/gohistogram v1.0.0 h1:6+hBz+qvs0JOrrNhhmR7lFxo5sINxBCGXrdtl/UvroE=

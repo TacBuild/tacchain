@@ -1,6 +1,6 @@
 # TacChain v1.6.3 — Changelog
 
-> **Status:** In development
+> **Status:** Ready for release
 > **Upgrade name:** `v1.6.3`
 > **Release tag:** `v1.6.3` (to be cut from `main`)
 > **Previous version:** v1.6.2
@@ -71,6 +71,28 @@ Instead:
 A partial migration is recoverable in a follow-up upgrade; a halted chain is a
 coordinated restart across the whole validator set. Verification moves off-chain,
 to a post-upgrade check at M+1.
+
+### Verification
+
+Rehearsed end to end against a mainnet snapshot at height 25,017,373, using the
+real two-binary path: the pre-upgrade binary halted at the upgrade height with
+`UPGRADE "v1.6.3" NEEDED`, and the v1.6.3 binary applied the migration on
+restart.
+
+Result: 19/19 refunds paid and the escrow left at zero; the new OFT funded; the
+self-unbonding stake moved to the destination with its **completion times
+unchanged** (2026-09-23, to the nanosecond) and the amount matching the audited
+figure to the wei; all 993 delegations released to their own owners; the six
+compromised accounts left with no delegations and no unbonding delegations; both
+staking pools reconciling against their bank balances; the chain continuing to
+produce blocks with no step skipped.
+
+Determinism was checked by running the whole rehearsal twice in separate
+processes and diffing the resulting state. Every amount matched, including the
+316 delegations whose payout shifts by 1-4 wei from share-to-token rounding -
+the one place where a difference in iteration order would surface first. The
+only difference between runs was the completion timestamp of newly created
+entries, which is `blockTime + 504h` by definition.
 
 ### Task B: redirect mechanics
 

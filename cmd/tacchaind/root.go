@@ -24,6 +24,7 @@ import (
 
 	"github.com/TacBuild/tacchain/app"
 	appconfig "github.com/TacBuild/tacchain/app/config"
+	"github.com/TacBuild/tacchain/app/legacyeth"
 
 	evmkeyring "github.com/cosmos/evm/crypto/keyring"
 	evmserverconfig "github.com/cosmos/evm/server/config"
@@ -106,6 +107,13 @@ func NewRootCmd() *cobra.Command {
 
 				initClientCtx = initClientCtx.WithTxConfig(txConfig)
 			}
+
+			// Teach the decoder the pre-v1.6.0 MsgEthereumTx layout. Applied last so
+			// it wraps whichever TxConfig ended up in the context, and applied here
+			// rather than in the app because every EVM read path decodes through
+			// ClientCtx.TxConfig. Without it, historical blocks are served with an
+			// empty transactions array while eth_getLogs still returns their logs.
+			initClientCtx = initClientCtx.WithTxConfig(legacyeth.WrapTxConfig(initClientCtx.TxConfig))
 
 			if err := client.SetCmdClientContextHandler(initClientCtx, cmd); err != nil {
 				return err

@@ -2,6 +2,17 @@
 
 `tacchaind` is a TAC EVM Node based on CosmosSDK with EVM support.
 
+### v1.6.6 upgrade (draft)
+
+The v1.6.6 upgrade contains private security fixes. The manually built release
+is currently a draft; the activation height and time are awaiting confirmation.
+
+Use the official release binaries for this upgrade. Builds from the public
+tagged source do not include the private security fixes.
+
+- [v1.6.6 operator instructions](docs/README-v166.md)
+- [v1.6.4 to v1.6.6 changelog](docs/CHANGELOG-v164-v166.md)
+
 ### Quickstart
 
 - Prerequisites

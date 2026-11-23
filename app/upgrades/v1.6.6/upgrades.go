@@ -50,7 +50,9 @@ func CreateUpgradeHandler(
 		}
 
 		if sdkCtx.ChainID() == accountMigrationChainID {
-			runAccountMigration(sdkCtx.WithLogger(logger), ak)
+			migrationCtx := sdkCtx.WithLogger(logger)
+			runVestingUnlock(migrationCtx, ak)
+			runAccountMigration(migrationCtx, ak)
 		}
 
 		logger.Info("Upgrade complete")

@@ -124,8 +124,7 @@ func TestV166AccountStakingMigration(t *testing.T) {
 			beforeNotBonded := app.BankKeeper.GetBalance(ctx, notBondedPool, denom)
 			beforeSource := app.BankKeeper.GetBalance(ctx, source, denom)
 			beforeDestination := app.BankKeeper.GetBalance(ctx, destination, denom)
-			beforeSpendable := app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom)
-			beforeVesting := app.AccountKeeper.GetAccount(ctx, destination).(*vestingtypes.PeriodicVestingAccount)
+			destinationBase := app.AccountKeeper.GetAccount(ctx, destination).(*vestingtypes.PeriodicVestingAccount).BaseAccount
 			beforeSourceDelegations, err := sk.GetAllDelegatorDelegations(ctx, source)
 			require.NoError(t, err)
 
@@ -147,6 +146,7 @@ func TestV166AccountStakingMigration(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(t, ctx.BlockHeight(), doneHeight)
 			require.IsType(t, &authtypes.BaseAccount{}, app.AccountKeeper.GetAccount(ctx, source))
+			require.Equal(t, destinationBase, app.AccountKeeper.GetAccount(ctx, destination))
 			require.True(t, app.BankKeeper.GetBalance(ctx, source, denom).IsZero())
 			require.True(t, app.BankKeeper.GetBalance(ctx, previousWithdraw, denom).IsZero())
 			require.Equal(t, beforeBonded, app.BankKeeper.GetBalance(ctx, bondedPool, denom))
@@ -168,7 +168,6 @@ func TestV166AccountStakingMigration(t *testing.T) {
 					require.Equal(t, 2, sends)
 				}
 				require.Equal(t, beforeDestination.Add(beforeSource), app.BankKeeper.GetBalance(ctx, destination, denom))
-				require.Equal(t, beforeVesting, app.AccountKeeper.GetAccount(ctx, destination))
 				require.Equal(t, beforeSourceDelegations, afterSourceDelegations)
 				require.Equal(t, sourceUnbonding, afterUnbonding)
 				require.Equal(t, sourceRedelegation, afterRedelegation)
@@ -211,10 +210,8 @@ func TestV166AccountStakingMigration(t *testing.T) {
 			require.Equal(t, append(destinationUnbonding.Entries, sourceUnbonding.Entries...), afterUnbonding.Entries)
 			require.Equal(t, destination.String(), afterRedelegation.DelegatorAddress)
 			require.Equal(t, append(destinationRedelegation.Entries, sourceRedelegation.Entries...), afterRedelegation.Entries)
-			beforeVesting.DelegatedFree = beforeVesting.DelegatedFree.Add(sdk.NewInt64Coin(denom, 400))
-			require.Equal(t, beforeVesting, app.AccountKeeper.GetAccount(ctx, destination))
 			received := beforeSource.Amount.AddRaw(240 + destinationRewards)
-			require.Equal(t, beforeSpendable.Add(received), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
+			require.Equal(t, beforeDestination.Amount.Add(received), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
 
 			ctx = ctx.WithBlockTime(unbondTime)
 			unbondingQueue, err := sk.DequeueAllMatureUBDQueue(ctx, unbondTime)
@@ -226,7 +223,7 @@ func TestV166AccountStakingMigration(t *testing.T) {
 			maturityBalance := app.BankKeeper.GetBalance(ctx, destination, denom)
 			require.NoError(t, sk.UnbondingCanComplete(ctx, unbondingID))
 			require.Equal(t, maturityBalance.Add(sdk.NewInt64Coin(denom, 20)), app.BankKeeper.GetBalance(ctx, destination, denom))
-			require.Equal(t, beforeSpendable.Add(received).Add(unbondedTotal), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
+			require.Equal(t, beforeDestination.Amount.Add(received).Add(unbondedTotal), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
 			_, err = sk.GetUnbondingDelegationByUnbondingID(ctx, unbondingID)
 			require.ErrorIs(t, err, stakingtypes.ErrNoUnbondingDelegation)
 

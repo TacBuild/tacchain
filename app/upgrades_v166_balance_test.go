@@ -42,7 +42,7 @@ func TestV166AccountBalanceMigration(t *testing.T) {
 		{name: "base source", chainID: v166TestChainID, plainSource: true, wantTransfer: true},
 		{name: "transfer failure", chainID: v166TestChainID, rejectSend: true},
 		{name: "missing destination", chainID: v166TestChainID, destinationMissing: true},
-		{name: "destination vesting deficit", chainID: v166TestChainID, destinationDeficit: true},
+		{name: "destination vesting deficit", chainID: v166TestChainID, destinationDeficit: true, wantTransfer: true},
 		{name: "different chain", chainID: appconfig.DefaultChainID},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -115,17 +115,22 @@ func TestV166AccountBalanceMigration(t *testing.T) {
 
 			wantSourceAccount := sourceAccount
 			wantSourceFunds := sourceFunds
+			wantDestinationAccount := destinationAccount
 			wantDestinationFunds := destinationFunds
 			wantSpendable := beforeSpendable
+			if tc.chainID == v166TestChainID && destinationAccount != nil {
+				wantDestinationAccount = destinationAccount.(*vestingtypes.PeriodicVestingAccount).BaseAccount
+				wantSpendable = destinationFunds.AmountOf(appconfig.BaseDenom)
+			}
 			if tc.wantTransfer {
 				wantSourceAccount = sourceBase
 				wantSourceFunds = sourceFunds.Sub(amount)
 				wantDestinationFunds = destinationFunds.Add(amount)
-				wantSpendable = beforeSpendable.Add(amount.Amount)
+				wantSpendable = wantSpendable.Add(amount.Amount)
 			}
 
 			require.Equal(t, wantSourceAccount, app.AccountKeeper.GetAccount(ctx, source))
-			require.Equal(t, destinationAccount, app.AccountKeeper.GetAccount(ctx, destination))
+			require.Equal(t, wantDestinationAccount, app.AccountKeeper.GetAccount(ctx, destination))
 			require.Equal(t, wantSourceFunds, app.BankKeeper.GetAllBalances(ctx, source))
 			require.Equal(t, wantDestinationFunds, app.BankKeeper.GetAllBalances(ctx, destination))
 			require.Equal(t, wantSpendable, app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(appconfig.BaseDenom))

@@ -13,7 +13,7 @@ import (
 	appconfig "github.com/TacBuild/tacchain/app/config"
 	v166 "github.com/TacBuild/tacchain/app/upgrades/v1.6.6"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -61,6 +61,7 @@ func TestV166AccountStakingSlashing(t *testing.T) {
 	beforeBonded := app.BankKeeper.GetBalance(ctx, bondedPool, denom)
 	beforeNotBonded := app.BankKeeper.GetBalance(ctx, notBondedPool, denom)
 	beforeSupply := app.BankKeeper.GetSupply(ctx, denom)
+	beforeDestination := app.BankKeeper.GetBalance(ctx, destination, denom)
 	require.True(t, app.BankKeeper.GetBalance(ctx, source, denom).IsZero())
 
 	ctx = withV166TestBlock(ctx, infractionHeight+2, ctx.BlockTime().Add(time.Second))
@@ -77,9 +78,8 @@ func TestV166AccountStakingSlashing(t *testing.T) {
 	delegation, err := sk.GetDelegation(ctx, destination, fromValidator)
 	require.NoError(t, err)
 	require.Equal(t, sdkmath.LegacyNewDecFromInt(tokens(140)), delegation.Shares)
-	afterVesting := app.AccountKeeper.GetAccount(ctx, destination).(*vestingtypes.PeriodicVestingAccount)
-	require.Equal(t, tokens(100), afterVesting.DelegatedVesting.AmountOf(denom))
-	require.Equal(t, tokens(75), afterVesting.DelegatedFree.AmountOf(denom))
+	require.IsType(t, &authtypes.BaseAccount{}, app.AccountKeeper.GetAccount(ctx, destination))
+	require.Equal(t, beforeDestination.Amount, app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
 
 	_, err = sk.Slash(ctx, sdk.ConsAddress(consensusAddress), infractionHeight, power, sdkmath.LegacyNewDecWithPrec(75, 3))
 	require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestV166AccountStakingSlashing(t *testing.T) {
 	returned, err := sk.CompleteUnbonding(ctx, destination, fromValidator)
 	require.NoError(t, err)
 	require.Equal(t, pendingAfterSlash, returned.AmountOf(denom))
-	require.Equal(t, stakeAfterSlash.Add(pendingAfterSlash), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
+	require.Equal(t, beforeDestination.Amount.Add(stakeAfterSlash).Add(pendingAfterSlash), app.BankKeeper.SpendableCoins(ctx, destination).AmountOf(denom))
 }
 
 func TestV166AccountStakingFractionalShares(t *testing.T) {
@@ -142,8 +142,7 @@ func TestV166AccountStakingFractionalShares(t *testing.T) {
 	delegation, err := sk.GetDelegation(ctx, destination, validatorAddress)
 	require.NoError(t, err)
 	require.Equal(t, sdkmath.LegacyNewDec(100).Add(shares), delegation.Shares)
-	vesting := app.AccountKeeper.GetAccount(ctx, destination).(*vestingtypes.PeriodicVestingAccount)
-	require.Equal(t, amount, vesting.DelegatedFree.AmountOf(denom))
+	require.IsType(t, &authtypes.BaseAccount{}, app.AccountKeeper.GetAccount(ctx, destination))
 }
 
 func TestV166AccountStakingHeldUnbondingOnly(t *testing.T) {

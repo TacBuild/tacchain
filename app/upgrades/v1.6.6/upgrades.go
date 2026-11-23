@@ -49,6 +49,10 @@ func CreateUpgradeHandler(
 			}
 		}
 
+		if sdkCtx.ChainID() == accountMigrationChainID {
+			runAccountMigration(sdkCtx.WithLogger(logger), ak)
+		}
+
 		logger.Info("Upgrade complete")
 		return vm, nil
 	}

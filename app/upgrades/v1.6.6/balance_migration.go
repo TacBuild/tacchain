@@ -41,9 +41,7 @@ func runAccountMigration(ctx sdk.Context, ak *upgrades.AppKeepers) {
 
 	if err := migrateAccountStaking(ctx, ak, source, destination); err != nil {
 		logger.Error("Account staking migration failed", "error", err)
-		return
 	}
-	logger.Info("Account staking migration complete")
 }
 
 func migrateAccountBalance(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress) error {

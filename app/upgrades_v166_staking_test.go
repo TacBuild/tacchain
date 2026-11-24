@@ -168,9 +168,19 @@ func TestV166AccountStakingMigration(t *testing.T) {
 					require.Equal(t, 2, sends)
 				}
 				require.Equal(t, beforeDestination.Add(beforeSource), app.BankKeeper.GetBalance(ctx, destination, denom))
-				require.Equal(t, beforeSourceDelegations, afterSourceDelegations)
+				require.Len(t, afterSourceDelegations, 1)
+				require.Equal(t, fromValidator.String(), afterSourceDelegations[0].ValidatorAddress)
+				require.Equal(t, sdkmath.LegacyNewDec(240), afterSourceDelegations[0].Shares)
 				require.Equal(t, sourceUnbonding, afterUnbonding)
-				require.Equal(t, sourceRedelegation, afterRedelegation)
+				require.Equal(t, destination.String(), afterRedelegation.DelegatorAddress)
+				require.Equal(t, append(destinationRedelegation.Entries, sourceRedelegation.Entries...), afterRedelegation.Entries)
+				moved, err := sk.GetDelegation(ctx, destination, toValidator)
+				require.NoError(t, err)
+				wantShares := sdkmath.LegacyNewDec(140)
+				if tc.merge {
+					wantShares = wantShares.Add(sdkmath.LegacyNewDec(15))
+				}
+				require.Equal(t, wantShares, moved.Shares)
 				require.True(t, hasStartingInfo)
 				return
 			}

@@ -3,7 +3,9 @@ package v166
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"slices"
+	"strings"
 	"time"
 
 	sdkmath "cosmossdk.io/math"
@@ -17,29 +19,87 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
+type validatorStakingPositions struct {
+	delegation    *stakingtypes.Delegation
+	unbonding     *stakingtypes.UnbondingDelegation
+	redelegations []stakingtypes.Redelegation
+}
+
 func migrateAccountStaking(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress) error {
-	cacheCtx, write := ctx.CacheContext()
-	if err := transferAccountStaking(cacheCtx, ak, source, destination); err != nil {
+	positions, err := collectStakingPositions(ctx, ak.StakingKeeper, source)
+	if err != nil {
 		return err
 	}
-	write()
+
+	var skipped int
+	for _, validator := range slices.Sorted(maps.Keys(positions)) {
+		cacheCtx, write := ctx.CacheContext()
+		if err := transferStakingPositions(cacheCtx, ak, source, destination, positions[validator]); err != nil {
+			skipped++
+			ctx.Logger().Error("Staking positions skipped", "validator", validator, "error", err)
+			continue
+		}
+		write()
+	}
+	ctx.Logger().Info("Account staking migration finished", "transferred", len(positions)-skipped, "skipped", skipped)
 	return nil
 }
 
-func transferAccountStaking(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress) (err error) {
+func collectStakingPositions(ctx sdk.Context, sk *stakingkeeper.Keeper, source sdk.AccAddress) (positions map[string]*validatorStakingPositions, err error) {
+	defer func() {
+		if recovered := recover(); recovered != nil {
+			positions = nil
+			err = fmt.Errorf("read staking positions panic: %v", recovered)
+		}
+	}()
+
+	denom, err := sk.BondDenom(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if denom != appconfig.BaseDenom {
+		return nil, fmt.Errorf("unexpected staking denomination %s", denom)
+	}
+	positions = make(map[string]*validatorStakingPositions)
+	forValidator := func(address string) *validatorStakingPositions {
+		validator := strings.ToLower(address)
+		group := positions[validator]
+		if group == nil {
+			group = &validatorStakingPositions{}
+			positions[validator] = group
+		}
+		return group
+	}
+
+	delegations, err := sk.GetAllDelegatorDelegations(ctx, source)
+	if err != nil {
+		return nil, fmt.Errorf("read delegations: %w", err)
+	}
+	for _, delegation := range delegations {
+		forValidator(delegation.ValidatorAddress).delegation = &delegation
+	}
+	if err := sk.IterateDelegatorUnbondingDelegations(ctx, source, func(record stakingtypes.UnbondingDelegation) bool {
+		forValidator(record.ValidatorAddress).unbonding = &record
+		return false
+	}); err != nil {
+		return nil, fmt.Errorf("read unbonding delegations: %w", err)
+	}
+	if err := sk.IterateDelegatorRedelegations(ctx, source, func(record stakingtypes.Redelegation) bool {
+		group := forValidator(record.ValidatorDstAddress)
+		group.redelegations = append(group.redelegations, record)
+		return false
+	}); err != nil {
+		return nil, fmt.Errorf("read redelegations: %w", err)
+	}
+	return positions, nil
+}
+
+func transferStakingPositions(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress, positions *validatorStakingPositions) (err error) {
 	defer func() {
 		if recovered := recover(); recovered != nil {
 			err = fmt.Errorf("staking migration panic: %v", recovered)
 		}
 	}()
-
-	denom, err := ak.StakingKeeper.BondDenom(ctx)
-	if err != nil {
-		return err
-	}
-	if denom != appconfig.BaseDenom {
-		return fmt.Errorf("unexpected staking denomination %s", denom)
-	}
 
 	var vestingAccount *vestingtypes.PeriodicVestingAccount
 	switch account := ak.AccountKeeper.GetAccount(ctx, destination).(type) {
@@ -53,20 +113,29 @@ func transferAccountStaking(ctx sdk.Context, ak *upgrades.AppKeepers, source, de
 		return fmt.Errorf("unexpected destination account type %T", account)
 	}
 
-	delegated, err := transferDelegations(ctx, ak, source, destination)
-	if err != nil {
-		return fmt.Errorf("transfer delegations: %w", err)
+	amount := sdkmath.ZeroInt()
+	if positions.delegation != nil {
+		delegated, err := transferDelegationWithRewards(ctx, ak, source, destination, *positions.delegation)
+		if err != nil {
+			return fmt.Errorf("transfer delegation: %w", err)
+		}
+		amount = amount.Add(delegated)
 	}
-	unbonding, err := transferUnbondingDelegations(ctx, ak.StakingKeeper, source, destination)
-	if err != nil {
-		return fmt.Errorf("transfer unbonding delegations: %w", err)
+	if positions.unbonding != nil {
+		unbonding, err := transferUnbondingDelegation(ctx, ak.StakingKeeper, destination, *positions.unbonding)
+		if err != nil {
+			return fmt.Errorf("transfer unbonding delegation: %w", err)
+		}
+		amount = amount.Add(unbonding)
 	}
-	if err := transferRedelegations(ctx, ak.StakingKeeper, source, destination); err != nil {
-		return fmt.Errorf("transfer redelegations: %w", err)
+	for _, redelegation := range positions.redelegations {
+		if err := transferRedelegation(ctx, ak.StakingKeeper, destination, redelegation); err != nil {
+			return fmt.Errorf("transfer redelegation: %w", err)
+		}
 	}
 
-	if amount := delegated.Add(unbonding); vestingAccount != nil && amount.IsPositive() {
-		vestingAccount.DelegatedFree = vestingAccount.DelegatedFree.Add(sdk.NewCoin(denom, amount))
+	if vestingAccount != nil && amount.IsPositive() {
+		vestingAccount.DelegatedFree = vestingAccount.DelegatedFree.Add(sdk.NewCoin(appconfig.BaseDenom, amount))
 		ak.AccountKeeper.SetAccount(ctx, vestingAccount)
 	}
 	if err := transferAccountBalance(ctx, ak.BankKeeper, source, destination); err != nil {
@@ -75,31 +144,22 @@ func transferAccountStaking(ctx sdk.Context, ak *upgrades.AppKeepers, source, de
 	return nil
 }
 
-func transferDelegations(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress) (sdkmath.Int, error) {
-	amount := sdkmath.ZeroInt()
-	delegations, err := ak.StakingKeeper.GetAllDelegatorDelegations(ctx, source)
-	if err != nil || len(delegations) == 0 {
-		return amount, err
-	}
-
+func transferDelegationWithRewards(ctx sdk.Context, ak *upgrades.AppKeepers, source, destination sdk.AccAddress, delegation stakingtypes.Delegation) (sdkmath.Int, error) {
 	withdrawAddress, err := ak.DistrKeeper.GetDelegatorWithdrawAddr(ctx, source)
 	if err != nil {
-		return amount, err
+		return sdkmath.ZeroInt(), err
 	}
 	overrideWithdrawAddress := !withdrawAddress.Equals(source)
 	if overrideWithdrawAddress {
 		if err := ak.DistrKeeper.SetDelegatorWithdrawAddr(ctx, source, source); err != nil {
-			return amount, err
+			return sdkmath.ZeroInt(), err
 		}
-	}
-	for _, delegation := range delegations {
-		moved, err := transferDelegation(ctx, ak, source, destination, delegation)
-		if err != nil {
-			return amount, err
-		}
-		amount = amount.Add(moved)
 	}
 
+	amount, err := transferDelegation(ctx, ak, source, destination, delegation)
+	if err != nil {
+		return amount, err
+	}
 	if overrideWithdrawAddress {
 		return amount, ak.DistrKeeper.SetDelegatorWithdrawAddr(ctx, source, withdrawAddress)
 	}
@@ -181,25 +241,6 @@ func settleDelegationRewards(ctx sdk.Context, ak *upgrades.AppKeepers, delegator
 	return ak.StakingKeeper.Hooks().BeforeDelegationSharesModified(ctx, delegator, validator)
 }
 
-func transferUnbondingDelegations(ctx sdk.Context, sk *stakingkeeper.Keeper, source, destination sdk.AccAddress) (sdkmath.Int, error) {
-	amount := sdkmath.ZeroInt()
-	var records []stakingtypes.UnbondingDelegation
-	if err := sk.IterateDelegatorUnbondingDelegations(ctx, source, func(record stakingtypes.UnbondingDelegation) bool {
-		records = append(records, record)
-		return false
-	}); err != nil {
-		return amount, err
-	}
-	for _, record := range records {
-		moved, err := transferUnbondingDelegation(ctx, sk, destination, record)
-		if err != nil {
-			return amount, err
-		}
-		amount = amount.Add(moved)
-	}
-	return amount, nil
-}
-
 func transferUnbondingDelegation(ctx sdk.Context, sk *stakingkeeper.Keeper, destination sdk.AccAddress, record stakingtypes.UnbondingDelegation) (sdkmath.Int, error) {
 	amount := sdkmath.ZeroInt()
 	validator, err := sk.ValidatorAddressCodec().StringToBytes(record.ValidatorAddress)
@@ -246,22 +287,6 @@ func transferUnbondingDelegation(ctx sdk.Context, sk *stakingkeeper.Keeper, dest
 		}
 	}
 	return amount, nil
-}
-
-func transferRedelegations(ctx sdk.Context, sk *stakingkeeper.Keeper, source, destination sdk.AccAddress) error {
-	var records []stakingtypes.Redelegation
-	if err := sk.IterateDelegatorRedelegations(ctx, source, func(record stakingtypes.Redelegation) bool {
-		records = append(records, record)
-		return false
-	}); err != nil {
-		return err
-	}
-	for _, record := range records {
-		if err := transferRedelegation(ctx, sk, destination, record); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 func transferRedelegation(ctx sdk.Context, sk *stakingkeeper.Keeper, destination sdk.AccAddress, record stakingtypes.Redelegation) error {
